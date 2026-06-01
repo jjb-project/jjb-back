@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('후보 상세')}"></head>
+<body>
+<main class="app-shell">
+  <section class="screen active">
+    <div th:replace="~{fragments/layout :: topbar('후보 상세', '/boss/home')}"></div>
+
+    <div class="detail-page">
+      <div class="detail-hero">
+        <div class="avatar avatar-72 avatar-worker"><i class="fa-regular fa-user"></i></div>
+        <div>
+          <h1 th:text="${candidate.name}">김하나</h1>
+          <p th:text="${candidate.availableTime}">오늘 17:00-22:00 가능</p>
+        </div>
+      </div>
+
+      <dl class="detail-grid">
+        <div>
+          <dt>희망 지역</dt>
+          <dd th:text="${candidate.area}">서울 강남구</dd>
+        </div>
+        <div>
+          <dt>희망 시급</dt>
+          <dd th:text="${candidate.desiredHourlyWage} + '원 이상'">13,000원 이상</dd>
+        </div>
+        <div>
+          <dt>경험</dt>
+          <dd th:text="${candidate.skills}">카페, 서빙</dd>
+        </div>
+      </dl>
+
+      <form class="form-screen compact" th:action="@{/boss/match-requests}" method="post">
+        <input type="hidden" name="jobSeekerId" th:value="${candidate.id}">
+        <div class="form-group">
+          <label class="form-label" for="recruitmentId">연결할 모집</label>
+          <select class="form-input" id="recruitmentId" name="recruitmentId">
+            <option value="">모집 미지정</option>
+            <option th:each="recruitment : ${recruitments}" th:value="${recruitment.id}" th:text="${recruitment.title}">카페 마감</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="message">요청 메시지</label>
+          <textarea class="form-input" id="message" name="message" rows="3">오늘 근무 가능하실까요?</textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">매칭 요청 보내기</button>
+      </form>
+    </div>
+  </section>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

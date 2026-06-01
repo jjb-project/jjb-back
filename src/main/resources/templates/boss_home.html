@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('사장님 홈')}"></head>
+<body>
+<main class="app-shell">
+  <section class="screen active">
+    <header class="home-topbar">
+      <a class="logo-mark" th:href="@{/boss/home}">
+        <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+        <span class="logo-text">바로<span>알바</span></span>
+      </a>
+      <a class="avatar avatar-48 avatar-boss" th:href="@{/mypage}" aria-label="마이페이지">
+        <i class="fa-solid fa-store"></i>
+      </a>
+    </header>
+
+    <div class="boss-header">
+      <p class="eyebrow">사장님 모드</p>
+      <h1 th:text="${member == null ? '오늘 필요한 인력을 찾아보세요' : member.displayName() + '님, 인재를 확인하세요'}">인재 추천</h1>
+      <p>모집 등록과 매칭 요청은 사업자 인증 후 사용할 수 있습니다.</p>
+      <div class="header-actions">
+        <a class="btn btn-outline bright" th:href="@{/boss/verify}" th:if="${!memberVerified}">
+          <i class="fa-solid fa-shield-halved"></i>
+          사업자 인증
+        </a>
+        <a class="btn btn-outline bright" th:href="@{/boss/recruitments/new}">
+          <i class="fa-solid fa-plus"></i>
+          모집 등록
+        </a>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">진행 중 모집</span>
+      <a class="section-more" th:href="@{/boss/recruitments/new}">새 모집</a>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(recruitments)}">
+      아직 등록된 모집이 없습니다.
+    </div>
+
+    <a class="board-card link-card" th:each="recruitment : ${recruitments}"
+       th:href="@{/boss/recruitments/new}">
+      <span class="badge badge-blue">모집 중</span>
+      <h2 class="board-card-title" th:text="${recruitment.title}">카페 마감 알바 급구</h2>
+      <p th:text="${recruitment.workTime} + ' · ' + ${recruitment.hourlyWage} + '원'">오늘 17:00-22:00</p>
+      <div class="board-card-meta">
+        <span th:text="${recruitment.workplaceAddress}">서울 강남구</span>
+      </div>
+    </a>
+
+    <div class="section-header">
+      <span class="section-title">추천 인재</span>
+      <span class="section-more" th:text="${#lists.size(candidates)} + '명'">0명</span>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(candidates)}">
+      등록된 구직자 프로필이 없습니다.
+    </div>
+
+    <a class="candidate-card link-card" th:each="candidate : ${candidates}"
+       th:href="@{/boss/candidates/{id}(id=${candidate.id})}">
+      <div class="candidate-top">
+        <div class="avatar avatar-48 avatar-worker"><i class="fa-regular fa-user"></i></div>
+        <div class="candidate-info">
+          <strong class="candidate-name" th:text="${candidate.name}">김하나</strong>
+          <span th:text="${candidate.availableTime}">오늘 가능</span>
+          <span th:text="${candidate.area}">서울 강남구</span>
+        </div>
+      </div>
+      <div class="candidate-tags">
+        <span class="tag-chip active" th:text="${candidate.skills}">카페, 서빙</span>
+      </div>
+      <span class="btn btn-primary btn-sm">상세 보기</span>
+    </a>
+  </section>
+</main>
+<div th:replace="~{fragments/layout :: bottomNav('home')}"></div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

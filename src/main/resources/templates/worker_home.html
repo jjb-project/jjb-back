@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('구직자 홈')}"></head>
+<body>
+<main class="app-shell">
+  <section class="screen active">
+    <header class="home-topbar">
+      <a class="logo-mark" th:href="@{/worker/home}">
+        <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+        <span class="logo-text">바로<span>알바</span></span>
+      </a>
+      <a class="avatar avatar-48 avatar-worker" th:href="@{/worker/profile/edit}" aria-label="프로필 수정">
+        <i class="fa-regular fa-user"></i>
+      </a>
+    </header>
+
+    <div class="worker-header">
+      <p class="eyebrow">구직자 모드</p>
+      <h1 th:text="${member == null ? '오늘 가능한 근무를 받아보세요' : member.displayName() + '님, 근무 요청을 확인하세요'}">근무 요청</h1>
+      <p>프로필을 등록하면 사장님이 확인하고 바로 매칭 요청을 보낼 수 있습니다.</p>
+      <a class="btn btn-outline bright" th:href="@{/worker/profile/edit}">
+        <i class="fa-solid fa-pen"></i>
+        프로필 등록/수정
+      </a>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">받은 매칭 요청</span>
+      <span class="section-more" th:text="${#lists.size(requestCards)} + '건'">0건</span>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(requestCards)}">
+      아직 받은 매칭 요청이 없습니다.
+    </div>
+
+    <a class="request-card link-card" th:each="request : ${requestCards}" th:href="@{/worker/requests/{id}(id=${request.id})}">
+      <div class="request-card-header">
+        <div class="request-store-icon"><i class="fa-solid fa-store"></i></div>
+        <div class="request-main">
+          <strong th:text="${request.storeName}">카페 모모 역삼점</strong>
+          <span th:text="${request.workTime}">오늘 17:00-22:00</span>
+        </div>
+        <span class="badge badge-green" th:text="${request.status}">REQUESTED</span>
+      </div>
+      <p th:text="${request.message}">카운터와 음료 제조를 도와주세요.</p>
+      <div class="request-card-footer">
+        <span class="request-pay" th:text="${request.hourlyWage} + ' /시간'">13,000원 /시간</span>
+        <span class="btn btn-primary btn-sm">상세 보기</span>
+      </div>
+    </a>
+  </section>
+</main>
+<div th:replace="~{fragments/layout :: bottomNav('home')}"></div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

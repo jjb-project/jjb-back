@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('휴대폰 인증')}"></head>
+<body>
+<main class="app-shell">
+  <section class="screen active">
+    <div th:replace="~{fragments/layout :: topbar('휴대폰 본인 인증', '/')}"></div>
+    <div class="progress-bar"><div class="progress-fill progress-one-third"></div></div>
+
+    <form class="form-screen" th:action="@{/phone}" method="post">
+      <div class="page-intro">
+        <h1>안전한 이용을 위해<br>본인 인증이 필요해요</h1>
+        <p>노쇼 방지와 신뢰도 확보를 위해 휴대폰 인증을 먼저 진행합니다.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="phoneNumber">휴대폰 번호</label>
+        <div class="inline-field">
+          <input class="form-input" id="phoneNumber" name="phoneNumber" type="tel" placeholder="010-1234-5678" value="010-1234-5678" required>
+          <button class="btn btn-primary btn-sm" type="button" data-otp-trigger>인증번호 받기</button>
+        </div>
+      </div>
+
+      <div class="otp-panel" data-otp-panel hidden>
+        <p>입력한 휴대폰 번호로 인증번호를 보냈어요.</p>
+        <input class="form-input" name="verificationCode" inputmode="numeric" maxlength="6" value="123456" required>
+      </div>
+
+      <button class="btn btn-primary" type="submit">
+        <i class="fa-solid fa-shield-halved"></i>
+        본인 인증 완료
+      </button>
+    </form>
+  </section>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

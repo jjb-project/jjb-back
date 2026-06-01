@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('매칭 완료')}"></head>
+<body>
+<main class="app-shell">
+  <section class="screen active">
+    <div class="result-page">
+      <div class="result-icon"><i class="fa-solid fa-check"></i></div>
+      <h1>매칭 요청이 처리됐어요</h1>
+      <p>확정된 근무는 마이페이지와 홈에서 다시 확인할 수 있습니다.</p>
+      <div class="stack-actions">
+        <a class="btn btn-primary" th:href="@{/worker/home}">구직자 홈으로</a>
+        <a class="btn btn-secondary" th:href="@{/boss/home}">사장님 홈으로</a>
+        <a class="btn btn-outline" th:href="@{/eval}">평가 화면 보기</a>
+      </div>
+    </div>
+  </section>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

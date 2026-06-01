@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('역할 선택')}"></head>
+<body>
+<main class="app-shell">
+  <section class="screen active">
+    <div th:replace="~{fragments/layout :: topbar('이용 목적 선택', '/phone')}"></div>
+    <div class="progress-bar"><div class="progress-fill progress-two-third"></div></div>
+
+    <form class="role-form" th:action="@{/role}" method="post" data-role-form>
+      <div class="page-intro padded">
+        <h1>어떤 목적으로<br>이용하시나요?</h1>
+        <p>하나의 계정으로 구직자와 사장님 모드를 모두 사용할 수 있어요.</p>
+      </div>
+
+      <button class="role-card" type="submit" name="role" value="JOB_SEEKER">
+        <span class="role-icon role-icon-worker"><i class="fa-solid fa-person-running"></i></span>
+        <span>
+          <span class="role-title">알바하고 싶어요</span>
+          <span class="role-desc">가능 시간을 등록하고 매칭 요청을 받아요</span>
+        </span>
+        <span class="role-check"><i class="fa-solid fa-check"></i></span>
+      </button>
+
+      <button class="role-card" type="submit" name="role" value="OWNER">
+        <span class="role-icon role-icon-boss"><i class="fa-solid fa-store"></i></span>
+        <span>
+          <span class="role-title">사람을 구하고 싶어요</span>
+          <span class="role-desc">주변 구직자를 찾고 매칭 요청을 보내요</span>
+        </span>
+        <span class="role-check"><i class="fa-solid fa-check"></i></span>
+      </button>
+    </form>
+  </section>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

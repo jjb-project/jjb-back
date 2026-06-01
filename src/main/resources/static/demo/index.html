@@ -1,0 +1,1146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jjb MVP Demo Console</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --text: #172033;
+      --muted: #64748b;
+      --line: #d8e0ea;
+      --green: #16834a;
+      --green-soft: #e8f6ee;
+      --blue: #156fc2;
+      --blue-soft: #e9f3ff;
+      --amber: #b7791f;
+      --amber-soft: #fff4db;
+      --red: #bc2f2f;
+      --red-soft: #fff0f0;
+      --shadow: 0 16px 36px rgba(33, 48, 72, 0.08);
+      font-family: Inter, "Pretendard", "Apple SD Gothic Neo", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.82), rgba(245,247,251,0.9)),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 760px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 13px;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: #9eb0c5;
+    }
+
+    .button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .button.danger {
+      color: var(--red);
+    }
+
+    .button:disabled {
+      cursor: progress;
+      opacity: 0.6;
+      transform: none;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .status-card,
+    .panel,
+    .profile-card,
+    .log-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .status-card {
+      padding: 14px;
+      min-height: 116px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .status-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 17px;
+      line-height: 1.28;
+      word-break: keep-all;
+    }
+
+    .small {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #eef2f7;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .chip.green {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .chip.blue {
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .chip.amber {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .chip.red {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 430px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .panel h2,
+    .log-panel h2 {
+      margin: 0 0 12px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.wide {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--blue);
+      background: #fff;
+    }
+
+    .steps {
+      display: grid;
+      gap: 8px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+    }
+
+    .step-number {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .step-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .step-meta {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .step .button {
+      min-height: 32px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .workspace {
+      display: grid;
+      gap: 18px;
+    }
+
+    .profiles {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .profile-card {
+      padding: 15px;
+      min-height: 218px;
+    }
+
+    .profile-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .avatar {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      font-weight: 900;
+      color: #fff;
+      background: var(--green);
+    }
+
+    .avatar.owner {
+      background: var(--blue);
+    }
+
+    .avatar.match {
+      background: var(--amber);
+    }
+
+    .profile-card h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .profile-grid {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    .profile-row {
+      display: grid;
+      grid-template-columns: 84px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+    }
+
+    .profile-row span:first-child {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .profile-row span:last-child {
+      overflow-wrap: anywhere;
+    }
+
+    .log-panel {
+      overflow: hidden;
+    }
+
+    .log-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .log-list {
+      display: grid;
+      gap: 10px;
+      max-height: 520px;
+      overflow: auto;
+      padding: 14px;
+      background: #0f172a;
+    }
+
+    .log-entry {
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.82);
+      color: #dbeafe;
+      overflow: hidden;
+    }
+
+    .log-entry header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .log-entry pre {
+      margin: 0;
+      padding: 10px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .method {
+      color: #93c5fd;
+    }
+
+    .log-ok {
+      color: #86efac;
+    }
+
+    .log-warn {
+      color: #fde68a;
+    }
+
+    .log-error {
+      color: #fca5a5;
+    }
+
+    .empty-log {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 16px;
+      border: 1px dashed rgba(148, 163, 184, 0.35);
+      border-radius: 8px;
+    }
+
+    @media (max-width: 1120px) {
+      .layout,
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+
+      .summary,
+      .profiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        padding: 14px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .summary,
+      .profiles,
+      .inputs {
+        grid-template-columns: 1fr;
+      }
+
+      .step {
+        grid-template-columns: 32px minmax(0, 1fr);
+      }
+
+      .step .button {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="topbar" aria-label="데모 개요">
+      <div>
+        <p class="eyebrow">개발 검증용 미니 데모</p>
+        <h1>jjb MVP Demo Console</h1>
+        <p class="subtitle">긴급 대타/단기 알바 매칭의 가입, 인증, 역할 전환, 프로필, 사업자 인증, 모집, 매칭 수락 흐름을 현재 REST API로 바로 확인합니다.</p>
+      </div>
+      <div class="toolbar">
+        <button class="button primary" id="runAllButton" type="button">전체 MVP 흐름 실행</button>
+        <button class="button" id="swaggerButton" type="button">Swagger 열기</button>
+        <button class="button danger" id="resetButton" type="button">화면 상태 초기화</button>
+      </div>
+    </section>
+
+    <section class="summary" aria-label="상태 요약">
+      <article class="status-card">
+        <span class="label">구직자</span>
+        <strong id="jobSeekerStatus">미생성</strong>
+        <div class="small" id="jobSeekerIdText">jobSeekerId 없음</div>
+      </article>
+      <article class="status-card">
+        <span class="label">사장님</span>
+        <strong id="ownerStatus">미생성</strong>
+        <div class="small" id="ownerIdText">ownerId 없음</div>
+      </article>
+      <article class="status-card">
+        <span class="label">사업자 인증 게이트</span>
+        <strong id="businessGateStatus">대기</strong>
+        <div class="small">인증 전 모집/매칭 요청 차단 확인</div>
+      </article>
+      <article class="status-card">
+        <span class="label">매칭</span>
+        <strong id="matchStatus">대기</strong>
+        <div class="small" id="matchIdText">matchRequestId 없음</div>
+      </article>
+    </section>
+
+    <section class="layout">
+      <aside class="panel" aria-label="실행 패널">
+        <h2>테스트 입력값</h2>
+        <div class="inputs">
+          <div class="field">
+            <label for="jobSeekerName">구직자 이름</label>
+            <input id="jobSeekerName" value="김알바">
+          </div>
+          <div class="field">
+            <label for="ownerName">사장님 이름</label>
+            <input id="ownerName" value="박사장">
+          </div>
+          <div class="field">
+            <label for="phoneNumber">휴대폰 번호</label>
+            <input id="phoneNumber" value="010-1234-5678">
+          </div>
+          <div class="field">
+            <label for="hourlyWage">희망/제시 시급</label>
+            <input id="hourlyWage" type="number" value="13000">
+          </div>
+          <div class="field wide">
+            <label for="workTime">근무 가능 시간</label>
+            <input id="workTime" value="오늘 18:00-23:00">
+          </div>
+          <div class="field wide">
+            <label for="preferredArea">근무 지역</label>
+            <input id="preferredArea" value="서면역 1km 이내">
+          </div>
+          <div class="field wide">
+            <label for="storeName">매장명</label>
+            <input id="storeName" value="카페 모모 역삼점">
+          </div>
+          <div class="field wide">
+            <label for="matchMessage">매칭 요청 메시지</label>
+            <textarea id="matchMessage">오늘 저녁 긴급 대타 가능하실까요?</textarea>
+          </div>
+        </div>
+
+        <h2>단계별 실행</h2>
+        <div class="steps" id="steps"></div>
+      </aside>
+
+      <section class="workspace">
+        <div class="profiles" aria-label="프로필 카드">
+          <article class="profile-card">
+            <div class="profile-head">
+              <div class="avatar">구</div>
+              <div>
+                <h3>구직자 카드</h3>
+                <span class="chip green" id="jobSeekerChip">대기</span>
+              </div>
+            </div>
+            <div class="profile-grid" id="jobSeekerProfile">
+              <div class="profile-row"><span>상태</span><span>아직 생성되지 않았습니다.</span></div>
+            </div>
+          </article>
+
+          <article class="profile-card">
+            <div class="profile-head">
+              <div class="avatar owner">사</div>
+              <div>
+                <h3>사장님 카드</h3>
+                <span class="chip blue" id="ownerChip">대기</span>
+              </div>
+            </div>
+            <div class="profile-grid" id="ownerProfile">
+              <div class="profile-row"><span>상태</span><span>아직 생성되지 않았습니다.</span></div>
+            </div>
+          </article>
+
+          <article class="profile-card">
+            <div class="profile-head">
+              <div class="avatar match">매</div>
+              <div>
+                <h3>매칭 상태</h3>
+                <span class="chip amber" id="matchChip">대기</span>
+              </div>
+            </div>
+            <div class="profile-grid" id="matchProfile">
+              <div class="profile-row"><span>상태</span><span>요청 전입니다.</span></div>
+            </div>
+          </article>
+        </div>
+
+        <section class="log-panel" aria-label="API 로그">
+          <div class="log-head">
+            <h2>API 요청/응답 로그</h2>
+            <span class="chip" id="lastResultChip">대기</span>
+          </div>
+          <div class="log-list" id="logList">
+            <div class="empty-log">단계 버튼을 실행하면 요청 경로, 상태 코드, 응답 JSON이 여기에 쌓입니다.</div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      memberId: null,
+      jobSeekerId: null,
+      ownerId: null,
+      recruitmentId: null,
+      matchRequestId: null,
+      jobSeeker: null,
+      owner: null,
+      match: null,
+      businessGateChecked: false,
+      busy: false
+    };
+
+    const steps = [
+      { id: "createJobSeeker", title: "구직자 회원 생성", meta: "POST /api/members", run: createJobSeeker },
+      { id: "verifyJobSeekerPhone", title: "구직자 휴대폰 인증", meta: "POST /api/members/{id}/phone-verification", run: verifyJobSeekerPhone },
+      { id: "selectJobSeekerRole", title: "구직자 역할 선택", meta: "PUT /api/members/{id}/role", run: selectJobSeekerRole },
+      { id: "registerJobSeekerProfile", title: "구직자 프로필 등록", meta: "PUT /api/members/{id}/job-seeker-profile", run: registerJobSeekerProfile },
+      { id: "createOwner", title: "사장님 회원 생성", meta: "POST /api/members", run: createOwner },
+      { id: "verifyOwnerPhone", title: "사장님 휴대폰 인증", meta: "POST /api/members/{id}/phone-verification", run: verifyOwnerPhone },
+      { id: "selectOwnerRole", title: "사장님 역할 선택", meta: "PUT /api/members/{id}/role", run: selectOwnerRole },
+      { id: "registerOwnerProfile", title: "사장님 프로필 등록", meta: "PUT /api/members/{id}/owner-profile", run: registerOwnerProfile },
+      { id: "checkBusinessGate", title: "인증 전 모집/매칭 차단 확인", meta: "BUSINESS_VERIFICATION_REQUIRED", run: checkBusinessGate },
+      { id: "verifyBusiness", title: "사장님 사업자 인증", meta: "POST /api/members/{id}/business-verification", run: verifyBusiness },
+      { id: "createRecruitment", title: "모집 등록", meta: "POST /api/recruitments", run: createRecruitment },
+      { id: "createMatchRequest", title: "매칭 요청", meta: "POST /api/match-requests", run: createMatchRequest },
+      { id: "acceptMatchRequest", title: "구직자 수락", meta: "POST /api/match-requests/{id}/accept", run: acceptMatchRequest }
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    function readInput(id) {
+      return $(id).value.trim();
+    }
+
+    function uniqueSubject(prefix) {
+      return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    }
+
+    function requireState(key, message) {
+      if (!state[key]) {
+        throw new Error(message);
+      }
+      return state[key];
+    }
+
+    async function api(label, method, path, body, options = {}) {
+      const started = new Date();
+      const response = await fetch(path, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined
+      });
+
+      const text = await response.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (error) {
+        data = { raw: text };
+      }
+
+      const expectedCode = options.expectedCode;
+      const expectedFailure = expectedCode && !response.ok && data && data.code === expectedCode;
+      const ok = response.ok || expectedFailure;
+      const statusLabel = expectedFailure ? `expected ${response.status}` : String(response.status);
+      appendLog({
+        label,
+        method,
+        path,
+        status: statusLabel,
+        ok,
+        expectedFailure,
+        body,
+        data,
+        time: started.toLocaleTimeString()
+      });
+
+      if (!ok) {
+        const message = data && data.message ? data.message : `${method} ${path} failed`;
+        throw new Error(message);
+      }
+      return data;
+    }
+
+    async function createJobSeeker() {
+      const data = await api("구직자 회원 생성", "POST", "/api/members", {
+        socialProvider: "KAKAO",
+        socialSubject: uniqueSubject("jobseeker"),
+        displayName: readInput("jobSeekerName")
+      });
+      state.memberId = data.id;
+      state.jobSeekerId = data.id;
+      state.jobSeeker = data;
+      render();
+    }
+
+    async function verifyJobSeekerPhone() {
+      const id = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
+      state.jobSeeker = await api("구직자 휴대폰 인증", "POST", `/api/members/${id}/phone-verification`, {
+        phoneNumber: readInput("phoneNumber"),
+        verificationCode: "123456"
+      });
+      render();
+    }
+
+    async function selectJobSeekerRole() {
+      const id = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
+      state.jobSeeker = await api("구직자 역할 선택", "PUT", `/api/members/${id}/role`, {
+        role: "JOB_SEEKER"
+      });
+      render();
+    }
+
+    async function registerJobSeekerProfile() {
+      const id = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
+      state.jobSeeker = await api("구직자 프로필 등록", "PUT", `/api/members/${id}/job-seeker-profile`, {
+        availableTime: readInput("workTime"),
+        preferredArea: readInput("preferredArea"),
+        desiredHourlyWage: Number(readInput("hourlyWage")),
+        experiencedIndustries: ["카페", "음료"],
+        urgentSubstituteAvailable: true,
+        introduction: "카페 음료 매장 1년 경력, 긴급 대타 가능"
+      });
+      render();
+    }
+
+    async function createOwner() {
+      const data = await api("사장님 회원 생성", "POST", "/api/members", {
+        socialProvider: "NAVER",
+        socialSubject: uniqueSubject("owner"),
+        displayName: readInput("ownerName")
+      });
+      state.memberId = data.id;
+      state.ownerId = data.id;
+      state.owner = data;
+      render();
+    }
+
+    async function verifyOwnerPhone() {
+      const id = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
+      state.owner = await api("사장님 휴대폰 인증", "POST", `/api/members/${id}/phone-verification`, {
+        phoneNumber: readInput("phoneNumber"),
+        verificationCode: "654321"
+      });
+      render();
+    }
+
+    async function selectOwnerRole() {
+      const id = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
+      state.owner = await api("사장님 역할 선택", "PUT", `/api/members/${id}/role`, {
+        role: "OWNER"
+      });
+      render();
+    }
+
+    async function registerOwnerProfile() {
+      const id = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
+      state.owner = await api("사장님 프로필 등록", "PUT", `/api/members/${id}/owner-profile`, {
+        storeName: readInput("storeName"),
+        storeAddress: "서울 강남구 역삼동",
+        businessCategory: "카페·디저트",
+        storeIntroduction: "역삼역 인근 긴급 대타 수요 매장"
+      });
+      render();
+    }
+
+    async function checkBusinessGate() {
+      const ownerId = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
+      const jobSeekerId = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
+      await api("인증 전 모집 등록 차단", "POST", "/api/recruitments", {
+        ownerId,
+        title: "긴급 저녁 대타",
+        workTime: readInput("workTime"),
+        workplaceAddress: "서울 강남구 역삼동",
+        hourlyWage: Number(readInput("hourlyWage"))
+      }, { expectedCode: "BUSINESS_VERIFICATION_REQUIRED" });
+
+      await api("인증 전 매칭 요청 차단", "POST", "/api/match-requests", {
+        ownerId,
+        jobSeekerId,
+        message: readInput("matchMessage")
+      }, { expectedCode: "BUSINESS_VERIFICATION_REQUIRED" });
+
+      state.businessGateChecked = true;
+      render();
+    }
+
+    async function verifyBusiness() {
+      const id = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
+      state.owner = await api("사장님 사업자 인증", "POST", `/api/members/${id}/business-verification`, {
+        businessRegistrationNumber: "123-45-67890",
+        representativeName: readInput("ownerName"),
+        openingDate: "2024-03-12"
+      });
+      render();
+    }
+
+    async function createRecruitment() {
+      const ownerId = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
+      const data = await api("모집 등록", "POST", "/api/recruitments", {
+        ownerId,
+        title: "긴급 저녁 대타",
+        workTime: readInput("workTime"),
+        workplaceAddress: "서울 강남구 역삼동",
+        hourlyWage: Number(readInput("hourlyWage"))
+      });
+      state.recruitmentId = data.id;
+      render();
+    }
+
+    async function createMatchRequest() {
+      const ownerId = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
+      const jobSeekerId = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
+      const data = await api("매칭 요청", "POST", "/api/match-requests", {
+        ownerId,
+        jobSeekerId,
+        recruitmentId: state.recruitmentId,
+        message: readInput("matchMessage")
+      });
+      state.matchRequestId = data.id;
+      state.match = data;
+      render();
+    }
+
+    async function acceptMatchRequest() {
+      const matchRequestId = requireState("matchRequestId", "매칭 요청을 먼저 생성하세요.");
+      const jobSeekerId = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
+      state.match = await api("구직자 매칭 수락", "POST", `/api/match-requests/${matchRequestId}/accept`, {
+        jobSeekerId
+      });
+      render();
+    }
+
+    async function runStep(step) {
+      if (state.busy) {
+        return;
+      }
+      setBusy(true);
+      try {
+        await step.run();
+        setLastResult("완료", "green");
+      } catch (error) {
+        appendLocalError(step.title, error.message);
+        setLastResult("오류", "red");
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function runAll() {
+      if (state.busy) {
+        return;
+      }
+      resetState(false);
+      setBusy(true);
+      try {
+        for (const step of steps) {
+          await step.run();
+        }
+        setLastResult("ACCEPTED", "green");
+      } catch (error) {
+        appendLocalError("전체 MVP 흐름", error.message);
+        setLastResult("중단", "red");
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function resetState(clearLog = true) {
+      Object.assign(state, {
+        memberId: null,
+        jobSeekerId: null,
+        ownerId: null,
+        recruitmentId: null,
+        matchRequestId: null,
+        jobSeeker: null,
+        owner: null,
+        match: null,
+        businessGateChecked: false,
+        busy: false
+      });
+      if (clearLog) {
+        $("logList").innerHTML = '<div class="empty-log">단계 버튼을 실행하면 요청 경로, 상태 코드, 응답 JSON이 여기에 쌓입니다.</div>';
+        setLastResult("대기", "");
+      }
+      render();
+    }
+
+    function setBusy(value) {
+      state.busy = value;
+      document.querySelectorAll("button").forEach((button) => {
+        button.disabled = value;
+      });
+      render();
+    }
+
+    function setLastResult(text, tone) {
+      const chip = $("lastResultChip");
+      chip.textContent = text;
+      chip.className = `chip ${tone || ""}`.trim();
+    }
+
+    function appendLocalError(label, message) {
+      appendLog({
+        label,
+        method: "LOCAL",
+        path: "page-state",
+        status: "error",
+        ok: false,
+        body: null,
+        data: { message },
+        time: new Date().toLocaleTimeString()
+      });
+    }
+
+    function appendLog(entry) {
+      const logList = $("logList");
+      const empty = logList.querySelector(".empty-log");
+      if (empty) {
+        empty.remove();
+      }
+
+      const item = document.createElement("article");
+      item.className = "log-entry";
+      const statusClass = entry.ok ? (entry.expectedFailure ? "log-warn" : "log-ok") : "log-error";
+      item.innerHTML = `
+        <header>
+          <span><span class="method">${entry.method}</span> ${escapeHtml(entry.path)} · ${escapeHtml(entry.label)}</span>
+          <span class="${statusClass}">${escapeHtml(entry.status)}</span>
+        </header>
+        <pre>${escapeHtml(JSON.stringify({ request: entry.body, response: entry.data, time: entry.time }, null, 2))}</pre>
+      `;
+      logList.prepend(item);
+    }
+
+    function renderSteps() {
+      const container = $("steps");
+      container.innerHTML = "";
+      steps.forEach((step, index) => {
+        const row = document.createElement("div");
+        row.className = "step";
+        row.innerHTML = `
+          <div class="step-number">${index + 1}</div>
+          <div>
+            <p class="step-title">${escapeHtml(step.title)}</p>
+            <p class="step-meta">${escapeHtml(step.meta)}</p>
+          </div>
+          <button class="button" type="button" data-step="${escapeHtml(step.id)}">실행</button>
+        `;
+        container.appendChild(row);
+      });
+      container.querySelectorAll("[data-step]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const step = steps.find((item) => item.id === button.dataset.step);
+          runStep(step);
+        });
+      });
+    }
+
+    function render() {
+      $("jobSeekerStatus").textContent = state.jobSeeker
+        ? profileStatus(state.jobSeeker, "구직자")
+        : "미생성";
+      $("ownerStatus").textContent = state.owner
+        ? ownerStatus(state.owner)
+        : "미생성";
+      $("businessGateStatus").textContent = state.businessGateChecked
+        ? "차단 확인"
+        : "대기";
+      $("matchStatus").textContent = state.match ? state.match.status : "대기";
+
+      $("jobSeekerIdText").textContent = state.jobSeekerId ? `jobSeekerId ${shortId(state.jobSeekerId)}` : "jobSeekerId 없음";
+      $("ownerIdText").textContent = state.ownerId ? `ownerId ${shortId(state.ownerId)}` : "ownerId 없음";
+      $("matchIdText").textContent = state.matchRequestId ? `matchRequestId ${shortId(state.matchRequestId)}` : "matchRequestId 없음";
+
+      renderMemberCard("jobSeeker", state.jobSeeker, "구직자");
+      renderMemberCard("owner", state.owner, "사장님");
+      renderMatchCard();
+    }
+
+    function renderMemberCard(kind, member, label) {
+      const profile = $(`${kind}Profile`);
+      const chip = $(`${kind}Chip`);
+      if (!member) {
+        chip.textContent = "대기";
+        chip.className = `chip ${kind === "owner" ? "blue" : "green"}`;
+        profile.innerHTML = '<div class="profile-row"><span>상태</span><span>아직 생성되지 않았습니다.</span></div>';
+        return;
+      }
+
+      const verification = member.verification || {};
+      const isOwner = kind === "owner";
+      const title = isOwner ? ownerStatus(member) : profileStatus(member, label);
+      chip.textContent = title;
+      chip.className = `chip ${verification.businessVerified || verification.phoneVerified ? (isOwner ? "blue" : "green") : "amber"}`;
+
+      const profileData = isOwner ? member.ownerProfile : member.jobSeekerProfile;
+      const profileRows = profileData
+        ? Object.entries(profileData)
+          .map(([key, value]) => row(labelFor(key), Array.isArray(value) ? value.join(", ") : String(value)))
+          .join("")
+        : row("프로필", "미등록");
+
+      profile.innerHTML = [
+        row("ID", shortId(member.id)),
+        row("이름", member.displayName),
+        row("역할", (member.roles || []).join(", ") || "미선택"),
+        row("활성 모드", member.activeRole || "없음"),
+        row("휴대폰", verification.phoneVerified ? "인증 완료" : "미인증"),
+        isOwner ? row("사업자", verification.businessVerified ? "인증 완료" : "미인증") : "",
+        profileRows
+      ].join("");
+    }
+
+    function renderMatchCard() {
+      const profile = $("matchProfile");
+      const chip = $("matchChip");
+      if (!state.match) {
+        chip.textContent = state.businessGateChecked ? "게이트 확인" : "대기";
+        chip.className = `chip ${state.businessGateChecked ? "amber" : ""}`;
+        profile.innerHTML = [
+          row("모집", state.recruitmentId ? shortId(state.recruitmentId) : "등록 전"),
+          row("매칭", "요청 전"),
+          row("차단", state.businessGateChecked ? "BUSINESS_VERIFICATION_REQUIRED 확인" : "대기")
+        ].join("");
+        return;
+      }
+
+      chip.textContent = state.match.status;
+      chip.className = `chip ${state.match.status === "ACCEPTED" ? "green" : "amber"}`;
+      profile.innerHTML = [
+        row("요청 ID", shortId(state.match.id)),
+        row("모집 ID", state.match.recruitmentId ? shortId(state.match.recruitmentId) : "없음"),
+        row("구직자", shortId(state.match.jobSeekerId)),
+        row("사장님", shortId(state.match.ownerId)),
+        row("상태", state.match.status),
+        row("메시지", state.match.message)
+      ].join("");
+    }
+
+    function row(label, value) {
+      const displayValue = value === undefined || value === null || value === "" ? "-" : value;
+      return `<div class="profile-row"><span>${escapeHtml(label)}</span><span>${escapeHtml(displayValue)}</span></div>`;
+    }
+
+    function labelFor(key) {
+      return {
+        availableTime: "시간",
+        preferredArea: "지역",
+        desiredHourlyWage: "시급",
+        experiencedIndustries: "경험",
+        urgentSubstituteAvailable: "긴급 대타",
+        introduction: "소개",
+        storeName: "매장명",
+        storeAddress: "주소",
+        businessCategory: "업종",
+        storeIntroduction: "소개"
+      }[key] || key;
+    }
+
+    function profileStatus(member, label) {
+      if (member.jobSeekerProfile) {
+        return `${label} 프로필 완료`;
+      }
+      if (member.verification && member.verification.phoneVerified) {
+        return "휴대폰 인증 완료";
+      }
+      return "회원 생성";
+    }
+
+    function ownerStatus(member) {
+      if (member.verification && member.verification.businessVerified) {
+        return "사업자 인증 완료";
+      }
+      if (member.ownerProfile) {
+        return "프로필 완료";
+      }
+      if (member.verification && member.verification.phoneVerified) {
+        return "휴대폰 인증 완료";
+      }
+      return "회원 생성";
+    }
+
+    function shortId(id) {
+      if (!id) {
+        return "-";
+      }
+      return `${id.slice(0, 8)}...${id.slice(-4)}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    $("runAllButton").addEventListener("click", runAll);
+    $("resetButton").addEventListener("click", () => resetState(true));
+    $("swaggerButton").addEventListener("click", () => {
+      window.open("/swagger-ui.html", "_blank", "noopener,noreferrer");
+    });
+
+    renderSteps();
+    render();
+  </script>
+</body>
+</html>
