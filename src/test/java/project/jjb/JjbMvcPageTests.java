@@ -48,7 +48,8 @@ class JjbMvcPageTests {
 			.andExpect(status().isOk())
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("급할 때 바로 매칭")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/google")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/apple")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/kakao")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/naver")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/css/style.css")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/js/app.js")));
 
@@ -75,9 +76,13 @@ class JjbMvcPageTests {
 			.andExpect(status().is3xxRedirection())
 			.andExpect(header().string("Location", org.hamcrest.Matchers.containsString("accounts.google.com")));
 
-		mockMvc.perform(get("/oauth2/authorization/apple"))
+		mockMvc.perform(get("/oauth2/authorization/kakao"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(header().string("Location", org.hamcrest.Matchers.containsString("appleid.apple.com")));
+			.andExpect(header().string("Location", org.hamcrest.Matchers.containsString("kauth.kakao.com")));
+
+		mockMvc.perform(get("/oauth2/authorization/naver"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(header().string("Location", org.hamcrest.Matchers.containsString("nid.naver.com")));
 	}
 
 	@Test

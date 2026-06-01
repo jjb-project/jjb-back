@@ -1,6 +1,7 @@
 package project.jjb.common;
 
 import java.io.IOException;
+import java.util.Map;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,8 +38,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
 		OAuth2User principal = oauth2Authentication.getPrincipal();
 		String provider = oauth2Authentication.getAuthorizedClientRegistrationId();
-		String subject = attribute(principal, "sub", principal.getName());
-		String displayName = displayName(principal);
+		String subject = subject(provider, principal);
+		String displayName = displayName(provider, principal);
 		MemberSnapshot member = memberService.createMember(provider, subject, displayName);
 
 		request.getSession(true).setAttribute(WebSessionKeys.CURRENT_MEMBER_ID, member.id());
@@ -46,17 +47,61 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 		response.sendRedirect(nextPath(member));
 	}
 
-	private String displayName(OAuth2User principal) {
-		String name = attribute(principal, "name", null);
+	private String subject(String provider, OAuth2User principal) {
+		if ("naver".equals(provider)) {
+			return attributePath(principal, principal.getName(), "response", "id");
+		}
+		if ("kakao".equals(provider)) {
+			return attributePath(principal, principal.getName(), "id");
+		}
+
+		String subject = attributePath(principal, null, "sub");
+		if (!isBlank(subject)) {
+			return subject;
+		}
+		return attributePath(principal, principal.getName(), "id");
+	}
+
+	private String displayName(String provider, OAuth2User principal) {
+		String name = providerDisplayName(provider, principal);
 		if (!isBlank(name)) {
 			return name;
 		}
-		String email = attribute(principal, "email", null);
+
+		String email = email(provider, principal);
 		if (!isBlank(email)) {
 			int atIndex = email.indexOf('@');
 			return atIndex > 0 ? email.substring(0, atIndex) : email;
 		}
 		return "바로알바 회원";
+	}
+
+	private String providerDisplayName(String provider, OAuth2User principal) {
+		if ("naver".equals(provider)) {
+			String name = attributePath(principal, null, "response", "name");
+			if (!isBlank(name)) {
+				return name;
+			}
+			return attributePath(principal, null, "response", "nickname");
+		}
+		if ("kakao".equals(provider)) {
+			String name = attributePath(principal, null, "kakao_account", "profile", "nickname");
+			if (!isBlank(name)) {
+				return name;
+			}
+			return attributePath(principal, null, "properties", "nickname");
+		}
+		return attributePath(principal, null, "name");
+	}
+
+	private String email(String provider, OAuth2User principal) {
+		if ("naver".equals(provider)) {
+			return attributePath(principal, null, "response", "email");
+		}
+		if ("kakao".equals(provider)) {
+			return attributePath(principal, null, "kakao_account", "email");
+		}
+		return attributePath(principal, null, "email");
 	}
 
 	private String nextPath(MemberSnapshot member) {
@@ -69,9 +114,19 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 		return member.activeRole() == MemberRole.OWNER ? "/boss/home" : "/worker/home";
 	}
 
-	private String attribute(OAuth2User principal, String name, String defaultValue) {
-		Object value = principal.getAttributes().get(name);
-		if (value instanceof String text && !text.isBlank()) {
+	private String attributePath(OAuth2User principal, String defaultValue, String... path) {
+		Object value = principal.getAttributes();
+		for (String key : path) {
+			if (!(value instanceof Map<?, ?> values)) {
+				return defaultValue;
+			}
+			value = values.get(key);
+		}
+		if (value == null) {
+			return defaultValue;
+		}
+		String text = value.toString();
+		if (!text.isBlank()) {
 			return text;
 		}
 		return defaultValue;
