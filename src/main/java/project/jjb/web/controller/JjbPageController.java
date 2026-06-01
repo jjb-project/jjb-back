@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -54,6 +55,35 @@ public class JjbPageController {
 		MemberSnapshot member = memberService.createMember(provider, subject, displayName);
 		setSessionMember(session, member);
 		return "redirect:/phone";
+	}
+
+	@PostMapping("/login/local")
+	String loginLocal(
+		@RequestParam String email,
+		@RequestParam String password,
+		HttpSession session
+	) {
+		MemberSnapshot member = memberService.loginLocalMember(email, password);
+		setSessionMember(session, member);
+		return "redirect:" + nextPath(member);
+	}
+
+	@GetMapping("/signup")
+	String signup(Model model, HttpSession session) {
+		addSessionMember(model, session);
+		return "signup";
+	}
+
+	@PostMapping("/signup/local")
+	String signupLocal(
+		@RequestParam String displayName,
+		@RequestParam String email,
+		@RequestParam String password,
+		HttpSession session
+	) {
+		MemberSnapshot member = memberService.registerLocalMember(email, password, displayName);
+		setSessionMember(session, member);
+		return "redirect:" + nextPath(member);
 	}
 
 	@GetMapping("/phone")
@@ -281,8 +311,16 @@ public class JjbPageController {
 	}
 
 	@ExceptionHandler(ApiException.class)
-	String handlePageException(ApiException exception, RedirectAttributes redirectAttributes) {
+	String handlePageException(
+		ApiException exception,
+		HttpServletRequest request,
+		RedirectAttributes redirectAttributes
+	) {
 		redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+		String requestUri = request.getRequestURI();
+		if (requestUri != null && requestUri.startsWith("/signup")) {
+			return "redirect:/signup";
+		}
 		return "redirect:/";
 	}
 
@@ -319,6 +357,16 @@ public class JjbPageController {
 	private void setSessionMember(HttpSession session, MemberSnapshot member) {
 		session.setAttribute(WebSessionKeys.CURRENT_MEMBER_ID, member.id());
 		session.setAttribute(WebSessionKeys.ACTIVE_ROLE, member.activeRole());
+	}
+
+	private String nextPath(MemberSnapshot member) {
+		if (!member.verification().phoneVerified()) {
+			return "/phone";
+		}
+		if (member.activeRole() == null) {
+			return "/role";
+		}
+		return member.activeRole() == MemberRole.OWNER ? "/boss/home" : "/worker/home";
 	}
 
 	private List<String> splitList(String csv) {

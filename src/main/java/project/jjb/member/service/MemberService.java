@@ -2,8 +2,10 @@ package project.jjb.member.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.jjb.common.ApiException;
@@ -25,17 +27,20 @@ public class MemberService {
 	private final SocialIdentityPort socialIdentityPort;
 	private final PhoneVerificationPort phoneVerificationPort;
 	private final BusinessVerificationPort businessVerificationPort;
+	private final PasswordEncoder passwordEncoder;
 
 	public MemberService(
 		MemberRepository memberRepository,
 		SocialIdentityPort socialIdentityPort,
 		PhoneVerificationPort phoneVerificationPort,
-		BusinessVerificationPort businessVerificationPort
+		BusinessVerificationPort businessVerificationPort,
+		PasswordEncoder passwordEncoder
 	) {
 		this.memberRepository = memberRepository;
 		this.socialIdentityPort = socialIdentityPort;
 		this.phoneVerificationPort = phoneVerificationPort;
 		this.businessVerificationPort = businessVerificationPort;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	@Transactional
@@ -43,6 +48,40 @@ public class MemberService {
 		SocialIdentity socialIdentity = socialIdentityPort.resolve(socialProvider, socialSubject);
 		Member member = memberRepository.findBySocialIdentity(socialIdentity)
 			.orElseGet(() -> memberRepository.save(new Member(UUID.randomUUID(), socialIdentity, displayName)));
+		return MemberSnapshot.from(member);
+	}
+
+	@Transactional
+	public MemberSnapshot registerLocalMember(String email, String password, String displayName) {
+		String normalizedEmail = normalizeEmail(email);
+		validatePassword(password);
+		String normalizedName = isBlank(displayName)
+			? normalizedEmail.substring(0, normalizedEmail.indexOf('@'))
+			: displayName.trim();
+		SocialIdentity socialIdentity = socialIdentityPort.resolve("local", normalizedEmail);
+		memberRepository.findBySocialIdentity(socialIdentity)
+			.ifPresent(member -> {
+				throw ApiException.conflict("LOCAL_ACCOUNT_ALREADY_EXISTS", "이미 가입된 이메일입니다.");
+			});
+		Member member = new Member(
+			UUID.randomUUID(),
+			socialIdentity,
+			normalizedName,
+			passwordEncoder.encode(password)
+		);
+		return MemberSnapshot.from(memberRepository.save(member));
+	}
+
+	@Transactional(readOnly = true)
+	public MemberSnapshot loginLocalMember(String email, String password) {
+		String normalizedEmail = normalizeEmail(email);
+		SocialIdentity socialIdentity = socialIdentityPort.resolve("local", normalizedEmail);
+		Member member = memberRepository.findBySocialIdentity(socialIdentity)
+			.orElseThrow(() -> invalidLocalLogin());
+		String passwordHash = member.passwordHash();
+		if (isBlank(passwordHash) || !passwordEncoder.matches(password, passwordHash)) {
+			throw invalidLocalLogin();
+		}
 		return MemberSnapshot.from(member);
 	}
 
@@ -146,5 +185,31 @@ public class MemberService {
 	private Member requireMember(UUID memberId) {
 		return memberRepository.findById(memberId)
 			.orElseThrow(() -> ApiException.notFound("MEMBER_NOT_FOUND", "Member was not found."));
+	}
+
+	private String normalizeEmail(String email) {
+		if (isBlank(email)) {
+			throw ApiException.badRequest("INVALID_LOCAL_EMAIL", "이메일을 입력해주세요.");
+		}
+		String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+		int atIndex = normalizedEmail.indexOf('@');
+		if (atIndex < 1 || atIndex == normalizedEmail.length() - 1) {
+			throw ApiException.badRequest("INVALID_LOCAL_EMAIL", "올바른 이메일을 입력해주세요.");
+		}
+		return normalizedEmail;
+	}
+
+	private void validatePassword(String password) {
+		if (password == null || password.length() < 8) {
+			throw ApiException.badRequest("INVALID_LOCAL_PASSWORD", "비밀번호는 8자 이상이어야 합니다.");
+		}
+	}
+
+	private ApiException invalidLocalLogin() {
+		return ApiException.badRequest("INVALID_LOCAL_LOGIN", "이메일 또는 비밀번호가 올바르지 않습니다.");
+	}
+
+	private boolean isBlank(String value) {
+		return value == null || value.isBlank();
 	}
 }

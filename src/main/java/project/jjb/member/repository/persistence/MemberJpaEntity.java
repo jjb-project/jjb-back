@@ -42,6 +42,9 @@ class MemberJpaEntity {
 	@Column(nullable = false, length = 80)
 	private String displayName;
 
+	@Column(name = "password_hash", length = 100)
+	private String passwordHash;
+
 	@Column(length = 32)
 	private String phoneNumber;
 
@@ -100,6 +103,7 @@ class MemberJpaEntity {
 		entity.socialProvider = member.socialIdentity().provider();
 		entity.socialSubject = member.socialIdentity().subject();
 		entity.displayName = member.displayName();
+		entity.passwordHash = member.passwordHash();
 		entity.phoneNumber = member.phoneNumber();
 		entity.phoneVerified = member.phoneVerified();
 		entity.businessVerified = member.businessVerified();
@@ -146,6 +150,7 @@ class MemberJpaEntity {
 			id,
 			new SocialIdentity(socialProvider, socialSubject),
 			displayName,
+			passwordHash,
 			phoneNumber,
 			phoneVerified,
 			businessVerified,

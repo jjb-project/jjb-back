@@ -11,6 +11,7 @@ public class Member {
 	private final UUID id;
 	private final SocialIdentity socialIdentity;
 	private final String displayName;
+	private final String passwordHash;
 	private String phoneNumber;
 	private boolean phoneVerified;
 	private boolean businessVerified;
@@ -21,15 +22,21 @@ public class Member {
 	private OwnerProfile ownerProfile;
 
 	public Member(UUID id, SocialIdentity socialIdentity, String displayName) {
+		this(id, socialIdentity, displayName, null);
+	}
+
+	public Member(UUID id, SocialIdentity socialIdentity, String displayName, String passwordHash) {
 		this.id = id;
 		this.socialIdentity = socialIdentity;
 		this.displayName = displayName;
+		this.passwordHash = passwordHash;
 	}
 
 	public static Member restore(
 		UUID id,
 		SocialIdentity socialIdentity,
 		String displayName,
+		String passwordHash,
 		String phoneNumber,
 		boolean phoneVerified,
 		boolean businessVerified,
@@ -39,7 +46,7 @@ public class Member {
 		JobSeekerProfile jobSeekerProfile,
 		OwnerProfile ownerProfile
 	) {
-		Member member = new Member(id, socialIdentity, displayName);
+		Member member = new Member(id, socialIdentity, displayName, passwordHash);
 		member.phoneNumber = phoneNumber;
 		member.phoneVerified = phoneVerified;
 		member.businessVerified = businessVerified;
@@ -112,6 +119,10 @@ public class Member {
 
 	public String displayName() {
 		return displayName;
+	}
+
+	public String passwordHash() {
+		return passwordHash;
 	}
 
 	public String phoneNumber() {

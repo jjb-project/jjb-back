@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('회원가입')}"></head>
+<body>
+<main class="app-shell">
+  <section class="screen active">
+    <div th:replace="~{fragments/layout :: topbar('이메일 회원가입', '/')}"></div>
+
+    <form class="form-screen" th:action="@{/signup/local}" method="post">
+      <div class="page-intro">
+        <h1>이메일로 계정을 만들어요</h1>
+        <p>가입 후 휴대폰 본인 인증을 완료하면 구직자와 사장님 모드를 선택할 수 있습니다.</p>
+      </div>
+
+      <p class="page-message error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+
+      <div class="form-group">
+        <label class="form-label" for="signupDisplayName">이름</label>
+        <input class="form-input" id="signupDisplayName" name="displayName" autocomplete="name" placeholder="홍길동" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signupEmail">이메일</label>
+        <input class="form-input" id="signupEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signupPassword">비밀번호</label>
+        <input class="form-input" id="signupPassword" name="password" type="password" autocomplete="new-password" minlength="8" required>
+      </div>
+
+      <button class="btn btn-primary" type="submit">
+        <i class="fa-solid fa-user-plus"></i>
+        계정 만들기
+      </button>
+
+      <a class="btn btn-secondary" th:href="@{/}">로그인으로 돌아가기</a>
+    </form>
+  </section>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -53,10 +53,11 @@ html,body { height:100%; background:#E8EDF2; font-family:'Pretendard',-apple-sys
 .social-btn-label { flex:1; text-align:center; padding-right:52px; }
 .social-btn-kakao { background:#FEE500; color:#3C1E1E; }
 .social-btn-naver { background:#03C75A; color:white; }
-.social-btn-google { background:white; color:var(--gray-800); border:1.5px solid var(--gray-200); }
 .social-btn-apple { background:#000; color:white; }
 .login-divider { display:flex; align-items:center; gap:12px; color:var(--gray-400); font-size:12px; margin:2px 0; }
 .login-divider::before,.login-divider::after { content:''; flex:1; height:1px; background:var(--gray-200); }
+.local-auth-form { display:grid; gap:10px; padding:14px; border:1px solid var(--gray-200); border-radius:var(--radius-md); background:white; }
+.local-auth-form .form-group { margin-bottom:0; }
 
 /* Role cards */
 .role-card { margin:0 20px 12px; padding:16px; background:white; border:2px solid var(--gray-200); border-radius:var(--radius-md); cursor:pointer; display:flex; align-items:center; gap:14px; transition:border-color 0.2s, box-shadow 0.2s; }

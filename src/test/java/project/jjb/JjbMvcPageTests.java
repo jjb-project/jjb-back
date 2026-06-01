@@ -3,9 +3,13 @@ package project.jjb;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.UUID;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import project.jjb.web.WebSessionKeys;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -47,11 +52,21 @@ class JjbMvcPageTests {
 		mockMvc.perform(get("/"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("급할 때 바로 매칭")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/google")))
+			.andExpect(content().string(org.hamcrest.Matchers.not(
+				org.hamcrest.Matchers.containsString("/oauth2/authorization/google"))))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/login/local")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/signup")))
+			.andExpect(content().string(org.hamcrest.Matchers.not(
+				org.hamcrest.Matchers.containsString("id=\"signupEmail\""))))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/kakao")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/naver")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/css/style.css")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/js/app.js")));
+
+		mockMvc.perform(get("/signup"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("이메일 회원가입")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/signup/local")));
 
 		mockMvc.perform(get("/phone"))
 			.andExpect(status().isOk())
@@ -72,10 +87,6 @@ class JjbMvcPageTests {
 
 	@Test
 	void oauth2AuthorizationEndpointsRedirectToProviders() throws Exception {
-		mockMvc.perform(get("/oauth2/authorization/google"))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(header().string("Location", org.hamcrest.Matchers.containsString("accounts.google.com")));
-
 		mockMvc.perform(get("/oauth2/authorization/kakao"))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(header().string("Location", org.hamcrest.Matchers.containsString("kauth.kakao.com")));
@@ -83,6 +94,44 @@ class JjbMvcPageTests {
 		mockMvc.perform(get("/oauth2/authorization/naver"))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(header().string("Location", org.hamcrest.Matchers.containsString("nid.naver.com")));
+	}
+
+	@Test
+	void localSignupAndLoginUseSession() throws Exception {
+		String email = "mvc-local-" + UUID.randomUUID() + "@example.test";
+		String password = "password123";
+		MockHttpSession signupSession = new MockHttpSession();
+
+		mockMvc.perform(post("/signup/local")
+				.session(signupSession)
+				.param("displayName", "Local Tester")
+				.param("email", email)
+				.param("password", password))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/phone"))
+			.andExpect(request().sessionAttribute(
+				WebSessionKeys.CURRENT_MEMBER_ID,
+				org.hamcrest.Matchers.notNullValue()
+			));
+
+		mockMvc.perform(post("/login/local")
+				.session(new MockHttpSession())
+				.param("email", email)
+				.param("password", password))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/phone"))
+			.andExpect(request().sessionAttribute(
+				WebSessionKeys.CURRENT_MEMBER_ID,
+				org.hamcrest.Matchers.notNullValue()
+			));
+
+		mockMvc.perform(post("/login/local")
+				.session(new MockHttpSession())
+				.param("email", email)
+				.param("password", "wrong-password"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/"))
+			.andExpect(flash().attribute("errorMessage", "이메일 또는 비밀번호가 올바르지 않습니다."));
 	}
 
 	@Test
