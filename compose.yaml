@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: jjb-postgres
+    environment:
+      POSTGRES_DB: jjb
+      POSTGRES_USER: jjb
+      POSTGRES_PASSWORD: jjb
+    ports:
+      - "5432:5432"
+    volumes:
+      - jjb-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  jjb-postgres-data:
