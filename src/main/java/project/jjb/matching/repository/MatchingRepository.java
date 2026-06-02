@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import project.jjb.matching.domain.MatchRequest;
+import project.jjb.matching.domain.Review;
 import project.jjb.matching.domain.Recruitment;
 
 public interface MatchingRepository {
@@ -12,6 +13,8 @@ public interface MatchingRepository {
 	Recruitment saveRecruitment(Recruitment recruitment);
 
 	List<Recruitment> findRecruitments();
+
+	List<Recruitment> findRecruitmentsByOwnerId(UUID ownerId);
 
 	Optional<Recruitment> findRecruitmentById(UUID id);
 
@@ -22,4 +25,12 @@ public interface MatchingRepository {
 	List<MatchRequest> findMatchRequestsByJobSeekerId(UUID jobSeekerId);
 
 	List<MatchRequest> findMatchRequestsByOwnerId(UUID ownerId);
+
+	List<MatchRequest> findMatchRequestsByParticipantId(UUID memberId);
+
+	Review saveReview(Review review);
+
+	boolean existsReviewByMatchRequestIdAndEvaluatorId(UUID matchRequestId, UUID evaluatorId);
+
+	List<Review> findReviewsByTargetId(UUID targetId);
 }

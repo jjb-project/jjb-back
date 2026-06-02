@@ -16,4 +16,6 @@ public interface MemberRepository {
 	Optional<Member> findBySocialIdentity(SocialIdentity identity);
 
 	List<Member> findJobSeekersWithProfiles();
+
+	List<Member> findVerifiedOwnersWithProfiles();
 }

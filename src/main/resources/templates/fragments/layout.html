@@ -24,11 +24,8 @@
     <i class="fa-solid fa-house"></i>
     홈
   </a>
-  <a class="nav-item" th:classappend="${active == 'match'} ? 'active'" th:href="@{/worker/home}">
-    <i class="fa-solid fa-bolt"></i>
-    매칭
-  </a>
-  <a class="nav-item" th:classappend="${active == 'post'} ? 'active'" th:href="@{/boss/recruitments/new}">
+  <a class="nav-item" th:if="${activeRole != null and activeRole.name() == 'JOB_SEEKER'}"
+     th:classappend="${active == 'post'} ? 'active'" th:href="@{/worker/profile/edit}">
     <i class="fa-regular fa-square-plus"></i>
     등록
   </a>

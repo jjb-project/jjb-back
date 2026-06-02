@@ -6,27 +6,50 @@
   <section class="screen active">
     <div th:replace="~{fragments/layout :: topbar('근무 평가', '/mypage')}"></div>
 
-    <form class="form-screen" th:action="@{/mypage}" method="get">
+    <form class="form-screen" th:if="${!#lists.isEmpty(evaluationOptions)}" th:action="@{/eval}" method="post">
       <div class="page-intro">
         <h1>함께 일한 경험을<br>평가해주세요</h1>
         <p>구직자와 사장님 모두 평가 대상이며, 신뢰 점수에 반영됩니다.</p>
       </div>
 
-      <div class="rating-row" data-rating>
-        <button class="star-btn" type="button" data-star="1"><i class="fa-solid fa-star"></i></button>
-        <button class="star-btn" type="button" data-star="2"><i class="fa-solid fa-star"></i></button>
-        <button class="star-btn" type="button" data-star="3"><i class="fa-solid fa-star"></i></button>
-        <button class="star-btn" type="button" data-star="4"><i class="fa-solid fa-star"></i></button>
-        <button class="star-btn" type="button" data-star="5"><i class="fa-solid fa-star"></i></button>
+      <div class="form-group">
+        <label class="form-label" for="evaluationTarget">평가할 매칭</label>
+        <select class="form-input" id="evaluationTarget" name="matchRequestId" required>
+          <option th:each="option : ${evaluationOptions}"
+                  th:value="${option.matchRequestId}"
+                  th:data-target-id="${option.targetId}"
+                  th:text="${option.targetName} + ' · ' + ${option.context}">
+            평가 대상 · 매칭 내용
+          </option>
+        </select>
+        <input type="hidden" name="targetId" data-target-id-input
+               th:value="${evaluationOptions[0].targetId}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="rating">평점</label>
+        <select class="form-input" id="rating" name="rating" required>
+          <option value="5">5점</option>
+          <option value="4">4점</option>
+          <option value="3">3점</option>
+          <option value="2">2점</option>
+          <option value="1">1점</option>
+        </select>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="review">후기</label>
-        <textarea class="form-input" id="review" rows="4" placeholder="약속, 업무 태도, 소통에 대해 남겨주세요."></textarea>
+        <textarea class="form-input" id="review" name="review" rows="4" required
+                  placeholder="약속, 업무 태도, 소통에 대해 남겨주세요."></textarea>
       </div>
 
       <button class="btn btn-primary" type="submit">평가 저장</button>
     </form>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(evaluationOptions)}">
+      아직 평가할 수 있는 확정 매칭이 없습니다.
+      <a class="btn btn-primary" th:href="@{/mypage}">마이페이지로 돌아가기</a>
+    </div>
   </section>
 </main>
 <div th:replace="~{fragments/layout :: scripts}"></div>

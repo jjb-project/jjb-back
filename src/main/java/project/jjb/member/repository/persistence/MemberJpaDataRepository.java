@@ -10,5 +10,7 @@ interface MemberJpaDataRepository extends JpaRepository<MemberJpaEntity, UUID> {
 
 	Optional<MemberJpaEntity> findBySocialProviderAndSocialSubject(String socialProvider, String socialSubject);
 
-	List<MemberJpaEntity> findByPhoneVerifiedTrueAndAvailableTimeIsNotNullOrderByDisplayNameAsc();
+	List<MemberJpaEntity> findByAvailableTimeIsNotNullOrderByDisplayNameAsc();
+
+	List<MemberJpaEntity> findByBusinessVerifiedTrueAndStoreNameIsNotNullOrderByStoreNameAsc();
 }

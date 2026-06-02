@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 interface RecruitmentJpaDataRepository extends JpaRepository<RecruitmentJpaEntity, UUID> {
 
-	List<RecruitmentJpaEntity> findAllByOrderByTitleAsc();
+	List<RecruitmentJpaEntity> findAllByOrderByCreatedAtDesc();
 
-	List<RecruitmentJpaEntity> findByOwnerIdOrderByTitleAsc(UUID ownerId);
+	List<RecruitmentJpaEntity> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
 }

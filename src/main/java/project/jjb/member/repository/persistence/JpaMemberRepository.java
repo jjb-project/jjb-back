@@ -37,7 +37,14 @@ public class JpaMemberRepository implements MemberRepository {
 
 	@Override
 	public List<Member> findJobSeekersWithProfiles() {
-		return memberJpaDataRepository.findByPhoneVerifiedTrueAndAvailableTimeIsNotNullOrderByDisplayNameAsc().stream()
+		return memberJpaDataRepository.findByAvailableTimeIsNotNullOrderByDisplayNameAsc().stream()
+			.map(MemberJpaEntity::toDomain)
+			.toList();
+	}
+
+	@Override
+	public List<Member> findVerifiedOwnersWithProfiles() {
+		return memberJpaDataRepository.findByBusinessVerifiedTrueAndStoreNameIsNotNullOrderByStoreNameAsc().stream()
 			.map(MemberJpaEntity::toDomain)
 			.toList();
 	}

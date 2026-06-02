@@ -10,7 +10,7 @@
       <div class="detail-hero">
         <div class="avatar avatar-72 avatar-worker"><i class="fa-regular fa-user"></i></div>
         <div>
-          <h1 th:text="${candidate.name}">김하나</h1>
+          <h1 th:text="${candidate.name}">구직자명</h1>
           <p th:text="${candidate.availableTime}">오늘 17:00-22:00 가능</p>
         </div>
       </div>
@@ -26,19 +26,17 @@
         </div>
         <div>
           <dt>경험</dt>
-          <dd th:text="${candidate.skills}">카페, 서빙</dd>
+          <dd th:text="${candidate.skills}">입력한 경험 업종</dd>
         </div>
       </dl>
 
-      <form class="form-screen compact" th:action="@{/boss/match-requests}" method="post">
+      <div class="empty-state" th:if="${!memberVerified}">
+        매칭 요청은 사업자 인증 후 보낼 수 있습니다.
+        <a class="btn btn-primary" th:href="@{/boss/verify}">사업자 인증하기</a>
+      </div>
+
+      <form class="form-screen compact" th:if="${memberVerified}" th:action="@{/boss/match-requests}" method="post">
         <input type="hidden" name="jobSeekerId" th:value="${candidate.id}">
-        <div class="form-group">
-          <label class="form-label" for="recruitmentId">연결할 모집</label>
-          <select class="form-input" id="recruitmentId" name="recruitmentId">
-            <option value="">모집 미지정</option>
-            <option th:each="recruitment : ${recruitments}" th:value="${recruitment.id}" th:text="${recruitment.title}">카페 마감</option>
-          </select>
-        </div>
         <div class="form-group">
           <label class="form-label" for="message">요청 메시지</label>
           <textarea class="form-input" id="message" name="message" rows="3">오늘 근무 가능하실까요?</textarea>

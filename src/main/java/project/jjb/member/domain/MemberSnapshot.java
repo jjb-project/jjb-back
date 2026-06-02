@@ -7,7 +7,6 @@ public record MemberSnapshot(
 	UUID id,
 	String displayName,
 	String socialProvider,
-	String phoneNumber,
 	Set<MemberRole> roles,
 	MemberRole activeRole,
 	VerificationSummary verification,
@@ -20,10 +19,9 @@ public record MemberSnapshot(
 			member.id(),
 			member.displayName(),
 			member.socialIdentity().provider(),
-			member.phoneNumber(),
 			member.roles(),
 			member.activeRole(),
-			new VerificationSummary(member.phoneVerified(), member.businessVerified(), member.businessOperatingStatus()),
+			new VerificationSummary(member.businessVerified(), member.businessOperatingStatus()),
 			member.jobSeekerProfile(),
 			member.ownerProfile()
 		);

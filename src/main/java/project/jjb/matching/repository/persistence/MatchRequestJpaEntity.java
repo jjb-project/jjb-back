@@ -1,5 +1,6 @@
 package project.jjb.matching.repository.persistence;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -9,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import project.jjb.matching.domain.MatchRequest;
+import project.jjb.matching.domain.MatchRequestInitiator;
 import project.jjb.matching.domain.MatchRequestSnapshot;
 import project.jjb.matching.domain.MatchRequestStatus;
 
@@ -34,6 +36,15 @@ class MatchRequestJpaEntity {
 	@Column(nullable = false, length = 32)
 	private MatchRequestStatus status;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 32)
+	private MatchRequestInitiator requestedBy;
+
+	@Column(nullable = false)
+	private Instant createdAt;
+
+	private Instant respondedAt;
+
 	protected MatchRequestJpaEntity() {
 	}
 
@@ -46,10 +57,13 @@ class MatchRequestJpaEntity {
 		entity.recruitmentId = snapshot.recruitmentId();
 		entity.message = snapshot.message();
 		entity.status = snapshot.status();
+		entity.requestedBy = snapshot.requestedBy();
+		entity.createdAt = snapshot.createdAt();
+		entity.respondedAt = snapshot.respondedAt();
 		return entity;
 	}
 
 	MatchRequest toDomain() {
-		return MatchRequest.restore(id, ownerId, jobSeekerId, recruitmentId, message, status);
+		return MatchRequest.restore(id, ownerId, jobSeekerId, recruitmentId, message, status, requestedBy, createdAt, respondedAt);
 	}
 }

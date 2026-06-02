@@ -503,7 +503,7 @@
       <div>
         <p class="eyebrow">개발 검증용 미니 데모</p>
         <h1>jjb MVP Demo Console</h1>
-        <p class="subtitle">긴급 대타/단기 알바 매칭의 가입, 인증, 역할 전환, 프로필, 사업자 인증, 모집, 매칭 수락 흐름을 현재 REST API로 바로 확인합니다.</p>
+        <p class="subtitle">긴급 대타/단기 알바 매칭의 가입/로그인, 역할 전환, 구직자 프로필 등록, 사업자 인증 게이트, 매칭 요청, 구직자 수락, 양방향 평가 흐름을 현재 REST API로 바로 확인합니다.</p>
       </div>
       <div class="toolbar">
         <button class="button primary" id="runAllButton" type="button">전체 MVP 흐름 실행</button>
@@ -526,7 +526,7 @@
       <article class="status-card">
         <span class="label">사업자 인증 게이트</span>
         <strong id="businessGateStatus">대기</strong>
-        <div class="small">인증 전 모집/매칭 요청 차단 확인</div>
+        <div class="small">인증 전 매칭 요청 차단 확인</div>
       </article>
       <article class="status-card">
         <span class="label">매칭</span>
@@ -541,15 +541,11 @@
         <div class="inputs">
           <div class="field">
             <label for="jobSeekerName">구직자 이름</label>
-            <input id="jobSeekerName" value="김알바">
+            <input id="jobSeekerName" value="데모 구직자">
           </div>
           <div class="field">
             <label for="ownerName">사장님 이름</label>
-            <input id="ownerName" value="박사장">
-          </div>
-          <div class="field">
-            <label for="phoneNumber">휴대폰 번호</label>
-            <input id="phoneNumber" value="010-1234-5678">
+            <input id="ownerName" value="데모 사장님">
           </div>
           <div class="field">
             <label for="hourlyWage">희망/제시 시급</label>
@@ -565,7 +561,7 @@
           </div>
           <div class="field wide">
             <label for="storeName">매장명</label>
-            <input id="storeName" value="카페 모모 역삼점">
+            <input id="storeName" value="데모 매장">
           </div>
           <div class="field wide">
             <label for="matchMessage">매칭 요청 메시지</label>
@@ -637,7 +633,6 @@
       memberId: null,
       jobSeekerId: null,
       ownerId: null,
-      recruitmentId: null,
       matchRequestId: null,
       jobSeeker: null,
       owner: null,
@@ -648,16 +643,13 @@
 
     const steps = [
       { id: "createJobSeeker", title: "구직자 회원 생성", meta: "POST /api/members", run: createJobSeeker },
-      { id: "verifyJobSeekerPhone", title: "구직자 휴대폰 인증", meta: "POST /api/members/{id}/phone-verification", run: verifyJobSeekerPhone },
       { id: "selectJobSeekerRole", title: "구직자 역할 선택", meta: "PUT /api/members/{id}/role", run: selectJobSeekerRole },
       { id: "registerJobSeekerProfile", title: "구직자 프로필 등록", meta: "PUT /api/members/{id}/job-seeker-profile", run: registerJobSeekerProfile },
       { id: "createOwner", title: "사장님 회원 생성", meta: "POST /api/members", run: createOwner },
-      { id: "verifyOwnerPhone", title: "사장님 휴대폰 인증", meta: "POST /api/members/{id}/phone-verification", run: verifyOwnerPhone },
       { id: "selectOwnerRole", title: "사장님 역할 선택", meta: "PUT /api/members/{id}/role", run: selectOwnerRole },
       { id: "registerOwnerProfile", title: "사장님 프로필 등록", meta: "PUT /api/members/{id}/owner-profile", run: registerOwnerProfile },
-      { id: "checkBusinessGate", title: "인증 전 모집/매칭 차단 확인", meta: "BUSINESS_VERIFICATION_REQUIRED", run: checkBusinessGate },
+      { id: "checkBusinessGate", title: "인증 전 매칭 요청 차단 확인", meta: "BUSINESS_VERIFICATION_REQUIRED", run: checkBusinessGate },
       { id: "verifyBusiness", title: "사장님 사업자 인증", meta: "POST /api/members/{id}/business-verification", run: verifyBusiness },
-      { id: "createRecruitment", title: "모집 등록", meta: "POST /api/recruitments", run: createRecruitment },
       { id: "createMatchRequest", title: "매칭 요청", meta: "POST /api/match-requests", run: createMatchRequest },
       { id: "acceptMatchRequest", title: "구직자 수락", meta: "POST /api/match-requests/{id}/accept", run: acceptMatchRequest }
     ];
@@ -730,15 +722,6 @@
       render();
     }
 
-    async function verifyJobSeekerPhone() {
-      const id = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
-      state.jobSeeker = await api("구직자 휴대폰 인증", "POST", `/api/members/${id}/phone-verification`, {
-        phoneNumber: readInput("phoneNumber"),
-        verificationCode: "123456"
-      });
-      render();
-    }
-
     async function selectJobSeekerRole() {
       const id = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
       state.jobSeeker = await api("구직자 역할 선택", "PUT", `/api/members/${id}/role`, {
@@ -772,15 +755,6 @@
       render();
     }
 
-    async function verifyOwnerPhone() {
-      const id = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
-      state.owner = await api("사장님 휴대폰 인증", "POST", `/api/members/${id}/phone-verification`, {
-        phoneNumber: readInput("phoneNumber"),
-        verificationCode: "654321"
-      });
-      render();
-    }
-
     async function selectOwnerRole() {
       const id = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
       state.owner = await api("사장님 역할 선택", "PUT", `/api/members/${id}/role`, {
@@ -803,14 +777,6 @@
     async function checkBusinessGate() {
       const ownerId = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
       const jobSeekerId = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
-      await api("인증 전 모집 등록 차단", "POST", "/api/recruitments", {
-        ownerId,
-        title: "긴급 저녁 대타",
-        workTime: readInput("workTime"),
-        workplaceAddress: "서울 강남구 역삼동",
-        hourlyWage: Number(readInput("hourlyWage"))
-      }, { expectedCode: "BUSINESS_VERIFICATION_REQUIRED" });
-
       await api("인증 전 매칭 요청 차단", "POST", "/api/match-requests", {
         ownerId,
         jobSeekerId,
@@ -831,26 +797,12 @@
       render();
     }
 
-    async function createRecruitment() {
-      const ownerId = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
-      const data = await api("모집 등록", "POST", "/api/recruitments", {
-        ownerId,
-        title: "긴급 저녁 대타",
-        workTime: readInput("workTime"),
-        workplaceAddress: "서울 강남구 역삼동",
-        hourlyWage: Number(readInput("hourlyWage"))
-      });
-      state.recruitmentId = data.id;
-      render();
-    }
-
     async function createMatchRequest() {
       const ownerId = requireState("ownerId", "사장님 회원을 먼저 생성하세요.");
       const jobSeekerId = requireState("jobSeekerId", "구직자 회원을 먼저 생성하세요.");
       const data = await api("매칭 요청", "POST", "/api/match-requests", {
         ownerId,
         jobSeekerId,
-        recruitmentId: state.recruitmentId,
         message: readInput("matchMessage")
       });
       state.matchRequestId = data.id;
@@ -907,7 +859,6 @@
         memberId: null,
         jobSeekerId: null,
         ownerId: null,
-        recruitmentId: null,
         matchRequestId: null,
         jobSeeker: null,
         owner: null,
@@ -1028,7 +979,7 @@
       const isOwner = kind === "owner";
       const title = isOwner ? ownerStatus(member) : profileStatus(member, label);
       chip.textContent = title;
-      chip.className = `chip ${verification.businessVerified || verification.phoneVerified ? (isOwner ? "blue" : "green") : "amber"}`;
+      chip.className = `chip ${isOwner ? (verification.businessVerified ? "blue" : "amber") : (member.jobSeekerProfile ? "green" : "amber")}`;
 
       const profileData = isOwner ? member.ownerProfile : member.jobSeekerProfile;
       const profileRows = profileData
@@ -1042,7 +993,6 @@
         row("이름", member.displayName),
         row("역할", (member.roles || []).join(", ") || "미선택"),
         row("활성 모드", member.activeRole || "없음"),
-        row("휴대폰", verification.phoneVerified ? "인증 완료" : "미인증"),
         isOwner ? row("사업자", verification.businessVerified ? "인증 완료" : "미인증") : "",
         profileRows
       ].join("");
@@ -1055,7 +1005,6 @@
         chip.textContent = state.businessGateChecked ? "게이트 확인" : "대기";
         chip.className = `chip ${state.businessGateChecked ? "amber" : ""}`;
         profile.innerHTML = [
-          row("모집", state.recruitmentId ? shortId(state.recruitmentId) : "등록 전"),
           row("매칭", "요청 전"),
           row("차단", state.businessGateChecked ? "BUSINESS_VERIFICATION_REQUIRED 확인" : "대기")
         ].join("");
@@ -1066,7 +1015,6 @@
       chip.className = `chip ${state.match.status === "ACCEPTED" ? "green" : "amber"}`;
       profile.innerHTML = [
         row("요청 ID", shortId(state.match.id)),
-        row("모집 ID", state.match.recruitmentId ? shortId(state.match.recruitmentId) : "없음"),
         row("구직자", shortId(state.match.jobSeekerId)),
         row("사장님", shortId(state.match.ownerId)),
         row("상태", state.match.status),
@@ -1098,9 +1046,6 @@
       if (member.jobSeekerProfile) {
         return `${label} 프로필 완료`;
       }
-      if (member.verification && member.verification.phoneVerified) {
-        return "휴대폰 인증 완료";
-      }
       return "회원 생성";
     }
 
@@ -1110,9 +1055,6 @@
       }
       if (member.ownerProfile) {
         return "프로필 완료";
-      }
-      if (member.verification && member.verification.phoneVerified) {
-        return "휴대폰 인증 완료";
       }
       return "회원 생성";
     }

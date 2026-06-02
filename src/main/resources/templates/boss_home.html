@@ -2,57 +2,53 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('사장님 홈')}"></head>
 <body>
-<main class="app-shell">
+<main class="app-shell" data-live-refresh>
   <section class="screen active">
     <header class="home-topbar">
       <a class="logo-mark" th:href="@{/boss/home}">
         <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
         <span class="logo-text">바로<span>알바</span></span>
       </a>
-      <a class="avatar avatar-48 avatar-boss" th:href="@{/mypage}" aria-label="마이페이지">
-        <i class="fa-solid fa-store"></i>
-      </a>
+      <div class="home-actions">
+        <a class="mode-switch-link" th:href="@{/role}">
+          <i class="fa-solid fa-repeat"></i>
+          모드 전환
+        </a>
+        <a class="avatar avatar-48 avatar-boss" th:href="@{/mypage}" aria-label="마이페이지">
+          <i class="fa-solid fa-store"></i>
+        </a>
+      </div>
     </header>
 
     <div class="boss-header">
       <p class="eyebrow">사장님 모드</p>
       <h1 th:text="${member == null ? '오늘 필요한 인력을 찾아보세요' : member.displayName() + '님, 인재를 확인하세요'}">인재 추천</h1>
-      <p>모집 등록과 매칭 요청은 사업자 인증 후 사용할 수 있습니다.</p>
+      <p>구직자가 등록한 프로필을 보고, 사업자 인증 후 매칭 요청을 보낼 수 있습니다.</p>
       <div class="header-actions">
         <a class="btn btn-outline bright" th:href="@{/boss/verify}" th:if="${!memberVerified}">
           <i class="fa-solid fa-shield-halved"></i>
           사업자 인증
         </a>
-        <a class="btn btn-outline bright" th:href="@{/boss/recruitments/new}">
-          <i class="fa-solid fa-plus"></i>
-          모집 등록
+        <a class="btn btn-outline bright" href="#candidates">
+          <i class="fa-solid fa-users"></i>
+          구직자 보기
         </a>
       </div>
     </div>
 
-    <div class="section-header">
-      <span class="section-title">진행 중 모집</span>
-      <a class="section-more" th:href="@{/boss/recruitments/new}">새 모집</a>
-    </div>
-
-    <div class="empty-state" th:if="${#lists.isEmpty(recruitments)}">
-      아직 등록된 모집이 없습니다.
-    </div>
-
-    <a class="board-card link-card" th:each="recruitment : ${recruitments}"
-       th:href="@{/boss/recruitments/new}">
-      <span class="badge badge-blue">모집 중</span>
-      <h2 class="board-card-title" th:text="${recruitment.title}">카페 마감 알바 급구</h2>
-      <p th:text="${recruitment.workTime} + ' · ' + ${recruitment.hourlyWage} + '원'">오늘 17:00-22:00</p>
-      <div class="board-card-meta">
-        <span th:text="${recruitment.workplaceAddress}">서울 강남구</span>
-      </div>
-    </a>
-
-    <div class="section-header">
+    <div class="section-header" id="candidates">
       <span class="section-title">추천 인재</span>
-      <span class="section-more" th:text="${#lists.size(candidates)} + '명'">0명</span>
+      <button class="section-more link-button" type="button"
+              th:if="${memberVerified}"
+              data-recommendation-trigger
+              data-recommendation-target="boss-recommendations"
+              th:attr="data-recommendation-url=${recommendationUrl}">
+        AI 추천받기
+      </button>
+      <a class="section-more" th:if="${!memberVerified}" th:href="@{/boss/verify}">인증 후 추천</a>
     </div>
+
+    <div class="recommendation-panel" id="boss-recommendations" data-recommendation-results hidden></div>
 
     <div class="empty-state" th:if="${#lists.isEmpty(candidates)}">
       등록된 구직자 프로필이 없습니다.
@@ -63,16 +59,44 @@
       <div class="candidate-top">
         <div class="avatar avatar-48 avatar-worker"><i class="fa-regular fa-user"></i></div>
         <div class="candidate-info">
-          <strong class="candidate-name" th:text="${candidate.name}">김하나</strong>
+          <strong class="candidate-name" th:text="${candidate.name}">구직자명</strong>
           <span th:text="${candidate.availableTime}">오늘 가능</span>
           <span th:text="${candidate.area}">서울 강남구</span>
         </div>
       </div>
       <div class="candidate-tags">
-        <span class="tag-chip active" th:text="${candidate.skills}">카페, 서빙</span>
+        <span class="tag-chip active" th:text="${candidate.skills}">입력한 경험 업종</span>
       </div>
       <span class="btn btn-primary btn-sm">상세 보기</span>
     </a>
+
+    <div class="section-header">
+      <span class="section-title">받은 지원 요청</span>
+      <span class="section-more" th:text="${#lists.size(workerRequests)} + '건'">0건</span>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(workerRequests)}">
+      아직 구직자가 보낸 지원 요청이 없습니다.
+    </div>
+
+    <article class="request-card" th:each="request : ${workerRequests}">
+      <div class="request-card-header">
+        <div class="avatar avatar-48 avatar-worker"><i class="fa-regular fa-user"></i></div>
+        <div class="request-main">
+          <strong th:text="${request.jobSeekerName}">구직자명</strong>
+          <span th:text="${request.message}">근무 지원합니다.</span>
+        </div>
+        <span class="badge badge-green" th:text="${request.status}">요청 중</span>
+      </div>
+      <div class="action-row" th:if="${request.status == '요청 중'}">
+        <form th:action="@{/boss/requests/{id}/decline(id=${request.id})}" method="post">
+          <button class="btn btn-outline" type="submit">거절</button>
+        </form>
+        <form th:action="@{/boss/requests/{id}/accept(id=${request.id})}" method="post">
+          <button class="btn btn-primary" type="submit">수락</button>
+        </form>
+      </div>
+    </article>
   </section>
 </main>
 <div th:replace="~{fragments/layout :: bottomNav('home')}"></div>

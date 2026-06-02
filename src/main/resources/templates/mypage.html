@@ -10,7 +10,13 @@
       <div class="avatar avatar-72 avatar-worker"><i class="fa-regular fa-user"></i></div>
       <div>
         <h1 th:text="${member == null ? '바로알바 회원' : member.displayName()}">바로알바 회원</h1>
-        <p th:text="${member != null && member.verification().phoneVerified() ? '휴대폰 인증 완료' : '휴대폰 인증 대기'}">휴대폰 인증 완료</p>
+        <p th:text="${member != null && member.activeRole() != null ? '현재 모드 ' + member.activeRole() : '이용 목적을 선택해주세요'}">
+          이용 목적을 선택해주세요
+        </p>
+        <p th:if="${reviewSummary != null}"
+           th:text="'신뢰 평점 ' + ${reviewSummary.averageRating} + '점 · 평가 ' + ${reviewSummary.reviewCount} + '개'">
+          신뢰 평점 0.0점 · 평가 0개
+        </p>
       </div>
     </div>
 
@@ -26,10 +32,6 @@
       <a class="menu-item" th:href="@{/eval}">
         <i class="fa-solid fa-star"></i>
         평가하기
-      </a>
-      <a class="menu-item" th:href="@{/demo}">
-        <i class="fa-solid fa-code"></i>
-        API 데모 콘솔
       </a>
     </div>
   </section>

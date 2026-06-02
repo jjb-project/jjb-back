@@ -105,9 +105,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 	}
 
 	private String nextPath(MemberSnapshot member) {
-		if (!member.verification().phoneVerified()) {
-			return "/phone";
-		}
 		if (member.activeRole() == null) {
 			return "/role";
 		}

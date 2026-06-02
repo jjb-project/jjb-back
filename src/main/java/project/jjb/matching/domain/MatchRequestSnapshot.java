@@ -1,5 +1,6 @@
 package project.jjb.matching.domain;
 
+import java.time.Instant;
 import java.util.UUID;
 
 public record MatchRequestSnapshot(
@@ -8,6 +9,9 @@ public record MatchRequestSnapshot(
 	UUID jobSeekerId,
 	UUID recruitmentId,
 	String message,
-	MatchRequestStatus status
+	MatchRequestStatus status,
+	MatchRequestInitiator requestedBy,
+	Instant createdAt,
+	Instant respondedAt
 ) {
 }

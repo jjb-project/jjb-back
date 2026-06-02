@@ -16,7 +16,6 @@ import project.jjb.member.domain.Member;
 import project.jjb.member.domain.MemberRole;
 import project.jjb.member.domain.MemberSnapshot;
 import project.jjb.member.domain.OwnerProfile;
-import project.jjb.member.domain.PhoneVerificationResult;
 import project.jjb.member.domain.SocialIdentity;
 import project.jjb.member.repository.MemberRepository;
 
@@ -25,20 +24,17 @@ public class MemberService {
 
 	private final MemberRepository memberRepository;
 	private final SocialIdentityPort socialIdentityPort;
-	private final PhoneVerificationPort phoneVerificationPort;
 	private final BusinessVerificationPort businessVerificationPort;
 	private final PasswordEncoder passwordEncoder;
 
 	public MemberService(
 		MemberRepository memberRepository,
 		SocialIdentityPort socialIdentityPort,
-		PhoneVerificationPort phoneVerificationPort,
 		BusinessVerificationPort businessVerificationPort,
 		PasswordEncoder passwordEncoder
 	) {
 		this.memberRepository = memberRepository;
 		this.socialIdentityPort = socialIdentityPort;
-		this.phoneVerificationPort = phoneVerificationPort;
 		this.businessVerificationPort = businessVerificationPort;
 		this.passwordEncoder = passwordEncoder;
 	}
@@ -86,6 +82,15 @@ public class MemberService {
 	}
 
 	@Transactional(readOnly = true)
+	public LocalEmailAvailability checkLocalEmailAvailability(String email) {
+		String normalizedEmail = normalizeEmail(email);
+		SocialIdentity socialIdentity = socialIdentityPort.resolve("local", normalizedEmail);
+		boolean available = memberRepository.findBySocialIdentity(socialIdentity).isEmpty();
+		String message = available ? "사용 가능한 이메일입니다." : "이미 가입된 이메일입니다.";
+		return new LocalEmailAvailability(available, normalizedEmail, message);
+	}
+
+	@Transactional(readOnly = true)
 	public MemberSnapshot getMember(UUID memberId) {
 		return MemberSnapshot.from(requireMember(memberId));
 	}
@@ -97,15 +102,11 @@ public class MemberService {
 			.toList();
 	}
 
-	@Transactional
-	public MemberSnapshot completePhoneVerification(UUID memberId, String phoneNumber, String verificationCode) {
-		Member member = requireMember(memberId);
-		PhoneVerificationResult result = phoneVerificationPort.verify(phoneNumber, verificationCode);
-		if (!result.verified()) {
-			throw ApiException.badRequest("PHONE_VERIFICATION_FAILED", "Phone verification failed.");
-		}
-		member.completePhoneVerification(result.normalizedPhoneNumber());
-		return MemberSnapshot.from(memberRepository.save(member));
+	@Transactional(readOnly = true)
+	public List<MemberSnapshot> listVerifiedOwnersWithProfiles() {
+		return memberRepository.findVerifiedOwnersWithProfiles().stream()
+			.map(MemberSnapshot::from)
+			.toList();
 	}
 
 	@Transactional
@@ -211,5 +212,12 @@ public class MemberService {
 
 	private boolean isBlank(String value) {
 		return value == null || value.isBlank();
+	}
+
+	public record LocalEmailAvailability(
+		boolean available,
+		String normalizedEmail,
+		String message
+	) {
 	}
 }

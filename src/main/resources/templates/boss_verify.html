@@ -8,8 +8,8 @@
 
     <form class="form-screen" th:action="@{/boss/verify}" method="post">
       <div class="page-intro">
-        <h1>첫 모집 등록 전<br>사업자 인증이 필요해요</h1>
-        <p>사장님 모드 탐색은 가능하지만 모집 등록과 매칭 요청은 인증 후 진행됩니다.</p>
+        <h1>첫 매칭 요청 전<br>사업자 인증이 필요해요</h1>
+        <p>사장님 모드 탐색과 후보 조회는 가능하지만 매칭 요청은 인증 후 진행됩니다.</p>
       </div>
 
       <div class="verify-step">
@@ -44,11 +44,12 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="businessCategory">업종</label>
-        <input class="form-input" id="businessCategory" name="businessCategory" placeholder="예: 카페·디저트" required>
+        <input class="form-input" id="businessCategory" name="businessCategory" placeholder="업종을 직접 입력해주세요" required>
       </div>
       <div class="form-group">
         <label class="form-label" for="storeIntroduction">매장 소개</label>
-        <textarea class="form-input" id="storeIntroduction" name="storeIntroduction" rows="3" placeholder="매장을 소개해주세요."></textarea>
+        <textarea class="form-input" id="storeIntroduction" name="storeIntroduction" rows="3" placeholder="예: 역 근처라 출퇴근이 편하고, 처음 오신 분도 쉽게 배울 수 있어요."></textarea>
+        <p class="form-help">구직자에게는 이렇게 보여요: 매장 분위기, 맡을 일, 쉬운 점을 짧게 적어주세요.</p>
       </div>
 
       <button class="btn btn-primary" type="submit">

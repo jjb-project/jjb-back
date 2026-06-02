@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -20,15 +21,18 @@ import org.springframework.web.bind.annotation.RestController;
 import project.jjb.member.domain.MemberRole;
 import project.jjb.member.domain.MemberSnapshot;
 import project.jjb.member.service.MemberService;
+import project.jjb.web.LiveUpdateService;
 
 @RestController
 @RequestMapping("/api/members")
 public class MemberController {
 
 	private final MemberService memberService;
+	private final LiveUpdateService liveUpdateService;
 
-	public MemberController(MemberService memberService) {
+	public MemberController(MemberService memberService, LiveUpdateService liveUpdateService) {
 		this.memberService = memberService;
+		this.liveUpdateService = liveUpdateService;
 	}
 
 	@PostMapping
@@ -42,12 +46,14 @@ public class MemberController {
 		return memberService.getMember(memberId);
 	}
 
-	@PostMapping("/{memberId}/phone-verification")
-	MemberSnapshot completePhoneVerification(
-		@PathVariable UUID memberId,
-		@Valid @RequestBody PhoneVerificationRequest request
-	) {
-		return memberService.completePhoneVerification(memberId, request.phoneNumber(), request.verificationCode());
+	@GetMapping("/email-availability")
+	EmailAvailabilityResponse checkEmailAvailability(@RequestParam String email) {
+		MemberService.LocalEmailAvailability availability = memberService.checkLocalEmailAvailability(email);
+		return new EmailAvailabilityResponse(
+			availability.available(),
+			availability.normalizedEmail(),
+			availability.message()
+		);
 	}
 
 	@PutMapping("/{memberId}/role")
@@ -60,7 +66,7 @@ public class MemberController {
 		@PathVariable UUID memberId,
 		@Valid @RequestBody JobSeekerProfileRequest request
 	) {
-		return memberService.updateJobSeekerProfile(
+		MemberSnapshot member = memberService.updateJobSeekerProfile(
 			memberId,
 			request.availableTime(),
 			request.preferredArea(),
@@ -69,6 +75,8 @@ public class MemberController {
 			request.urgentSubstituteAvailable(),
 			request.introduction()
 		);
+		liveUpdateService.publish("profiles");
+		return member;
 	}
 
 	@PutMapping("/{memberId}/owner-profile")
@@ -76,13 +84,15 @@ public class MemberController {
 		@PathVariable UUID memberId,
 		@Valid @RequestBody OwnerProfileRequest request
 	) {
-		return memberService.updateOwnerProfile(
+		MemberSnapshot member = memberService.updateOwnerProfile(
 			memberId,
 			request.storeName(),
 			request.storeAddress(),
 			request.businessCategory(),
 			request.storeIntroduction()
 		);
+		liveUpdateService.publish("stores");
+		return member;
 	}
 
 	@PostMapping("/{memberId}/business-verification")
@@ -90,12 +100,14 @@ public class MemberController {
 		@PathVariable UUID memberId,
 		@Valid @RequestBody BusinessVerificationRequest request
 	) {
-		return memberService.verifyBusiness(
+		MemberSnapshot member = memberService.verifyBusiness(
 			memberId,
 			request.businessRegistrationNumber(),
 			request.representativeName(),
 			request.openingDate()
 		);
+		liveUpdateService.publish("stores");
+		return member;
 	}
 
 	record CreateMemberRequest(
@@ -105,9 +117,10 @@ public class MemberController {
 	) {
 	}
 
-	record PhoneVerificationRequest(
-		@NotBlank String phoneNumber,
-		@NotBlank String verificationCode
+	record EmailAvailabilityResponse(
+		boolean available,
+		String normalizedEmail,
+		String message
 	) {
 	}
 

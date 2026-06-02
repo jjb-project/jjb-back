@@ -12,8 +12,6 @@ public class Member {
 	private final SocialIdentity socialIdentity;
 	private final String displayName;
 	private final String passwordHash;
-	private String phoneNumber;
-	private boolean phoneVerified;
 	private boolean businessVerified;
 	private BusinessOperatingStatus businessOperatingStatus;
 	private final EnumSet<MemberRole> roles = EnumSet.noneOf(MemberRole.class);
@@ -37,8 +35,6 @@ public class Member {
 		SocialIdentity socialIdentity,
 		String displayName,
 		String passwordHash,
-		String phoneNumber,
-		boolean phoneVerified,
 		boolean businessVerified,
 		BusinessOperatingStatus businessOperatingStatus,
 		Set<MemberRole> roles,
@@ -47,8 +43,6 @@ public class Member {
 		OwnerProfile ownerProfile
 	) {
 		Member member = new Member(id, socialIdentity, displayName, passwordHash);
-		member.phoneNumber = phoneNumber;
-		member.phoneVerified = phoneVerified;
 		member.businessVerified = businessVerified;
 		member.businessOperatingStatus = businessOperatingStatus;
 		member.roles.addAll(roles);
@@ -58,31 +52,22 @@ public class Member {
 		return member;
 	}
 
-	public void completePhoneVerification(String normalizedPhoneNumber) {
-		phoneNumber = normalizedPhoneNumber;
-		phoneVerified = true;
-	}
-
 	public void switchRole(MemberRole role) {
-		ensurePhoneVerified();
 		roles.add(role);
 		activeRole = role;
 	}
 
 	public void updateJobSeekerProfile(JobSeekerProfile profile) {
-		ensurePhoneVerified();
 		roles.add(MemberRole.JOB_SEEKER);
 		jobSeekerProfile = profile;
 	}
 
 	public void updateOwnerProfile(OwnerProfile profile) {
-		ensurePhoneVerified();
 		roles.add(MemberRole.OWNER);
 		ownerProfile = profile;
 	}
 
 	public void completeBusinessVerification(BusinessVerificationResult result) {
-		ensurePhoneVerified();
 		roles.add(MemberRole.OWNER);
 		businessVerified = result.verified();
 		businessOperatingStatus = result.operatingStatus();
@@ -103,12 +88,6 @@ public class Member {
 		}
 	}
 
-	private void ensurePhoneVerified() {
-		if (!phoneVerified) {
-			throw ApiException.conflict("PHONE_VERIFICATION_REQUIRED", "Phone verification is required before selecting roles.");
-		}
-	}
-
 	public UUID id() {
 		return id;
 	}
@@ -123,14 +102,6 @@ public class Member {
 
 	public String passwordHash() {
 		return passwordHash;
-	}
-
-	public String phoneNumber() {
-		return phoneNumber;
-	}
-
-	public boolean phoneVerified() {
-		return phoneVerified;
 	}
 
 	public boolean businessVerified() {

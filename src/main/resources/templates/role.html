@@ -4,7 +4,7 @@
 <body>
 <main class="app-shell">
   <section class="screen active">
-    <div th:replace="~{fragments/layout :: topbar('이용 목적 선택', '/phone')}"></div>
+    <div th:replace="~{fragments/layout :: topbar('이용 목적 선택', '/')}"></div>
     <div class="progress-bar"><div class="progress-fill progress-two-third"></div></div>
 
     <form class="role-form" th:action="@{/role}" method="post" data-role-form>

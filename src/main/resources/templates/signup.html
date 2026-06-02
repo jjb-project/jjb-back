@@ -6,10 +6,10 @@
   <section class="screen active">
     <div th:replace="~{fragments/layout :: topbar('이메일 회원가입', '/')}"></div>
 
-    <form class="form-screen" th:action="@{/signup/local}" method="post">
+    <form class="form-screen" th:action="@{/signup/local}" method="post" data-signup-form>
       <div class="page-intro">
         <h1>이메일로 계정을 만들어요</h1>
-        <p>가입 후 휴대폰 본인 인증을 완료하면 구직자와 사장님 모드를 선택할 수 있습니다.</p>
+        <p>가입 후 바로 이용 목적을 선택하고 필요한 프로필을 등록할 수 있습니다.</p>
       </div>
 
       <p class="page-message error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
@@ -21,7 +21,12 @@
 
       <div class="form-group">
         <label class="form-label" for="signupEmail">이메일</label>
-        <input class="form-input" id="signupEmail" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <div class="email-check-row">
+          <input class="form-input" id="signupEmail" name="email" type="email" autocomplete="email"
+                 placeholder="you@example.com" required data-email-input>
+          <button class="btn btn-secondary email-check-btn" type="button" data-email-check-button>중복확인</button>
+        </div>
+        <p class="form-help" data-email-check-message role="status" aria-live="polite"></p>
       </div>
 
       <div class="form-group">
@@ -29,7 +34,7 @@
         <input class="form-input" id="signupPassword" name="password" type="password" autocomplete="new-password" minlength="8" required>
       </div>
 
-      <button class="btn btn-primary" type="submit">
+      <button class="btn btn-primary" type="submit" data-signup-submit disabled>
         <i class="fa-solid fa-user-plus"></i>
         계정 만들기
       </button>

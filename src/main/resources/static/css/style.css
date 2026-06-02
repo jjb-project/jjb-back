@@ -155,9 +155,21 @@ html,body { height:100%; background:#E8EDF2; font-family:'Pretendard',-apple-sys
 .filter-bar::-webkit-scrollbar { display:none; }
 .filter-chip { white-space:nowrap; padding:6px 12px; border-radius:20px; border:1.5px solid var(--gray-200); background:white; font-size:12px; font-weight:600; cursor:pointer; color:var(--gray-600); }
 .filter-chip.active { background:var(--green); border-color:var(--green); color:white; }
+.link-button { border:0; background:transparent; cursor:pointer; padding:0; }
+.link-button:disabled { opacity:0.6; cursor:wait; }
+.choice-chip-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.time-range-fields { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:8px; align-items:center; }
+.time-range-separator { color:var(--gray-400); font-weight:800; }
+.recommendation-panel { display:grid; gap:8px; margin:0 16px 12px; }
+.recommendation-card { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:14px; background:white; border:1px solid var(--green-light); border-radius:var(--radius-md); box-shadow:var(--shadow-sm); }
+.recommendation-card strong { display:block; font-size:14px; font-weight:800; margin-bottom:3px; }
+.recommendation-card span:not(.tag-chip) { display:block; font-size:12px; color:var(--gray-500); line-height:1.45; }
+.recommendation-card p { margin-top:7px; font-size:13px; line-height:1.55; color:var(--gray-700); }
+.recommendation-empty { padding:12px 14px; background:white; border-radius:var(--radius-sm); color:var(--gray-500); font-size:13px; }
 
 /* Candidates */
 .candidate-card { background:white; border-radius:var(--radius-md); margin:4px 16px 8px; padding:14px; box-shadow:var(--shadow-sm); cursor:pointer; }
+.store-card { background:white; border-radius:var(--radius-md); margin:4px 16px 8px; padding:14px; box-shadow:var(--shadow-sm); }
 .candidate-top { display:flex; gap:12px; margin-bottom:10px; }
 .candidate-info { flex:1; }
 .candidate-name { font-size:15px; font-weight:700; }
@@ -222,15 +234,21 @@ button, input, textarea, select { font:inherit; }
 .service-icon-circle { color:var(--green); background:var(--green-light); font-size:22px; }
 .inline-field { display:flex; gap:8px; align-items:flex-start; }
 .inline-field > .form-group, .inline-field > .form-input { flex:1; }
-.otp-panel { background:white; border:1px solid var(--gray-200); border-radius:var(--radius-md); padding:14px; margin-bottom:18px; }
-.otp-panel p { font-size:13px; color:var(--gray-600); margin-bottom:10px; }
+.email-check-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:start; }
+.email-check-btn { width:auto; min-width:86px; height:46px; padding:0 12px; white-space:nowrap; }
+.form-help { min-height:18px; margin-top:6px; font-size:12px; line-height:1.5; color:var(--gray-400); }
+.form-help.success { color:var(--green-dark); font-weight:700; }
+.form-help.error { color:var(--red); font-weight:700; }
 .progress-one-third { width:33%; }
 .progress-two-third { width:66%; }
 .progress-full { width:100%; }
 .role-form { padding-bottom:24px; }
 .role-card { width:calc(100% - 40px); text-align:left; }
 .role-card .role-title, .role-card .role-desc { display:block; }
-.home-topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:white; border-bottom:1px solid var(--gray-100); }
+.home-topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; background:white; border-bottom:1px solid var(--gray-100); }
+.home-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.mode-switch-link { min-height:36px; display:inline-flex; align-items:center; gap:6px; padding:0 10px; border:1.5px solid var(--gray-200); border-radius:18px; background:white; color:var(--gray-600); font-size:12px; font-weight:800; white-space:nowrap; }
+.mode-switch-link i { font-size:12px; color:var(--green); }
 .avatar-worker { background:var(--green-light); color:var(--green-dark); }
 .avatar-boss { background:var(--blue-light); color:var(--blue); }
 .worker-header, .boss-header { display:grid; gap:10px; }
@@ -248,6 +266,13 @@ button, input, textarea, select { font:inherit; }
 .request-store-icon.large { width:64px; height:64px; border-radius:18px; font-size:26px; }
 .request-card-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; }
 .request-pay { color:var(--green-dark); font-size:15px; font-weight:800; }
+.profile-summary-card { margin:8px 16px; padding:16px; background:white; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); display:grid; gap:12px; }
+.summary-row { display:flex; justify-content:space-between; gap:14px; padding-bottom:10px; border-bottom:1px solid var(--gray-100); }
+.summary-row span { flex-shrink:0; font-size:12px; font-weight:800; color:var(--gray-400); }
+.summary-row strong { text-align:right; font-size:14px; line-height:1.45; }
+.profile-summary-copy { font-size:13px; line-height:1.6; color:var(--gray-600); }
+.store-request-form { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; margin-top:12px; }
+.store-request-form .btn { height:46px; }
 .check-row { display:flex; align-items:center; gap:10px; padding:12px 0 18px; font-size:14px; font-weight:700; color:var(--gray-600); }
 .check-row input { width:18px; height:18px; accent-color:var(--green); }
 .detail-page { padding:20px; display:grid; gap:18px; }
@@ -258,7 +283,9 @@ button, input, textarea, select { font:inherit; }
 .detail-grid div { background:white; border:1px solid var(--gray-100); border-radius:var(--radius-sm); padding:12px; }
 .detail-grid dt { font-size:11px; font-weight:800; color:var(--gray-400); margin-bottom:5px; }
 .detail-grid dd { font-size:14px; font-weight:800; }
-.action-row { display:grid; grid-template-columns:1fr 1.5fr; gap:10px; }
+.action-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:10px; }
+.action-row form { display:flex; }
+.action-row form .btn { width:100%; }
 .result-page { min-height:100dvh; display:flex; flex-direction:column; justify-content:center; padding:32px 24px; gap:14px; text-align:center; }
 .result-page h1 { font-size:22px; line-height:1.35; font-weight:800; }
 .result-page p { font-size:13px; line-height:1.6; color:var(--gray-600); }
