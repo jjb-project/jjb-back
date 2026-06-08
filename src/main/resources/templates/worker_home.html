@@ -56,7 +56,7 @@
       </div>
     </div>
 
-    <section class="dual-match-strip">
+    <section class="dual-match-strip portal-command-bar">
       <div>
         <strong>양방향 매칭</strong>
         <span>구직자는 가게에 지원하고, 사장님은 인증 후 직접 제안할 수 있어요.</span>
@@ -120,37 +120,39 @@
       아직 사업자 인증을 완료한 가게가 없습니다.
     </div>
 
-    <article class="store-card job-card" th:each="store : ${storeCards}">
-      <div class="job-card-main">
-        <div class="avatar avatar-48 avatar-boss"><i class="fa-solid fa-store"></i></div>
-        <div class="candidate-info">
-          <div class="card-title-row">
-            <strong class="candidate-name" th:text="${store.storeName}">매장명</strong>
-            <span class="heart-badge" th:if="${store.favorite}"><i class="fa-solid fa-heart"></i></span>
+    <div class="listing-grid">
+      <article class="store-card job-card" th:each="store : ${storeCards}">
+        <div class="job-card-main">
+          <div class="avatar avatar-48 avatar-boss"><i class="fa-solid fa-store"></i></div>
+          <div class="candidate-info">
+            <div class="card-title-row">
+              <strong class="candidate-name" th:text="${store.storeName}">매장명</strong>
+              <span class="heart-badge" th:if="${store.favorite}"><i class="fa-solid fa-heart"></i></span>
+            </div>
+            <span th:text="${store.storeAddress}">서울 마포구</span>
+            <span class="line-clamp" th:text="${#strings.isEmpty(store.storeIntroduction) ? '가게 소개가 아직 없습니다.' : store.storeIntroduction}">초보도 환영하는 따뜻한 매장입니다.</span>
           </div>
-          <span th:text="${store.storeAddress}">서울 마포구</span>
-          <span class="line-clamp" th:text="${#strings.isEmpty(store.storeIntroduction) ? '가게 소개가 아직 없습니다.' : store.storeIntroduction}">초보도 환영하는 따뜻한 매장입니다.</span>
         </div>
-      </div>
-      <div class="candidate-tags">
-        <span class="tag-chip" th:text="${store.businessCategory}">카페</span>
-        <span class="tag-chip active" th:text="${store.trustLabel}">사업자 인증</span>
-        <span class="tag-chip" th:text="'평점 ' + ${store.averageRating} + ' · 후기 ' + ${store.reviewCount} + '개'">후기 0개</span>
-      </div>
-      <div class="card-actions">
-        <form th:action="@{/worker/stores/{id}/favorite(id=${store.id})}" method="post">
-          <button class="icon-action" type="submit" th:attr="aria-label=${store.favorite ? '찜 해제' : '찜'}">
-            <i th:class="${store.favorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'}"></i>
-          </button>
-        </form>
-        <a class="btn btn-outline btn-sm" th:href="@{/worker/stores/{id}(id=${store.id})}">상세</a>
-        <form class="inline-apply" th:action="@{/worker/match-requests}" method="post">
-          <input type="hidden" name="ownerId" th:value="${store.id}">
-          <input type="hidden" name="message" value="근무 지원합니다.">
-          <button class="btn btn-primary btn-sm" type="submit">지원하기</button>
-        </form>
-      </div>
-    </article>
+        <div class="candidate-tags">
+          <span class="tag-chip" th:text="${store.businessCategory}">카페</span>
+          <span class="tag-chip active" th:text="${store.trustLabel}">사업자 인증</span>
+          <span class="tag-chip" th:text="'평점 ' + ${store.averageRating} + ' · 후기 ' + ${store.reviewCount} + '개'">후기 0개</span>
+        </div>
+        <div class="card-actions">
+          <form th:action="@{/worker/stores/{id}/favorite(id=${store.id})}" method="post">
+            <button class="icon-action" type="submit" th:attr="aria-label=${store.favorite ? '찜 해제' : '찜'}">
+              <i th:class="${store.favorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'}"></i>
+            </button>
+          </form>
+          <a class="btn btn-outline btn-sm" th:href="@{/worker/stores/{id}(id=${store.id})}">상세</a>
+          <form class="inline-apply" th:action="@{/worker/match-requests}" method="post">
+            <input type="hidden" name="ownerId" th:value="${store.id}">
+            <input type="hidden" name="message" value="근무 지원합니다.">
+            <button class="btn btn-primary btn-sm" type="submit">지원하기</button>
+          </form>
+        </div>
+      </article>
+    </div>
 
     <div class="section-header">
       <span class="section-title">보낸 지원 요청</span>

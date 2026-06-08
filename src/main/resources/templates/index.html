@@ -2,21 +2,29 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('시작')}"></head>
 <body>
-<main class="app-shell job-portal-shell public-portal">
+<main class="app-shell job-portal-shell public-portal portal-home">
   <section class="screen active no-bottom">
     <header class="home-topbar">
       <a class="logo-mark" th:href="@{/}">
         <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+        <span class="logo-kicker">모든 생애 모든 알바</span>
         <span class="logo-text">바로<span>알바</span></span>
       </a>
+      <form class="top-search" th:action="@{/worker/home}" method="get">
+        <input name="keyword" placeholder="검색으로 딱! 알바 찾기" aria-label="알바 검색">
+        <button type="submit" aria-label="검색"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </form>
       <div class="home-actions">
+        <a class="mode-switch-link" th:href="@{/}">로그인</a>
         <a class="mode-switch-link" th:href="@{/signup}">회원가입</a>
       </div>
     </header>
 
     <nav class="portal-menu" aria-label="주요 메뉴">
+      <a th:href="@{/worker/home}"><i class="fa-solid fa-bars"></i> 전체메뉴</a>
       <a th:href="@{/worker/home}">채용정보</a>
       <a th:href="@{/boss/home}">인재정보</a>
+      <a th:href="@{/worker/home(category='브랜드')}">브랜드알바</a>
       <a th:href="@{/worker/home(region='서울특별시')}">지역별</a>
       <a th:href="@{/worker/home(category='외식·음료')}">업종별</a>
       <a th:href="@{/eval}">평가관리</a>
@@ -24,33 +32,65 @@
     </nav>
 
     <section class="public-main">
-      <div class="portal-hero public">
-        <p class="eyebrow">구인구직 포털 + 양방향 매칭</p>
-        <h1 class="login-headline">급할 때 바로 매칭,<br>믿을 수 있는 단기 알바</h1>
-        <p class="login-sub">구직자는 가게에 지원하고, 인증 사장님은 좋은 구직자에게 직접 제안합니다.</p>
-        <form class="portal-search" th:action="@{/worker/home}" method="get">
-          <label class="search-field">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input name="keyword" placeholder="알바, 지역, 업종을 검색하세요">
-          </label>
-          <div class="filter-row">
-            <input class="filter-input" name="region" placeholder="지역">
-            <input class="filter-input" name="category" placeholder="업종">
+      <div class="portal-home-stack">
+        <section class="today-panel">
+          <div>
+            <strong>오늘의 브랜드 알바</strong>
+            <a th:href="@{/worker/home(category='카페')}">카페 · 매장 급구 공고 확인하기</a>
+            <a th:href="@{/worker/home(region='서울특별시')}">서울 지역 오늘 근무 가능한 곳</a>
           </div>
-          <div class="search-actions">
-            <span class="mini-check">로그인 후 맞춤 결과 제공</span>
-            <button class="btn btn-primary btn-sm" type="submit">검색</button>
+          <span class="panel-control"><i class="fa-solid fa-chevron-up"></i></span>
+        </section>
+
+        <section class="portal-hero public">
+          <div>
+            <p class="eyebrow">구인구직 포털 + 양방향 매칭</p>
+            <h1 class="login-headline">급할 때 바로 매칭,<br>믿을 수 있는 단기 알바</h1>
+            <p class="login-sub">구직자는 가게에 지원하고, 인증 사장님은 좋은 구직자에게 직접 제안합니다.</p>
           </div>
-        </form>
-        <div class="quick-tabs" aria-label="빠른 필터">
-          <a th:href="@{/worker/home}">전체 알바</a>
-          <a th:href="@{/worker/home(region='서울특별시')}">서울</a>
-          <a th:href="@{/worker/home(category='카페')}">카페</a>
-          <a th:href="@{/boss/home}">인재 찾기</a>
-        </div>
+          <div class="hero-mascot" aria-hidden="true">
+            <i class="fa-solid fa-handshake"></i>
+          </div>
+        </section>
+
+        <section class="category-board">
+          <div>
+            <h2>지역·테마별 알바</h2>
+            <div class="region-links">
+              <a th:href="@{/worker/home(region='서울특별시')}">서울</a>
+              <a th:href="@{/worker/home(region='경기도')}">경기</a>
+              <a th:href="@{/worker/home(region='인천광역시')}">인천</a>
+              <a th:href="@{/worker/home(region='부산광역시')}">부산</a>
+              <a th:href="@{/worker/home(region='대구광역시')}">대구</a>
+              <a th:href="@{/worker/home(region='대전광역시')}">대전</a>
+              <a th:href="@{/worker/home(region='광주광역시')}">광주</a>
+              <a th:href="@{/worker/home(region='제주특별자치도')}">제주</a>
+              <a th:href="@{/worker/home}">전국</a>
+            </div>
+          </div>
+          <div>
+            <h2>바로 찾는 단기 알바</h2>
+            <div class="theme-links">
+              <a th:href="@{/worker/home(category='단기')}"><i class="fa-regular fa-clock"></i> 단시간 알바</a>
+              <a th:href="@{/worker/home(category='급구')}"><i class="fa-solid fa-bolt"></i> 급구 알바</a>
+              <a th:href="@{/worker/home(category='브랜드')}"><i class="fa-solid fa-certificate"></i> 브랜드 알바</a>
+              <a th:href="@{/worker/home(category='콜센터')}"><i class="fa-solid fa-headset"></i> 콜센터</a>
+            </div>
+          </div>
+          <div>
+            <h2>대상별 알바</h2>
+            <div class="theme-links">
+              <a th:href="@{/worker/home(keyword='대학생')}"><i class="fa-solid fa-graduation-cap"></i> 대학생</a>
+              <a th:href="@{/worker/home(keyword='주부')}"><i class="fa-solid fa-hand"></i> 주부</a>
+              <a th:href="@{/worker/home(keyword='중장년')}"><i class="fa-solid fa-user-tie"></i> 중장년</a>
+              <a th:href="@{/worker/home(keyword='외국인')}"><i class="fa-solid fa-earth-asia"></i> 외국인</a>
+            </div>
+          </div>
+        </section>
       </div>
 
       <aside class="public-login-card">
+        <h2>로그인</h2>
         <p class="page-message error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
         <form class="local-auth-form" th:action="@{/login/local}" method="post">
           <div class="form-group">
@@ -79,12 +119,23 @@
       </aside>
     </section>
 
-    <section class="dual-match-strip">
+    <section class="dual-match-strip portal-command-bar">
       <div>
         <strong>바로알바의 킥 포인트: 양방향 매칭</strong>
         <span>구직자 지원, 사장님 제안, 수락/거절, 근무 완료, 양방향 평가까지 한 계정에서 이어집니다.</span>
       </div>
       <a class="btn btn-outline btn-sm" th:href="@{/signup}">시작하기</a>
+    </section>
+
+    <section class="portal-banner-row" aria-label="추천 배너">
+      <a class="promo-banner purple" th:href="@{/worker/home(keyword='외국인')}">
+        <span>외국인을 위한 한국 생활 정보 일자리 플랫폼</span>
+        <strong>K-HIRE</strong>
+      </a>
+      <a class="promo-banner green" th:href="@{/worker/home(category='카페')}">
+        <span>오늘 오전을 여는 커피 매장 단기 근무</span>
+        <strong>카페 알바 모집</strong>
+      </a>
     </section>
 
     <div class="portal-feature-grid">
