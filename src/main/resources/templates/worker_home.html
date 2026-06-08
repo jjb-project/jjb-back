@@ -2,7 +2,7 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('구직자 홈')}"></head>
 <body>
-<main class="app-shell" data-live-refresh>
+<main class="app-shell job-portal-shell" data-live-refresh>
   <section class="screen active">
     <header class="home-topbar">
       <a class="logo-mark" th:href="@{/worker/home}">
@@ -19,6 +19,14 @@
         </a>
       </div>
     </header>
+    <nav class="portal-menu" aria-label="주요 메뉴">
+      <a th:href="@{/worker/home}">채용정보</a>
+      <a th:href="@{/worker/home(region='서울특별시')}">지역별</a>
+      <a th:href="@{/worker/home(category='외식·음료')}">업종별</a>
+      <a th:href="@{/worker/home(favoritesOnly=true)}">찜한공고</a>
+      <a th:href="@{/eval}">평가관리</a>
+      <a th:href="@{/role}">양방향 매칭</a>
+    </nav>
 
     <div class="portal-hero worker">
       <p class="eyebrow">구직자 맞춤 알바 찾기</p>
@@ -48,37 +56,51 @@
       </div>
     </div>
 
-    <div class="section-header tight">
-      <span class="section-title">등록 내역</span>
-      <a class="section-more" th:href="@{/worker/profile/edit}">수정</a>
-    </div>
+    <section class="dual-match-strip">
+      <div>
+        <strong>양방향 매칭</strong>
+        <span>구직자는 가게에 지원하고, 사장님은 인증 후 직접 제안할 수 있어요.</span>
+      </div>
+      <a class="btn btn-outline btn-sm" th:href="@{/role}">모드 전환</a>
+    </section>
 
-    <div class="empty-state" th:if="${member.jobSeekerProfile() == null}">
-      아직 등록된 구직자 프로필이 없습니다.
-      <a class="btn btn-primary btn-sm" th:href="@{/worker/profile/edit}">등록하기</a>
-    </div>
+    <div class="portal-layout">
+      <aside class="portal-sidebar">
+        <div class="side-panel">
+          <div class="section-header tight">
+            <span class="section-title">내 등록 내역</span>
+            <a class="section-more" th:href="@{/worker/profile/edit}">수정</a>
+          </div>
 
-    <article class="profile-summary-card" th:if="${member.jobSeekerProfile() != null}">
-      <div class="summary-row">
-        <span>가능 시간</span>
-        <strong th:text="${member.jobSeekerProfile().availableTime()}">오늘 17:00-22:00</strong>
-      </div>
-      <div class="summary-row">
-        <span>희망 지역</span>
-        <strong th:text="${member.jobSeekerProfile().preferredArea()}">서울 강남구</strong>
-      </div>
-      <div class="summary-row">
-        <span>희망 시급</span>
-        <strong th:text="${#numbers.formatInteger(member.jobSeekerProfile().desiredHourlyWage(), 0, 'COMMA')} + '원 이상'">13,000원 이상</strong>
-      </div>
-      <div class="summary-row">
-        <span>경험</span>
-        <strong th:text="${#lists.isEmpty(member.jobSeekerProfile().experiencedIndustries()) ? '경력 미입력' : #strings.listJoin(member.jobSeekerProfile().experiencedIndustries(), ', ')}">입력한 경험 업종</strong>
-      </div>
-      <p class="profile-summary-copy" th:text="${member.jobSeekerProfile().introduction()}">소개</p>
-    </article>
+          <div class="empty-state compact-state" th:if="${member.jobSeekerProfile() == null}">
+            아직 등록된 구직자 프로필이 없습니다.
+            <a class="btn btn-primary btn-sm" th:href="@{/worker/profile/edit}">등록하기</a>
+          </div>
 
-    <div class="section-header">
+          <article class="profile-summary-card" th:if="${member.jobSeekerProfile() != null}">
+            <div class="summary-row">
+              <span>가능 시간</span>
+              <strong th:text="${member.jobSeekerProfile().availableTime()}">오늘 17:00-22:00</strong>
+            </div>
+            <div class="summary-row">
+              <span>희망 지역</span>
+              <strong th:text="${member.jobSeekerProfile().preferredArea()}">서울 강남구</strong>
+            </div>
+            <div class="summary-row">
+              <span>희망 시급</span>
+              <strong th:text="${#numbers.formatInteger(member.jobSeekerProfile().desiredHourlyWage(), 0, 'COMMA')} + '원 이상'">13,000원 이상</strong>
+            </div>
+            <div class="summary-row">
+              <span>경험</span>
+              <strong th:text="${#lists.isEmpty(member.jobSeekerProfile().experiencedIndustries()) ? '경력 미입력' : #strings.listJoin(member.jobSeekerProfile().experiencedIndustries(), ', ')}">입력한 경험 업종</strong>
+            </div>
+            <p class="profile-summary-copy" th:text="${member.jobSeekerProfile().introduction()}">소개</p>
+          </article>
+        </div>
+      </aside>
+
+      <section class="portal-content">
+    <div class="section-header listing-head">
       <div>
         <span class="section-title">지원 가능한 가게</span>
         <p class="section-sub" th:text="${#lists.size(storeCards)} + '개의 가게'">0개의 가게</p>
@@ -179,6 +201,8 @@
         <span class="btn btn-primary btn-sm">상세 보기</span>
       </div>
     </a>
+      </section>
+    </div>
   </section>
 </main>
 <div th:replace="~{fragments/layout :: bottomNav('home')}"></div>

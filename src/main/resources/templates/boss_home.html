@@ -2,7 +2,7 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('사장님 홈')}"></head>
 <body>
-<main class="app-shell" data-live-refresh>
+<main class="app-shell job-portal-shell" data-live-refresh>
   <section class="screen active">
     <header class="home-topbar">
       <a class="logo-mark" th:href="@{/boss/home}">
@@ -19,6 +19,14 @@
         </a>
       </div>
     </header>
+    <nav class="portal-menu" aria-label="주요 메뉴">
+      <a th:href="@{/boss/home}">인재정보</a>
+      <a th:href="@{/boss/home(region='서울특별시')}">지역별</a>
+      <a th:href="@{/boss/home(industry='외식·음료')}">업종별</a>
+      <a th:href="@{/boss/home(favoritesOnly=true)}">찜한인재</a>
+      <a th:href="@{/boss/verify}">사업자인증</a>
+      <a th:href="@{/role}">양방향 매칭</a>
+    </nav>
 
     <div class="portal-hero boss">
       <p class="eyebrow">사장님 맞춤 인재 찾기</p>
@@ -58,7 +66,38 @@
       </div>
     </div>
 
-    <div class="section-header" id="candidates">
+    <section class="dual-match-strip boss-strip">
+      <div>
+        <strong>인증 사장님 제안</strong>
+        <span>사업자 인증 후 구직자에게 매칭 요청을 보내고, 구직자는 수락/거절할 수 있어요.</span>
+      </div>
+      <a class="btn btn-outline btn-sm" th:href="@{/boss/verify}" th:if="${!memberVerified}">인증하기</a>
+      <a class="btn btn-outline btn-sm" th:href="@{/role}" th:if="${memberVerified}">모드 전환</a>
+    </section>
+
+    <div class="portal-layout">
+      <aside class="portal-sidebar">
+        <div class="side-panel">
+          <div class="section-header tight">
+            <span class="section-title">사장님 신뢰 상태</span>
+          </div>
+          <div class="profile-summary-card">
+            <div class="summary-row">
+              <span>사업자 인증</span>
+              <strong th:text="${memberVerified ? '완료' : '필요'}">필요</strong>
+            </div>
+            <div class="summary-row">
+              <span>제안 권한</span>
+              <strong th:text="${memberVerified ? '매칭 요청 가능' : '인증 후 가능'}">인증 후 가능</strong>
+            </div>
+            <p class="profile-summary-copy">등록된 구직자를 검토하고, 인증된 사장님만 직접 제안할 수 있습니다.</p>
+            <a class="btn btn-primary btn-sm" th:href="@{/boss/verify}" th:if="${!memberVerified}">사업자 인증</a>
+          </div>
+        </div>
+      </aside>
+
+      <section class="portal-content">
+    <div class="section-header listing-head" id="candidates">
       <div>
         <span class="section-title">추천 인재</span>
         <p class="section-sub" th:text="${#lists.size(candidates)} + '명의 구직자'">0명의 구직자</p>
@@ -136,6 +175,8 @@
         </form>
       </div>
     </article>
+      </section>
+    </div>
   </section>
 </main>
 <div th:replace="~{fragments/layout :: bottomNav('home')}"></div>

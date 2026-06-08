@@ -619,6 +619,165 @@ select.form-input { appearance:none; background:white; }
 .menu-item i {
   color:var(--blue);
 }
+.job-portal-shell {
+  max-width:1180px;
+  background:#F1F5F9;
+}
+.job-portal-shell .screen {
+  padding-bottom:86px;
+}
+.job-portal-shell .home-topbar {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  background:white;
+  border-bottom:1px solid #E2E8F0;
+}
+.job-portal-shell .logo-mark {
+  min-width:148px;
+}
+.portal-menu {
+  display:flex;
+  align-items:center;
+  gap:0;
+  min-height:44px;
+  padding:0 14px;
+  background:var(--navy);
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.portal-menu::-webkit-scrollbar { display:none; }
+.portal-menu a {
+  flex:0 0 auto;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  padding:0 16px;
+  color:white;
+  font-size:14px;
+  font-weight:800;
+  border-left:1px solid rgba(255,255,255,0.12);
+}
+.portal-menu a:last-child {
+  border-right:1px solid rgba(255,255,255,0.12);
+  color:#FFE889;
+}
+.dual-match-strip {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin:14px;
+  padding:14px 16px;
+  background:white;
+  border:1px solid #FACC15;
+  border-left:4px solid var(--amber);
+  border-radius:8px;
+}
+.dual-match-strip.boss-strip {
+  border-color:#BFDBFE;
+  border-left-color:var(--blue);
+}
+.dual-match-strip div {
+  display:grid;
+  gap:3px;
+}
+.dual-match-strip strong {
+  font-size:15px;
+  font-weight:800;
+  color:var(--ink);
+}
+.dual-match-strip span {
+  font-size:12px;
+  line-height:1.45;
+  color:var(--gray-600);
+}
+.portal-layout {
+  display:block;
+}
+.side-panel {
+  display:grid;
+  gap:8px;
+}
+.compact-state {
+  margin:8px 0;
+}
+.listing-head {
+  border-bottom:2px solid var(--ink);
+  margin:0 14px 8px;
+  padding-left:0;
+  padding-right:0;
+}
+.job-portal-shell .portal-hero {
+  border-radius:0;
+}
+.job-portal-shell .job-card {
+  border-color:#CBD5E1;
+}
+.job-portal-shell .job-card:hover {
+  border-color:#94A3B8;
+  box-shadow:0 5px 16px rgba(15,23,42,0.08);
+}
+.job-portal-shell .candidate-name {
+  font-size:17px;
+}
+.job-portal-shell .tag-chip {
+  font-size:12px;
+}
+.job-portal-shell .btn-sm {
+  border-radius:6px;
+}
+.public-portal .screen {
+  padding-bottom:28px;
+}
+.public-main {
+  display:grid;
+  gap:14px;
+}
+.portal-hero.public {
+  padding:28px 18px 20px;
+}
+.portal-hero.public .login-headline {
+  text-align:left;
+  margin-bottom:8px;
+}
+.portal-hero.public .login-sub {
+  text-align:left;
+  line-height:1.55;
+}
+.public-login-card {
+  margin:14px;
+  padding:14px;
+  background:white;
+  border:1px solid #CBD5E1;
+  border-radius:8px;
+  display:grid;
+  gap:10px;
+}
+.public-login-card .local-auth-form {
+  padding:0;
+  border:0;
+}
+.portal-feature-grid {
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:10px;
+  margin:14px;
+}
+.portal-feature-grid .service-icon-item {
+  align-items:flex-start;
+  padding:14px;
+  background:white;
+  border:1px solid #E2E8F0;
+  border-radius:8px;
+}
+.portal-feature-grid .service-icon-label {
+  font-size:14px;
+}
+.portal-feature-grid p {
+  font-size:12px;
+  line-height:1.45;
+  color:var(--gray-600);
+}
 .login-hero {
   padding:34px 22px 26px;
   background:linear-gradient(180deg, #FFE889 0%, #FFD449 100%);
@@ -690,6 +849,99 @@ select.form-input { appearance:none; background:white; }
   .app-shell {
     max-width:720px;
   }
+  .job-portal-shell {
+    max-width:1180px;
+  }
+  .job-portal-shell .screen {
+    min-height:100dvh;
+  }
+  .job-portal-shell .home-topbar {
+    grid-template-columns:auto auto;
+    justify-content:space-between;
+    padding:14px 24px;
+  }
+  .job-portal-shell .logo-text {
+    font-size:24px;
+  }
+  .job-portal-shell .logo-icon {
+    font-size:28px;
+  }
+  .portal-menu {
+    padding:0 24px;
+  }
+  .public-main {
+    grid-template-columns:minmax(0,1fr) 320px;
+    align-items:stretch;
+    padding:0 24px;
+    background:linear-gradient(180deg, #FFE889 0%, #FFD449 100%);
+    border-bottom:1px solid #E7B900;
+  }
+  .public-main .portal-hero {
+    padding-left:0;
+    padding-right:0;
+    background:transparent;
+    border-bottom:0;
+  }
+  .public-main .public-login-card {
+    margin:24px 0;
+    align-self:start;
+  }
+  .portal-feature-grid {
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    margin-left:24px;
+    margin-right:24px;
+  }
+  .portal-hero {
+    padding-top:24px;
+    padding-bottom:20px;
+  }
+  .portal-hero h1 {
+    font-size:28px;
+  }
+  .portal-hero .eyebrow,
+  .quick-tabs,
+  .portal-search {
+    max-width:920px;
+  }
+  .dual-match-strip {
+    margin:18px 24px;
+  }
+  .portal-layout {
+    display:grid;
+    grid-template-columns:280px minmax(0,1fr);
+    gap:18px;
+    align-items:start;
+    padding:0 24px 24px;
+  }
+  .portal-sidebar {
+    position:sticky;
+    top:108px;
+  }
+  .portal-sidebar .section-header,
+  .portal-sidebar .profile-summary-card,
+  .portal-sidebar .empty-state {
+    margin-left:0;
+    margin-right:0;
+  }
+  .portal-sidebar .profile-summary-card {
+    padding:14px;
+  }
+  .portal-content {
+    min-width:0;
+  }
+  .portal-content .section-header,
+  .portal-content .job-card,
+  .portal-content .request-card,
+  .portal-content .review-card,
+  .portal-content .empty-state,
+  .portal-content .recommendation-panel {
+    margin-left:0;
+    margin-right:0;
+  }
+  .listing-head {
+    margin-left:0;
+    margin-right:0;
+  }
   .portal-hero,
   .home-topbar,
   .section-header {
@@ -729,5 +981,8 @@ select.form-input { appearance:none; background:white; }
   }
   .bottom-nav {
     max-width:720px;
+  }
+  .job-portal-shell ~ .bottom-nav {
+    max-width:1180px;
   }
 }
