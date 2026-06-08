@@ -1,13 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
   const signupForm = document.querySelector('[data-signup-form]');
   if (signupForm) {
-    const emailInput = signupForm.querySelector('[data-email-input]');
-    const checkButton = signupForm.querySelector('[data-email-check-button]');
+    const usernameInput = signupForm.querySelector('[data-username-input]');
+    const checkButton = signupForm.querySelector('[data-username-check-button]');
     const submitButton = signupForm.querySelector('[data-signup-submit]');
-    const message = signupForm.querySelector('[data-email-check-message]');
-    let verifiedEmail = '';
+    const message = signupForm.querySelector('[data-username-check-message]');
+    let verifiedUsername = '';
 
-    const normalizeEmail = (value) => value.trim().toLowerCase();
+    const normalizeUsername = (value) => value.trim().toLowerCase();
     const setMessage = (text, tone = '') => {
       if (!message) {
         return;
@@ -15,29 +15,29 @@ document.addEventListener('DOMContentLoaded', () => {
       message.textContent = text;
       message.className = `form-help ${tone}`.trim();
     };
-    const resetEmailCheck = () => {
-      verifiedEmail = '';
+    const resetUsernameCheck = () => {
+      verifiedUsername = '';
       if (submitButton) {
         submitButton.disabled = true;
       }
       setMessage('');
     };
 
-    emailInput.addEventListener('input', resetEmailCheck);
+    usernameInput.addEventListener('input', resetUsernameCheck);
     checkButton.addEventListener('click', async () => {
-      const email = normalizeEmail(emailInput.value);
-      if (!email || !emailInput.validity.valid) {
-        resetEmailCheck();
-        setMessage('올바른 이메일을 입력해주세요.', 'error');
-        emailInput.focus();
+      const username = normalizeUsername(usernameInput.value);
+      if (!username || !usernameInput.validity.valid) {
+        resetUsernameCheck();
+        setMessage('아이디는 영문/숫자 4자 이상으로 입력해주세요.', 'error');
+        usernameInput.focus();
         return;
       }
 
       checkButton.disabled = true;
       checkButton.textContent = '확인 중';
-      setMessage('이메일을 확인하고 있습니다.');
+      setMessage('아이디를 확인하고 있습니다.');
       try {
-        const response = await fetch(`/api/members/email-availability?email=${encodeURIComponent(email)}`, {
+        const response = await fetch(`/api/members/username-availability?username=${encodeURIComponent(username)}`, {
           headers: { Accept: 'application/json' }
         });
         const data = await response.json();
@@ -45,18 +45,18 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error(data.message || '이메일 확인에 실패했습니다.');
         }
         if (data.available) {
-          verifiedEmail = data.normalizedEmail;
+          verifiedUsername = data.normalizedUsername;
           if (submitButton) {
             submitButton.disabled = false;
           }
-          setMessage(data.message || '사용 가능한 이메일입니다.', 'success');
+          setMessage(data.message || '사용 가능한 아이디입니다.', 'success');
         } else {
-          resetEmailCheck();
-          setMessage(data.message || '이미 가입된 이메일입니다.', 'error');
+          resetUsernameCheck();
+          setMessage(data.message || '이미 가입된 아이디입니다.', 'error');
         }
       } catch (error) {
-        resetEmailCheck();
-        setMessage(error.message || '이메일 확인에 실패했습니다.', 'error');
+        resetUsernameCheck();
+        setMessage(error.message || '아이디 확인에 실패했습니다.', 'error');
       } finally {
         checkButton.disabled = false;
         checkButton.textContent = '중복확인';
@@ -64,10 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     signupForm.addEventListener('submit', (event) => {
-      if (normalizeEmail(emailInput.value) !== verifiedEmail) {
+      if (normalizeUsername(usernameInput.value) !== verifiedUsername) {
         event.preventDefault();
-        setMessage('이메일 중복확인을 먼저 완료해주세요.', 'error');
-        emailInput.focus();
+        setMessage('아이디 중복확인을 먼저 완료해주세요.', 'error');
+        usernameInput.focus();
       }
     });
   }
@@ -107,37 +107,62 @@ document.addEventListener('DOMContentLoaded', () => {
     syncAvailableTime();
   });
 
-  document.querySelectorAll('[data-area-option]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const input = document.getElementById('preferredArea');
-      if (!input) {
+  document.querySelectorAll('[data-region-picker]').forEach((picker) => {
+    const provinceSelect = picker.querySelector('[data-region-province]');
+    const districtSelect = picker.querySelector('[data-region-district]');
+    const hiddenInput = document.querySelector('[data-preferred-area-input]');
+    const districtsByProvince = JSON.parse(picker.dataset.regionDistricts || '{}');
+    const syncDistricts = () => {
+      const province = provinceSelect.value;
+      const districts = districtsByProvince[province] || [];
+      districtSelect.innerHTML = '<option value="">구/시 선택</option>';
+      districts.forEach((district) => {
+        const option = document.createElement('option');
+        option.value = district;
+        option.textContent = district;
+        districtSelect.appendChild(option);
+      });
+      syncPreferredArea();
+    };
+    const syncPreferredArea = () => {
+      if (!hiddenInput) {
         return;
       }
-      input.value = button.dataset.areaOption;
-      button.parentElement
-        .querySelectorAll('[data-area-option]')
-        .forEach((item) => item.classList.toggle('active', item === button));
-      input.focus();
-    });
+      hiddenInput.value = provinceSelect.value && districtSelect.value
+        ? `${provinceSelect.value} ${districtSelect.value}`
+        : '';
+    };
+    provinceSelect.addEventListener('change', syncDistricts);
+    districtSelect.addEventListener('change', syncPreferredArea);
   });
 
-  document.querySelectorAll('[data-industry-option]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const input = document.getElementById('experiencedIndustries');
-      const value = button.dataset.industryOption;
-      if (!input || !value) {
+  document.querySelectorAll('[data-industry-picker]').forEach((picker) => {
+    const groupSelect = picker.querySelector('[data-industry-group]');
+    const detailSelect = picker.querySelector('[data-industry-detail]');
+    const hiddenInput = document.querySelector('[data-experienced-industries-input]');
+    const optionsByGroup = JSON.parse(picker.dataset.industryOptions || '{}');
+    const syncDetails = () => {
+      const group = groupSelect.value;
+      const options = optionsByGroup[group] || [];
+      detailSelect.innerHTML = '<option value="">세부 업무 선택</option>';
+      options.forEach((detail) => {
+        const option = document.createElement('option');
+        option.value = detail;
+        option.textContent = detail;
+        detailSelect.appendChild(option);
+      });
+      syncExperiencedIndustry();
+    };
+    const syncExperiencedIndustry = () => {
+      if (!hiddenInput) {
         return;
       }
-      const values = input.value.split(',')
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0);
-      if (!values.includes(value)) {
-        values.push(value);
-      }
-      input.value = values.join(', ');
-      button.classList.add('active');
-      input.focus();
-    });
+      hiddenInput.value = groupSelect.value && detailSelect.value
+        ? `${groupSelect.value}, ${detailSelect.value}`
+        : '';
+    };
+    groupSelect.addEventListener('change', syncDetails);
+    detailSelect.addEventListener('change', syncExperiencedIndustry);
   });
 
   document.querySelectorAll('[data-recommendation-trigger]').forEach((button) => {

@@ -157,7 +157,7 @@ html,body { height:100%; background:#E8EDF2; font-family:'Pretendard',-apple-sys
 .filter-chip.active { background:var(--green); border-color:var(--green); color:white; }
 .link-button { border:0; background:transparent; cursor:pointer; padding:0; }
 .link-button:disabled { opacity:0.6; cursor:wait; }
-.choice-chip-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.select-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; }
 .time-range-fields { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:8px; align-items:center; }
 .time-range-separator { color:var(--gray-400); font-weight:800; }
 .recommendation-panel { display:grid; gap:8px; margin:0 16px 12px; }

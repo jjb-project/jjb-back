@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -213,6 +215,15 @@ class JjbMvpSliceTests {
 			""", Integer.class);
 
 		assertThat(phoneColumnCount).isZero();
+	}
+
+	@Test
+	void productionMigrationAllowsCanceledMatchRequests() throws Exception {
+		String migration = Files.readString(Path.of("src/main/resources/db/migration/V5__allow_canceled_match_request_status.sql"));
+
+		assertThat(migration)
+			.contains("match_requests_status_check")
+			.contains("CANCELED");
 	}
 
 	@Test

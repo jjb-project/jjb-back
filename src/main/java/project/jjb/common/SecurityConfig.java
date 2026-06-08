@@ -16,7 +16,10 @@ public class SecurityConfig {
 		return http
 			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
-			.oauth2Login(oauth2 -> oauth2.successHandler(successHandler))
+			.oauth2Login(oauth2 -> oauth2
+				.successHandler(successHandler)
+				.failureHandler((request, response, exception) -> response.sendRedirect("/"))
+			)
 			.logout(logout -> logout.logoutSuccessUrl("/"))
 			.build();
 	}

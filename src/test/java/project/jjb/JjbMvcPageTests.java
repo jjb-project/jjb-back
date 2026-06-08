@@ -71,10 +71,11 @@ class JjbMvcPageTests {
 
 		mockMvc.perform(get("/signup"))
 			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("이메일 회원가입")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("아이디 회원가입")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/signup/local")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("중복확인")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-email-check-button")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"username\"")))
+			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("type=\"email\""))))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-username-check-button")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-signup-submit")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("disabled")));
 
@@ -104,14 +105,14 @@ class JjbMvcPageTests {
 
 	@Test
 	void localSignupAndLoginUseSession() throws Exception {
-		String email = "mvc-local-" + UUID.randomUUID() + "@example.test";
+		String username = "mvcuser" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
 		String password = "password123";
 		MockHttpSession signupSession = new MockHttpSession();
 
 		mockMvc.perform(post("/signup/local")
 				.session(signupSession)
 				.param("displayName", "Local Tester")
-				.param("email", email)
+				.param("username", username)
 				.param("password", password))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/role"))
@@ -122,7 +123,7 @@ class JjbMvcPageTests {
 
 		mockMvc.perform(post("/login/local")
 				.session(new MockHttpSession())
-				.param("email", email)
+				.param("username", username)
 				.param("password", password))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/role"))
@@ -133,11 +134,24 @@ class JjbMvcPageTests {
 
 		mockMvc.perform(post("/login/local")
 				.session(new MockHttpSession())
-				.param("email", email)
+				.param("username", username)
 				.param("password", "wrong-password"))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/"))
-			.andExpect(flash().attribute("errorMessage", "이메일 또는 비밀번호가 올바르지 않습니다."));
+			.andExpect(flash().attribute("errorMessage", "아이디 또는 비밀번호가 올바르지 않습니다."));
+
+		mockMvc.perform(get("/login/local"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/"));
+	}
+
+	@Test
+	void oauth2CallbackFailureReturnsToStartPage() throws Exception {
+		mockMvc.perform(get("/login/oauth2/code/naver")
+				.param("error", "access_denied")
+				.param("state", "test-state"))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/"));
 	}
 
 	@Test
@@ -168,10 +182,11 @@ class JjbMvcPageTests {
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"10320\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("min=\"10320\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("2026년 최저시급 10,320원이 기본값으로 입력돼 있어요.")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-area-option")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-industry-option")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("서울 강남구")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("고객응대")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"preferredProvince\"")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"preferredDistrict\"")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-region-districts")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"experiencedIndustrySelect\"")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("외식·음료")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("checked=\"checked\"")));
 
 		mockMvc.perform(post("/worker/profile")

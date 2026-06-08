@@ -81,13 +81,19 @@ public class JjbPageController {
 
 	@PostMapping("/login/local")
 	String loginLocal(
-		@RequestParam String email,
+		@RequestParam(required = false) String username,
+		@RequestParam(required = false) String email,
 		@RequestParam String password,
 		HttpSession session
 	) {
-		MemberSnapshot member = memberService.loginLocalMember(email, password);
+		MemberSnapshot member = memberService.loginLocalMember(localIdentifier(username, email), password);
 		setSessionMember(session, member);
 		return "redirect:" + nextPath(member);
+	}
+
+	@GetMapping("/login/local")
+	String loginLocalFallback() {
+		return "redirect:/";
 	}
 
 	@GetMapping("/signup")
@@ -99,11 +105,12 @@ public class JjbPageController {
 	@PostMapping("/signup/local")
 	String signupLocal(
 		@RequestParam String displayName,
-		@RequestParam String email,
+		@RequestParam(required = false) String username,
+		@RequestParam(required = false) String email,
 		@RequestParam String password,
 		HttpSession session
 	) {
-		MemberSnapshot member = memberService.registerLocalMember(email, password, displayName);
+		MemberSnapshot member = memberService.registerLocalMember(localIdentifier(username, email), password, displayName);
 		setSessionMember(session, member);
 		return "redirect:" + nextPath(member);
 	}
@@ -485,6 +492,13 @@ public class JjbPageController {
 			return "/role";
 		}
 		return member.activeRole() == MemberRole.OWNER ? "/boss/home" : "/worker/home";
+	}
+
+	private String localIdentifier(String username, String email) {
+		if (username != null && !username.isBlank()) {
+			return username;
+		}
+		return email;
 	}
 
 	private List<String> splitList(String csv) {

@@ -56,6 +56,16 @@ public class MemberController {
 		);
 	}
 
+	@GetMapping("/username-availability")
+	UsernameAvailabilityResponse checkUsernameAvailability(@RequestParam String username) {
+		MemberService.LocalUsernameAvailability availability = memberService.checkLocalUsernameAvailability(username);
+		return new UsernameAvailabilityResponse(
+			availability.available(),
+			availability.normalizedUsername(),
+			availability.message()
+		);
+	}
+
 	@PutMapping("/{memberId}/role")
 	MemberSnapshot switchRole(@PathVariable UUID memberId, @Valid @RequestBody SwitchRoleRequest request) {
 		return memberService.switchRole(memberId, request.role());
@@ -120,6 +130,13 @@ public class MemberController {
 	record EmailAvailabilityResponse(
 		boolean available,
 		String normalizedEmail,
+		String message
+	) {
+	}
+
+	record UsernameAvailabilityResponse(
+		boolean available,
+		String normalizedUsername,
 		String message
 	) {
 	}

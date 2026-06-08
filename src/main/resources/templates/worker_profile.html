@@ -29,15 +29,21 @@
 
       <div class="form-group">
         <label class="form-label" for="preferredArea">희망 지역</label>
-        <div class="choice-chip-row" aria-label="희망 지역 선택">
-          <button class="filter-chip" type="button" data-area-option="서울 강남구">서울 강남구</button>
-          <button class="filter-chip" type="button" data-area-option="서울 마포구">서울 마포구</button>
-          <button class="filter-chip" type="button" data-area-option="서울 서초구">서울 서초구</button>
-          <button class="filter-chip" type="button" data-area-option="부산 서면">부산 서면</button>
-        </div>
-        <input class="form-input" id="preferredArea" name="preferredArea" required
-               placeholder="예: 홍대입구역 1km 이내, 서울 강남구"
+        <input type="hidden" id="preferredArea" name="preferredArea" data-preferred-area-input
                th:value="${profile == null ? '' : profile.preferredArea()}">
+        <div class="select-grid" data-region-picker
+             data-region-districts='{"서울특별시":["강남구","마포구","서초구","송파구"],"부산광역시":["부산진구","해운대구","수영구"],"인천광역시":["부평구","남동구","연수구"],"경기도":["수원시","성남시","고양시","용인시"]}'>
+          <select class="form-input" id="preferredProvince" data-region-province required>
+            <option value="">도/광역시 선택</option>
+            <option value="서울특별시">서울특별시</option>
+            <option value="부산광역시">부산광역시</option>
+            <option value="인천광역시">인천광역시</option>
+            <option value="경기도">경기도</option>
+          </select>
+          <select class="form-input" id="preferredDistrict" data-region-district required>
+            <option value="">구/시 선택</option>
+          </select>
+        </div>
       </div>
 
       <div class="form-group">
@@ -54,16 +60,21 @@
 
       <div class="form-group">
         <label class="form-label" for="experiencedIndustries">경험 업종</label>
-        <div class="choice-chip-row" aria-label="경험 업종 선택">
-          <button class="filter-chip" type="button" data-industry-option="고객응대">고객응대</button>
-          <button class="filter-chip" type="button" data-industry-option="매장정리">매장정리</button>
-          <button class="filter-chip" type="button" data-industry-option="음료제조">음료제조</button>
-          <button class="filter-chip" type="button" data-industry-option="주방보조">주방보조</button>
-          <button class="filter-chip" type="button" data-industry-option="계산">계산</button>
-        </div>
-        <input class="form-input" id="experiencedIndustries" name="experiencedIndustries"
-               placeholder="경험한 업종이나 업무를 쉼표로 구분해 입력해주세요"
+        <input type="hidden" id="experiencedIndustries" name="experiencedIndustries" data-experienced-industries-input
                th:value="${experiencedIndustries}">
+        <div class="select-grid" data-industry-picker
+             data-industry-options='{"외식·음료":["음료제조","홀서빙","주방보조","설거지"],"매장관리":["고객응대","계산","매장정리","재고정리"],"서비스":["안내","행사보조","청소"],"사무보조":["문서정리","자료입력","전화응대"]}'>
+          <select class="form-input" id="experiencedIndustryGroup" data-industry-group>
+            <option value="">대분류 선택</option>
+            <option value="외식·음료">외식·음료</option>
+            <option value="매장관리">매장관리</option>
+            <option value="서비스">서비스</option>
+            <option value="사무보조">사무보조</option>
+          </select>
+          <select class="form-input" id="experiencedIndustrySelect" data-industry-detail>
+            <option value="">세부 업무 선택</option>
+          </select>
+        </div>
       </div>
 
       <label class="check-row">

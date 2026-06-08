@@ -48,16 +48,16 @@ public class MemberService {
 	}
 
 	@Transactional
-	public MemberSnapshot registerLocalMember(String email, String password, String displayName) {
-		String normalizedEmail = normalizeEmail(email);
+	public MemberSnapshot registerLocalMember(String username, String password, String displayName) {
+		String normalizedUsername = normalizeLocalIdentifier(username);
 		validatePassword(password);
 		String normalizedName = isBlank(displayName)
-			? normalizedEmail.substring(0, normalizedEmail.indexOf('@'))
+			? normalizedUsername
 			: displayName.trim();
-		SocialIdentity socialIdentity = socialIdentityPort.resolve("local", normalizedEmail);
+		SocialIdentity socialIdentity = socialIdentityPort.resolve("local", normalizedUsername);
 		memberRepository.findBySocialIdentity(socialIdentity)
 			.ifPresent(member -> {
-				throw ApiException.conflict("LOCAL_ACCOUNT_ALREADY_EXISTS", "이미 가입된 이메일입니다.");
+				throw ApiException.conflict("LOCAL_ACCOUNT_ALREADY_EXISTS", "이미 가입된 아이디입니다.");
 			});
 		Member member = new Member(
 			UUID.randomUUID(),
@@ -69,9 +69,9 @@ public class MemberService {
 	}
 
 	@Transactional(readOnly = true)
-	public MemberSnapshot loginLocalMember(String email, String password) {
-		String normalizedEmail = normalizeEmail(email);
-		SocialIdentity socialIdentity = socialIdentityPort.resolve("local", normalizedEmail);
+	public MemberSnapshot loginLocalMember(String username, String password) {
+		String normalizedUsername = normalizeLocalIdentifier(username);
+		SocialIdentity socialIdentity = socialIdentityPort.resolve("local", normalizedUsername);
 		Member member = memberRepository.findBySocialIdentity(socialIdentity)
 			.orElseThrow(() -> invalidLocalLogin());
 		String passwordHash = member.passwordHash();
@@ -88,6 +88,15 @@ public class MemberService {
 		boolean available = memberRepository.findBySocialIdentity(socialIdentity).isEmpty();
 		String message = available ? "사용 가능한 이메일입니다." : "이미 가입된 이메일입니다.";
 		return new LocalEmailAvailability(available, normalizedEmail, message);
+	}
+
+	@Transactional(readOnly = true)
+	public LocalUsernameAvailability checkLocalUsernameAvailability(String username) {
+		String normalizedUsername = normalizeLocalIdentifier(username);
+		SocialIdentity socialIdentity = socialIdentityPort.resolve("local", normalizedUsername);
+		boolean available = memberRepository.findBySocialIdentity(socialIdentity).isEmpty();
+		String message = available ? "사용 가능한 아이디입니다." : "이미 가입된 아이디입니다.";
+		return new LocalUsernameAvailability(available, normalizedUsername, message);
 	}
 
 	@Transactional(readOnly = true)
@@ -200,6 +209,20 @@ public class MemberService {
 		return normalizedEmail;
 	}
 
+	private String normalizeLocalIdentifier(String username) {
+		if (isBlank(username)) {
+			throw ApiException.badRequest("INVALID_LOCAL_USERNAME", "아이디를 입력해주세요.");
+		}
+		String normalizedUsername = username.trim().toLowerCase(Locale.ROOT);
+		if (normalizedUsername.contains("@")) {
+			return normalizeEmail(normalizedUsername);
+		}
+		if (!normalizedUsername.matches("[a-z0-9._-]{4,40}")) {
+			throw ApiException.badRequest("INVALID_LOCAL_USERNAME", "아이디는 영문 소문자, 숫자, ., _, - 조합 4~40자로 입력해주세요.");
+		}
+		return normalizedUsername;
+	}
+
 	private void validatePassword(String password) {
 		if (password == null || password.length() < 8) {
 			throw ApiException.badRequest("INVALID_LOCAL_PASSWORD", "비밀번호는 8자 이상이어야 합니다.");
@@ -207,7 +230,7 @@ public class MemberService {
 	}
 
 	private ApiException invalidLocalLogin() {
-		return ApiException.badRequest("INVALID_LOCAL_LOGIN", "이메일 또는 비밀번호가 올바르지 않습니다.");
+		return ApiException.badRequest("INVALID_LOCAL_LOGIN", "아이디 또는 비밀번호가 올바르지 않습니다.");
 	}
 
 	private boolean isBlank(String value) {
@@ -217,6 +240,13 @@ public class MemberService {
 	public record LocalEmailAvailability(
 		boolean available,
 		String normalizedEmail,
+		String message
+	) {
+	}
+
+	public record LocalUsernameAvailability(
+		boolean available,
+		String normalizedUsername,
 		String message
 	) {
 	}
