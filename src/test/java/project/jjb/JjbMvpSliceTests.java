@@ -70,6 +70,11 @@ class JjbMvpSliceTests {
 			delete from recruitments
 			where owner_id in (select id from members where social_subject like 'test-%')
 			""");
+		jdbcTemplate.update("""
+			delete from favorites
+			where member_id in (select id from members where social_subject like 'test-%')
+			   or target_id in (select id from members where social_subject like 'test-%')
+			""");
 		jdbcTemplate.update("delete from members where social_subject like 'test-%'");
 	}
 
@@ -224,6 +229,16 @@ class JjbMvpSliceTests {
 		assertThat(migration)
 			.contains("match_requests_status_check")
 			.contains("CANCELED");
+	}
+
+	@Test
+	void favoritesMigrationCreatesUniqueUserTargetConstraint() throws Exception {
+		String migration = Files.readString(Path.of("src/main/resources/db/migration/V6__create_favorites.sql"));
+
+		assertThat(migration)
+			.contains("create table if not exists favorites")
+			.contains("target_type")
+			.contains("uk_favorites_member_target");
 	}
 
 	@Test

@@ -70,6 +70,19 @@
       </button>
     </div>
 
+    <form class="search-panel" th:action="@{/worker/home}" method="get">
+      <input class="form-input" name="keyword" placeholder="검색어" th:value="${keyword}">
+      <div class="select-grid">
+        <input class="form-input" name="region" placeholder="지역" th:value="${region}">
+        <input class="form-input" name="category" placeholder="업종" th:value="${category}">
+      </div>
+      <label class="check-row compact">
+        <input type="checkbox" name="favoritesOnly" value="true" th:checked="${favoritesOnly}">
+        <span>찜만 보기</span>
+      </label>
+      <button class="btn btn-secondary btn-sm" type="submit">조건 검색</button>
+    </form>
+
     <div class="recommendation-panel" id="worker-recommendations" data-recommendation-results hidden></div>
 
     <div class="empty-state" th:if="${#lists.isEmpty(storeCards)}">
@@ -85,7 +98,18 @@
           <span th:text="${store.businessCategory}">카페</span>
         </div>
       </div>
+      <div class="candidate-tags">
+        <span class="tag-chip active" th:text="${store.trustLabel}">사업자 인증</span>
+        <span class="tag-chip" th:text="'평점 ' + ${store.averageRating} + ' · 후기 ' + ${store.reviewCount} + '개'">후기 0개</span>
+        <span class="tag-chip active" th:if="${store.favorite}">찜한 가게</span>
+      </div>
       <p class="profile-summary-copy" th:text="${#strings.isEmpty(store.storeIntroduction) ? '가게 소개가 아직 없습니다.' : store.storeIntroduction}">초보도 환영하는 따뜻한 매장입니다.</p>
+      <div class="action-row">
+        <a class="btn btn-outline" th:href="@{/worker/stores/{id}(id=${store.id})}">상세 보기</a>
+        <form th:action="@{/worker/stores/{id}/favorite(id=${store.id})}" method="post">
+          <button class="btn btn-secondary" type="submit" th:text="${store.favorite ? '찜 해제' : '찜'}">찜</button>
+        </form>
+      </div>
       <form class="store-request-form" th:action="@{/worker/match-requests}" method="post">
         <input type="hidden" name="ownerId" th:value="${store.id}">
         <input class="form-input" name="message" value="근무 지원합니다." aria-label="지원 메시지">

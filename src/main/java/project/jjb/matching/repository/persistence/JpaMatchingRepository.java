@@ -5,6 +5,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+import project.jjb.matching.domain.Favorite;
+import project.jjb.matching.domain.FavoriteTargetType;
 import project.jjb.matching.domain.MatchRequest;
 import project.jjb.matching.domain.Review;
 import project.jjb.matching.repository.MatchingRepository;
@@ -16,15 +19,18 @@ public class JpaMatchingRepository implements MatchingRepository {
 	private final RecruitmentJpaDataRepository recruitmentJpaDataRepository;
 	private final MatchRequestJpaDataRepository matchRequestJpaDataRepository;
 	private final ReviewJpaDataRepository reviewJpaDataRepository;
+	private final FavoriteJpaDataRepository favoriteJpaDataRepository;
 
 	public JpaMatchingRepository(
 		RecruitmentJpaDataRepository recruitmentJpaDataRepository,
 		MatchRequestJpaDataRepository matchRequestJpaDataRepository,
-		ReviewJpaDataRepository reviewJpaDataRepository
+		ReviewJpaDataRepository reviewJpaDataRepository,
+		FavoriteJpaDataRepository favoriteJpaDataRepository
 	) {
 		this.recruitmentJpaDataRepository = recruitmentJpaDataRepository;
 		this.matchRequestJpaDataRepository = matchRequestJpaDataRepository;
 		this.reviewJpaDataRepository = reviewJpaDataRepository;
+		this.favoriteJpaDataRepository = favoriteJpaDataRepository;
 	}
 
 	@Override
@@ -98,6 +104,36 @@ public class JpaMatchingRepository implements MatchingRepository {
 	public List<Review> findReviewsByTargetId(UUID targetId) {
 		return reviewJpaDataRepository.findByTargetIdOrderByCreatedAtDesc(targetId).stream()
 			.map(ReviewJpaEntity::toDomain)
+			.toList();
+	}
+
+	@Override
+	public List<Review> findReviewsByEvaluatorId(UUID evaluatorId) {
+		return reviewJpaDataRepository.findByEvaluatorIdOrderByCreatedAtDesc(evaluatorId).stream()
+			.map(ReviewJpaEntity::toDomain)
+			.toList();
+	}
+
+	@Override
+	public Favorite saveFavorite(Favorite favorite) {
+		return favoriteJpaDataRepository.save(FavoriteJpaEntity.fromDomain(favorite)).toDomain();
+	}
+
+	@Override
+	@Transactional
+	public void deleteFavorite(UUID memberId, UUID targetId, FavoriteTargetType targetType) {
+		favoriteJpaDataRepository.deleteByMemberIdAndTargetIdAndTargetType(memberId, targetId, targetType);
+	}
+
+	@Override
+	public boolean existsFavorite(UUID memberId, UUID targetId, FavoriteTargetType targetType) {
+		return favoriteJpaDataRepository.existsByMemberIdAndTargetIdAndTargetType(memberId, targetId, targetType);
+	}
+
+	@Override
+	public List<Favorite> findFavoritesByMemberIdAndTargetType(UUID memberId, FavoriteTargetType targetType) {
+		return favoriteJpaDataRepository.findByMemberIdAndTargetType(memberId, targetType).stream()
+			.map(FavoriteJpaEntity::toDomain)
 			.toList();
 	}
 }

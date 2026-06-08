@@ -12,8 +12,13 @@
         <div>
           <h1 th:text="${candidate.name}">구직자명</h1>
           <p th:text="${candidate.availableTime}">오늘 17:00-22:00 가능</p>
+          <p th:text="'평점 ' + ${reviewSummary.averageRating} + '점 · 후기 ' + ${reviewSummary.reviewCount} + '개'">평점 0.0점 · 후기 0개</p>
         </div>
       </div>
+
+      <form th:action="@{/boss/candidates/{id}/favorite(id=${candidate.id})}" method="post">
+        <button class="btn btn-secondary" type="submit" th:text="${favorite ? '찜 해제' : '찜하기'}">찜하기</button>
+      </form>
 
       <dl class="detail-grid">
         <div>
@@ -43,6 +48,17 @@
         </div>
         <button class="btn btn-primary" type="submit">매칭 요청 보내기</button>
       </form>
+
+      <div class="section-header">
+        <span class="section-title">구직자 평가</span>
+        <span class="section-more" th:text="${reviewSummary.reviewCount} + '개'">0개</span>
+      </div>
+      <div class="empty-state" th:if="${#lists.isEmpty(reviews)}">아직 받은 평가가 없습니다.</div>
+      <article class="review-card" th:each="review : ${reviews}">
+        <strong th:text="${review.rating} + '점 · ' + ${review.evaluatorName}">5점</strong>
+        <p th:text="${review.review}">후기</p>
+        <span th:text="${review.context}">매칭 내용</span>
+      </article>
     </div>
   </section>
 </main>

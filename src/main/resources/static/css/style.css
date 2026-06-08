@@ -166,6 +166,12 @@ html,body { height:100%; background:#E8EDF2; font-family:'Pretendard',-apple-sys
 .recommendation-card span:not(.tag-chip) { display:block; font-size:12px; color:var(--gray-500); line-height:1.45; }
 .recommendation-card p { margin-top:7px; font-size:13px; line-height:1.55; color:var(--gray-700); }
 .recommendation-empty { padding:12px 14px; background:white; border-radius:var(--radius-sm); color:var(--gray-500); font-size:13px; }
+.search-panel { display:grid; gap:8px; margin:0 16px 12px; padding:14px; background:white; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); }
+.check-row.compact { padding:4px 0; }
+.review-card { background:white; border-radius:var(--radius-md); margin:8px 16px; padding:14px; box-shadow:var(--shadow-sm); display:grid; gap:6px; }
+.review-card strong { font-size:14px; font-weight:800; }
+.review-card p { font-size:13px; line-height:1.55; color:var(--gray-800); }
+.review-card span { font-size:12px; color:var(--gray-400); }
 
 /* Candidates */
 .candidate-card { background:white; border-radius:var(--radius-md); margin:4px 16px 8px; padding:14px; box-shadow:var(--shadow-sm); cursor:pointer; }

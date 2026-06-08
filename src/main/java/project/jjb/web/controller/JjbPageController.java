@@ -5,9 +5,11 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import project.jjb.common.ApiException;
+import project.jjb.matching.domain.FavoriteTargetType;
 import project.jjb.matching.domain.MatchRequestSnapshot;
 import project.jjb.matching.domain.MatchingRecommendation;
 import project.jjb.matching.domain.Recruitment;
@@ -132,7 +135,14 @@ public class JjbPageController {
 	}
 
 	@GetMapping("/worker/home")
-	String workerHome(Model model, HttpSession session) {
+	String workerHome(
+		@RequestParam(defaultValue = "") String keyword,
+		@RequestParam(defaultValue = "") String region,
+		@RequestParam(defaultValue = "") String category,
+		@RequestParam(defaultValue = "false") boolean favoritesOnly,
+		Model model,
+		HttpSession session
+	) {
 		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
 		model.addAttribute("member", member);
 		model.addAttribute("activeRole", member.activeRole());
@@ -143,7 +153,11 @@ public class JjbPageController {
 		model.addAttribute("sentRequestCards", requestCards(requests.stream()
 			.filter(request -> request.requestedBy().name().equals("JOB_SEEKER"))
 			.toList()));
-		model.addAttribute("storeCards", storeCards(member.id()));
+		model.addAttribute("storeCards", filterStoreCards(storeCards(member.id()), keyword, region, category, favoritesOnly));
+		model.addAttribute("keyword", keyword);
+		model.addAttribute("region", region);
+		model.addAttribute("category", category);
+		model.addAttribute("favoritesOnly", favoritesOnly);
 		model.addAttribute("recommendationUrl", "/api/members/" + member.id() + "/store-recommendations");
 		return "worker_home";
 	}
@@ -236,15 +250,46 @@ public class JjbPageController {
 		return "redirect:/match-confirmed?matchRequestId=" + request.id();
 	}
 
+	@GetMapping("/worker/stores/{id}")
+	String workerStoreDetail(@PathVariable UUID id, Model model, HttpSession session) {
+		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
+		MemberSnapshot owner = memberService.getMember(id);
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		model.addAttribute("store", storeCard(owner));
+		model.addAttribute("reviewSummary", reviewSummary(id));
+		model.addAttribute("reviews", reviewCards(matchingService.listReviewsForTarget(id)));
+		model.addAttribute("favorite", matchingService.isFavorite(member.id(), id, FavoriteTargetType.OWNER));
+		return "store_detail";
+	}
+
+	@PostMapping("/worker/stores/{id}/favorite")
+	String toggleStoreFavorite(@PathVariable UUID id, HttpSession session) {
+		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
+		matchingService.toggleFavorite(member.id(), id, FavoriteTargetType.OWNER);
+		return "redirect:/worker/home";
+	}
+
 	@GetMapping("/boss/home")
-	String bossHome(Model model, HttpSession session) {
+	String bossHome(
+		@RequestParam(defaultValue = "") String keyword,
+		@RequestParam(defaultValue = "") String region,
+		@RequestParam(defaultValue = "") String industry,
+		@RequestParam(defaultValue = "false") boolean favoritesOnly,
+		Model model,
+		HttpSession session
+	) {
 		MemberSnapshot member = ensureRole(session, MemberRole.OWNER);
 		model.addAttribute("member", member);
 		model.addAttribute("activeRole", member.activeRole());
 		model.addAttribute("recruitments", recruitmentCards(matchingService.listRecruitmentsForOwner(member.id())));
-		model.addAttribute("candidates", candidates(member.id()));
+		model.addAttribute("candidates", filterCandidateCards(member.id(), candidates(member.id()), keyword, region, industry, favoritesOnly));
 		model.addAttribute("workerRequests", ownerRequestCards(member.id()));
 		model.addAttribute("memberVerified", member.verification().businessVerified());
+		model.addAttribute("keyword", keyword);
+		model.addAttribute("region", region);
+		model.addAttribute("industry", industry);
+		model.addAttribute("favoritesOnly", favoritesOnly);
 		model.addAttribute("recommendationUrl", "/api/members/" + member.id() + "/candidate-recommendations");
 		return "boss_home";
 	}
@@ -337,7 +382,17 @@ public class JjbPageController {
 		model.addAttribute("candidate", candidate(id));
 		model.addAttribute("recruitments", matchingService.listRecruitmentsForOwner(member.id()));
 		model.addAttribute("memberVerified", member.verification().businessVerified());
+		model.addAttribute("reviewSummary", reviewSummary(id));
+		model.addAttribute("reviews", reviewCards(matchingService.listReviewsForTarget(id)));
+		model.addAttribute("favorite", matchingService.isFavorite(member.id(), id, FavoriteTargetType.JOB_SEEKER));
 		return "candidate_detail";
+	}
+
+	@PostMapping("/boss/candidates/{id}/favorite")
+	String toggleCandidateFavorite(@PathVariable UUID id, HttpSession session) {
+		MemberSnapshot member = ensureRole(session, MemberRole.OWNER);
+		matchingService.toggleFavorite(member.id(), id, FavoriteTargetType.JOB_SEEKER);
+		return "redirect:/boss/home";
 	}
 
 	@PostMapping("/boss/match-requests")
@@ -389,6 +444,8 @@ public class JjbPageController {
 		model.addAttribute("member", member);
 		model.addAttribute("activeRole", member.activeRole());
 		model.addAttribute("reviewSummary", reviewSummary(member.id()));
+		model.addAttribute("receivedReviews", reviewCards(matchingService.listReviewsForTarget(member.id())));
+		model.addAttribute("writtenReviews", reviewCards(matchingService.listReviewsByEvaluator(member.id())));
 		return "mypage";
 	}
 
@@ -579,20 +636,32 @@ public class JjbPageController {
 	}
 
 	private List<StoreCard> storeCards(UUID excludedMemberId) {
+		Set<UUID> favoriteIds = excludedMemberId == null
+			? Set.of()
+			: matchingService.listFavoriteTargetIds(excludedMemberId, FavoriteTargetType.OWNER).stream().collect(Collectors.toSet());
 		return memberService.listVerifiedOwnersWithProfiles().stream()
 			.filter(member -> excludedMemberId == null || !member.id().equals(excludedMemberId))
-			.map(this::storeCard)
+			.map(member -> storeCard(member, favoriteIds.contains(member.id())))
 			.toList();
 	}
 
 	private StoreCard storeCard(MemberSnapshot owner) {
+		return storeCard(owner, false);
+	}
+
+	private StoreCard storeCard(MemberSnapshot owner, boolean favorite) {
 		OwnerProfile profile = owner.ownerProfile();
+		ReviewSummary summary = reviewSummary(owner.id());
 		return new StoreCard(
 			owner.id(),
 			storeName(owner),
 			profile == null ? "" : profile.storeAddress(),
 			profile == null ? "" : profile.businessCategory(),
-			profile == null ? "" : profile.storeIntroduction()
+			profile == null ? "" : profile.storeIntroduction(),
+			summary.averageRating(),
+			summary.reviewCount(),
+			favorite,
+			owner.verification().businessVerified() ? "사업자 인증" : "인증 대기"
 		);
 	}
 
@@ -620,18 +689,24 @@ public class JjbPageController {
 		if (profile == null) {
 			throw ApiException.notFound("JOB_SEEKER_NOT_FOUND", "Job seeker profile was not found.");
 		}
+		ReviewSummary summary = reviewSummary(member.id());
 		return new CandidateCard(
 			member.id(),
 			member.displayName(),
 			profile.availableTime(),
 			profile.preferredArea(),
 			profile.experiencedIndustries().isEmpty() ? "경력 미입력" : String.join(", ", profile.experiencedIndustries()),
-			profile.desiredHourlyWage()
+			profile.desiredHourlyWage(),
+			summary.averageRating(),
+			summary.reviewCount(),
+			false,
+			profile.urgentSubstituteAvailable() ? "긴급 대타 가능" : "일반 지원"
 		);
 	}
 
 	private List<EvaluationOption> evaluationOptions(MemberSnapshot member) {
 		return matchingService.listAcceptedMatchRequestsForParticipant(member.id()).stream()
+			.filter(request -> !matchingService.hasReviewed(request.id(), member.id()))
 			.map(request -> {
 				boolean memberIsOwner = request.ownerId().equals(member.id());
 				UUID targetId = memberIsOwner ? request.jobSeekerId() : request.ownerId();
@@ -654,6 +729,77 @@ public class JjbPageController {
 		return new ReviewSummary(Math.round(average * 10.0) / 10.0, reviews.size());
 	}
 
+	private List<ReviewCard> reviewCards(List<Review> reviews) {
+		return reviews.stream()
+			.map(review -> {
+				MemberSnapshot evaluator = memberService.getMember(review.evaluatorId());
+				MemberSnapshot target = memberService.getMember(review.targetId());
+				String context = matchingService.getMatchRequest(review.matchRequestId()).message();
+				return new ReviewCard(
+					review.id(),
+					review.rating(),
+					review.review(),
+					evaluator.displayName(),
+					target.displayName(),
+					context,
+					review.createdAt().toString()
+				);
+			})
+			.toList();
+	}
+
+	private List<StoreCard> filterStoreCards(
+		List<StoreCard> stores,
+		String keyword,
+		String region,
+		String category,
+		boolean favoritesOnly
+	) {
+		return stores.stream()
+			.filter(store -> !favoritesOnly || store.favorite())
+			.filter(store -> containsIgnoreCase(store.storeName() + " " + store.storeIntroduction(), keyword))
+			.filter(store -> containsIgnoreCase(store.storeAddress(), region))
+			.filter(store -> containsIgnoreCase(store.businessCategory(), category))
+			.toList();
+	}
+
+	private List<CandidateCard> filterCandidateCards(
+		UUID ownerId,
+		List<CandidateCard> candidates,
+		String keyword,
+		String region,
+		String industry,
+		boolean favoritesOnly
+	) {
+		Set<UUID> favoriteIds = matchingService.listFavoriteTargetIds(ownerId, FavoriteTargetType.JOB_SEEKER).stream()
+			.collect(Collectors.toSet());
+		return candidates.stream()
+			.map(candidate -> new CandidateCard(
+				candidate.id(),
+				candidate.name(),
+				candidate.availableTime(),
+				candidate.area(),
+				candidate.skills(),
+				candidate.desiredHourlyWage(),
+				candidate.averageRating(),
+				candidate.reviewCount(),
+				favoriteIds.contains(candidate.id()),
+				candidate.trustLabel()
+			))
+			.filter(candidate -> !favoritesOnly || candidate.favorite())
+			.filter(candidate -> containsIgnoreCase(candidate.name() + " " + candidate.skills(), keyword))
+			.filter(candidate -> containsIgnoreCase(candidate.area(), region))
+			.filter(candidate -> containsIgnoreCase(candidate.skills(), industry))
+			.toList();
+	}
+
+	private boolean containsIgnoreCase(String source, String keyword) {
+		if (keyword == null || keyword.isBlank()) {
+			return true;
+		}
+		return source != null && source.toLowerCase().contains(keyword.trim().toLowerCase());
+	}
+
 	private String statusLabel(String status) {
 		return switch (status) {
 			case "OPEN" -> "모집 중";
@@ -672,10 +818,10 @@ public class JjbPageController {
 	record RecruitmentCard(UUID id, String title, String workTime, String workplaceAddress, int hourlyWage, String status) {
 	}
 
-	record CandidateCard(UUID id, String name, String availableTime, String area, String skills, int desiredHourlyWage) {
+	record CandidateCard(UUID id, String name, String availableTime, String area, String skills, int desiredHourlyWage, double averageRating, int reviewCount, boolean favorite, String trustLabel) {
 	}
 
-	record StoreCard(UUID id, String storeName, String storeAddress, String businessCategory, String storeIntroduction) {
+	record StoreCard(UUID id, String storeName, String storeAddress, String businessCategory, String storeIntroduction, double averageRating, int reviewCount, boolean favorite, String trustLabel) {
 	}
 
 	record OwnerRequestCard(UUID id, String jobSeekerName, String message, String status) {
@@ -685,5 +831,8 @@ public class JjbPageController {
 	}
 
 	record ReviewSummary(double averageRating, int reviewCount) {
+	}
+
+	record ReviewCard(UUID id, int rating, String review, String evaluatorName, String targetName, String context, String createdAt) {
 	}
 }

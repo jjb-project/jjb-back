@@ -10,4 +10,6 @@ interface ReviewJpaDataRepository extends JpaRepository<ReviewJpaEntity, UUID> {
 	boolean existsByMatchRequestIdAndEvaluatorId(UUID matchRequestId, UUID evaluatorId);
 
 	List<ReviewJpaEntity> findByTargetIdOrderByCreatedAtDesc(UUID targetId);
+
+	List<ReviewJpaEntity> findByEvaluatorIdOrderByCreatedAtDesc(UUID evaluatorId);
 }

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import project.jjb.matching.domain.Favorite;
+import project.jjb.matching.domain.FavoriteTargetType;
 import project.jjb.matching.domain.MatchRequest;
 import project.jjb.matching.domain.Review;
 import project.jjb.matching.domain.Recruitment;
@@ -33,4 +35,14 @@ public interface MatchingRepository {
 	boolean existsReviewByMatchRequestIdAndEvaluatorId(UUID matchRequestId, UUID evaluatorId);
 
 	List<Review> findReviewsByTargetId(UUID targetId);
+
+	List<Review> findReviewsByEvaluatorId(UUID evaluatorId);
+
+	Favorite saveFavorite(Favorite favorite);
+
+	void deleteFavorite(UUID memberId, UUID targetId, FavoriteTargetType targetType);
+
+	boolean existsFavorite(UUID memberId, UUID targetId, FavoriteTargetType targetType);
+
+	List<Favorite> findFavoritesByMemberIdAndTargetType(UUID memberId, FavoriteTargetType targetType);
 }

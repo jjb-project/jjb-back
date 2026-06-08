@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.jjb.common.ApiException;
+import project.jjb.matching.domain.Favorite;
+import project.jjb.matching.domain.FavoriteTargetType;
 import project.jjb.matching.domain.MatchRequest;
 import project.jjb.matching.domain.MatchRequestInitiator;
 import project.jjb.matching.domain.MatchRequestSnapshot;
@@ -263,6 +265,40 @@ public class MatchingService {
 	@Transactional(readOnly = true)
 	public List<Review> listReviewsForTarget(UUID targetId) {
 		return matchingRepository.findReviewsByTargetId(targetId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<Review> listReviewsByEvaluator(UUID evaluatorId) {
+		return matchingRepository.findReviewsByEvaluatorId(evaluatorId);
+	}
+
+	@Transactional(readOnly = true)
+	public boolean hasReviewed(UUID matchRequestId, UUID evaluatorId) {
+		return matchingRepository.existsReviewByMatchRequestIdAndEvaluatorId(matchRequestId, evaluatorId);
+	}
+
+	@Transactional
+	public boolean toggleFavorite(UUID memberId, UUID targetId, FavoriteTargetType targetType) {
+		memberService.getMember(memberId);
+		memberService.getMember(targetId);
+		if (matchingRepository.existsFavorite(memberId, targetId, targetType)) {
+			matchingRepository.deleteFavorite(memberId, targetId, targetType);
+			return false;
+		}
+		matchingRepository.saveFavorite(new Favorite(UUID.randomUUID(), memberId, targetId, targetType, Instant.now()));
+		return true;
+	}
+
+	@Transactional(readOnly = true)
+	public boolean isFavorite(UUID memberId, UUID targetId, FavoriteTargetType targetType) {
+		return matchingRepository.existsFavorite(memberId, targetId, targetType);
+	}
+
+	@Transactional(readOnly = true)
+	public List<UUID> listFavoriteTargetIds(UUID memberId, FavoriteTargetType targetType) {
+		return matchingRepository.findFavoritesByMemberIdAndTargetType(memberId, targetType).stream()
+			.map(Favorite::targetId)
+			.toList();
 	}
 
 	private void validateRecruitment(

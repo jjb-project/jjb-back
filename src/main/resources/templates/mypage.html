@@ -34,6 +34,28 @@
         평가하기
       </a>
     </div>
+
+    <div class="section-header">
+      <span class="section-title">받은 평가</span>
+      <span class="section-more" th:text="${#lists.size(receivedReviews)} + '개'">0개</span>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(receivedReviews)}">아직 받은 평가가 없습니다.</div>
+    <article class="review-card" th:each="review : ${receivedReviews}">
+      <strong th:text="${review.rating} + '점 · ' + ${review.evaluatorName}">5점</strong>
+      <p th:text="${review.review}">후기</p>
+      <span th:text="${review.context}">매칭 내용</span>
+    </article>
+
+    <div class="section-header">
+      <span class="section-title">내가 작성한 평가</span>
+      <span class="section-more" th:text="${#lists.size(writtenReviews)} + '개'">0개</span>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(writtenReviews)}">아직 작성한 평가가 없습니다.</div>
+    <article class="review-card" th:each="review : ${writtenReviews}">
+      <strong th:text="${review.rating} + '점 · ' + ${review.targetName}">5점</strong>
+      <p th:text="${review.review}">후기</p>
+      <span th:text="${review.context}">매칭 내용</span>
+    </article>
   </section>
 </main>
 <div th:replace="~{fragments/layout :: bottomNav('my')}"></div>

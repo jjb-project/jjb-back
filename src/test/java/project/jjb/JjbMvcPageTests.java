@@ -50,6 +50,11 @@ class JjbMvcPageTests {
 			delete from recruitments
 			where owner_id in (select id from members where social_subject like 'mvc-%' or social_subject like 'fixture-%')
 			""");
+		jdbcTemplate.update("""
+			delete from favorites
+			where member_id in (select id from members where social_subject like 'mvc-%' or social_subject like 'fixture-%')
+			   or target_id in (select id from members where social_subject like 'mvc-%' or social_subject like 'fixture-%')
+			""");
 		jdbcTemplate.update("delete from members where social_subject like 'mvc-%' or social_subject like 'fixture-%'");
 	}
 
@@ -289,9 +294,36 @@ class JjbMvcPageTests {
 		mockMvc.perform(get("/worker/home").session(session))
 			.andExpect(status().isOk())
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("지원 가능한 가게")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("검색어")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("찜만 보기")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("카페 양방향")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("AI 추천받기")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("초보도 환영하는 따뜻한 매장입니다.")));
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("초보도 환영하는 따뜻한 매장입니다.")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("후기 0개")));
+
+		UUID ownerId = (UUID) ownerSession.getAttribute(WebSessionKeys.CURRENT_MEMBER_ID);
+		mockMvc.perform(get("/worker/home")
+				.session(session)
+				.param("keyword", "없는매장"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("카페 양방향"))));
+
+		mockMvc.perform(post("/worker/stores/{id}/favorite", ownerId).session(session))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/worker/home"));
+
+		mockMvc.perform(get("/worker/home")
+				.session(session)
+				.param("favoritesOnly", "true"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("카페 양방향")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("찜한 가게")));
+
+		mockMvc.perform(get("/worker/stores/{id}", ownerId).session(session))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("카페 양방향")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("가게 평가")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("지원하기")));
 
 		mockMvc.perform(post("/worker/match-requests")
 				.session(session)
@@ -336,6 +368,59 @@ class JjbMvcPageTests {
 		mockMvc.perform(post("/boss/requests/{id}/accept", secondWorkerRequestId).session(ownerSession))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/match-confirmed?matchRequestId=" + secondWorkerRequestId));
+
+		mockMvc.perform(get("/eval").session(session))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("평가할 매칭")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("다시 지원합니다.")));
+
+		mockMvc.perform(post("/eval")
+				.session(session)
+				.param("matchRequestId", secondWorkerRequestId.toString())
+				.param("targetId", ownerId.toString())
+				.param("rating", "5")
+				.param("review", "친절하고 안내가 명확했어요."))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/mypage"));
+
+		mockMvc.perform(get("/eval").session(session))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("다시 지원합니다."))));
+
+		mockMvc.perform(get("/mypage").session(session))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("내가 작성한 평가")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("친절하고 안내가 명확했어요.")));
+
+		mockMvc.perform(post("/eval")
+				.session(ownerSession)
+				.param("matchRequestId", secondWorkerRequestId.toString())
+				.param("targetId", workerId.toString())
+				.param("rating", "4")
+				.param("review", "시간 약속을 잘 지켰어요."))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/mypage"));
+
+		mockMvc.perform(get("/mypage").session(session))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("받은 평가")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("시간 약속을 잘 지켰어요.")));
+
+		mockMvc.perform(get("/boss/candidates/{id}", workerId).session(ownerSession))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("구직자 평가")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("시간 약속을 잘 지켰어요.")));
+
+		mockMvc.perform(post("/boss/candidates/{id}/favorite", workerId).session(ownerSession))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/boss/home"));
+
+		mockMvc.perform(get("/boss/home")
+				.session(ownerSession)
+				.param("favoritesOnly", "true"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("MVC Tester")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("찜한 인재")));
 	}
 
 	private UUID createWorkerRequest(MockHttpSession workerSession, MockHttpSession ownerSession) throws Exception {

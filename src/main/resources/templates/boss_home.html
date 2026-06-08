@@ -48,6 +48,19 @@
       <a class="section-more" th:if="${!memberVerified}" th:href="@{/boss/verify}">인증 후 추천</a>
     </div>
 
+    <form class="search-panel" th:action="@{/boss/home}" method="get">
+      <input class="form-input" name="keyword" placeholder="검색어" th:value="${keyword}">
+      <div class="select-grid">
+        <input class="form-input" name="region" placeholder="지역" th:value="${region}">
+        <input class="form-input" name="industry" placeholder="경험업종" th:value="${industry}">
+      </div>
+      <label class="check-row compact">
+        <input type="checkbox" name="favoritesOnly" value="true" th:checked="${favoritesOnly}">
+        <span>찜만 보기</span>
+      </label>
+      <button class="btn btn-secondary btn-sm" type="submit">조건 검색</button>
+    </form>
+
     <div class="recommendation-panel" id="boss-recommendations" data-recommendation-results hidden></div>
 
     <div class="empty-state" th:if="${#lists.isEmpty(candidates)}">
@@ -66,6 +79,10 @@
       </div>
       <div class="candidate-tags">
         <span class="tag-chip active" th:text="${candidate.skills}">입력한 경험 업종</span>
+        <span class="tag-chip" th:text="${#numbers.formatInteger(candidate.desiredHourlyWage, 0, 'COMMA')} + '원 이상'">13,000원 이상</span>
+        <span class="tag-chip" th:text="'평점 ' + ${candidate.averageRating} + ' · 후기 ' + ${candidate.reviewCount} + '개'">후기 0개</span>
+        <span class="tag-chip active" th:text="${candidate.trustLabel}">긴급 대타 가능</span>
+        <span class="tag-chip active" th:if="${candidate.favorite}">찜한 인재</span>
       </div>
       <span class="btn btn-primary btn-sm">상세 보기</span>
     </a>
