@@ -35,6 +35,49 @@
   </a>
 </nav>
 
+<header th:fragment="siteHeader" class="site-header">
+  <div class="site-header-top">
+    <a class="logo-mark" th:href="@{/}">
+      <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+      <span class="logo-text">바로<span>알바</span></span>
+    </a>
+    <form class="site-search" th:action="@{/worker/home}" method="get">
+      <label class="search-field">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input name="keyword" placeholder="알바, 지역, 업종을 검색하세요">
+      </label>
+      <input class="filter-input" name="region" placeholder="지역">
+      <input class="filter-input" name="category" placeholder="업종">
+      <button class="btn btn-primary btn-sm" type="submit">검색</button>
+    </form>
+    <div class="site-header-actions">
+      <a th:if="${member == null}" th:href="@{/signup}">회원가입</a>
+      <a th:if="${member == null}" th:href="@{/}">로그인</a>
+      <a th:if="${member != null}" class="mode-switch-link" th:href="@{/role}">
+        <i class="fa-solid fa-repeat"></i>
+        모드 전환
+      </a>
+      <a th:if="${member != null}" class="avatar avatar-48 avatar-worker" th:href="@{/mypage}" aria-label="마이페이지">
+        <i class="fa-regular fa-user"></i>
+      </a>
+    </div>
+  </div>
+  <nav class="site-gnb" aria-label="주요 메뉴">
+    <div class="site-gnb-menu">
+      <a th:href="@{/worker/home}">채용정보</a>
+      <a th:href="@{/boss/home}">인재정보</a>
+      <a th:href="@{/worker/home(region='서울특별시')}">지역별</a>
+      <a th:href="@{/worker/home(category='외식·음료')}">업종별</a>
+      <a th:href="@{/eval}">평가관리</a>
+      <a th:href="@{/role}">양방향 매칭</a>
+    </div>
+    <div class="site-gnb-actions">
+      <a class="gnb-btn gnb-btn-worker" th:href="@{/worker/profile/edit}">구직 프로필 등록</a>
+      <a class="gnb-btn gnb-btn-boss" th:href="@{/boss/recruitments/new}">공고 등록</a>
+    </div>
+  </nav>
+</header>
+
 <div th:fragment="scripts">
   <script th:src="@{/js/app.js}"></script>
 </div>
