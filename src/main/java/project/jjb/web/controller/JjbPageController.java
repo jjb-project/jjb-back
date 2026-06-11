@@ -66,7 +66,15 @@ public class JjbPageController {
 	@GetMapping("/")
 	String start(Model model, HttpSession session) {
 		addSessionMember(model, session);
+		model.addAttribute("recentJobs", jobListingCards(openRecruitments().stream().limit(5).toList()));
 		return "index";
+	}
+
+	@GetMapping("/jobs")
+	String jobs(Model model, HttpSession session) {
+		addSessionMember(model, session);
+		model.addAttribute("jobCards", jobListingCards(openRecruitments()));
+		return "jobs";
 	}
 
 	@PostMapping("/start")
@@ -620,6 +628,33 @@ public class JjbPageController {
 		);
 	}
 
+	private List<Recruitment> openRecruitments() {
+		return matchingService.listRecruitments().stream()
+			.filter(Recruitment::isOpen)
+			.toList();
+	}
+
+	private List<JobListingCard> jobListingCards(List<Recruitment> recruitments) {
+		return recruitments.stream()
+			.map(this::jobListingCard)
+			.toList();
+	}
+
+	private JobListingCard jobListingCard(Recruitment recruitment) {
+		MemberSnapshot owner = memberService.getMember(recruitment.ownerId());
+		OwnerProfile profile = owner.ownerProfile();
+		return new JobListingCard(
+			recruitment.id(),
+			recruitment.title(),
+			storeName(owner),
+			profile == null ? "" : profile.businessCategory(),
+			recruitment.workplaceAddress(),
+			recruitment.workTime(),
+			recruitment.hourlyWage(),
+			statusLabel(recruitment.status().name())
+		);
+	}
+
 	private String storeName(MemberSnapshot owner) {
 		OwnerProfile ownerProfile = owner.ownerProfile();
 		if (ownerProfile != null && ownerProfile.storeName() != null && !ownerProfile.storeName().isBlank()) {
@@ -816,6 +851,9 @@ public class JjbPageController {
 	}
 
 	record RecruitmentCard(UUID id, String title, String workTime, String workplaceAddress, int hourlyWage, String status) {
+	}
+
+	record JobListingCard(UUID id, String title, String storeName, String businessCategory, String workplaceAddress, String workTime, int hourlyWage, String status) {
 	}
 
 	record CandidateCard(UUID id, String name, String availableTime, String area, String skills, int desiredHourlyWage, double averageRating, int reviewCount, boolean favorite, String trustLabel) {

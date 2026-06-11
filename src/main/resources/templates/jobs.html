@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('실시간 공고')}"></head>
+<body>
+<main class="app-shell job-portal-shell public-portal">
+  <section class="screen active no-bottom">
+    <div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+    <div class="jobs-page-head">
+      <h1>실시간 등록 공고</h1>
+      <span class="section-sub" th:text="${#lists.size(jobCards)} + '개의 공고'">0개의 공고</span>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(jobCards)}">
+      아직 등록된 공고가 없습니다.
+    </div>
+
+    <div class="jobs-grid" th:unless="${#lists.isEmpty(jobCards)}">
+      <article class="job-grid-card" th:each="job : ${jobCards}">
+        <span class="tag-chip" th:text="${job.businessCategory}">업종</span>
+        <strong class="job-grid-store" th:text="${job.storeName}">매장명</strong>
+        <p class="job-grid-title" th:text="${job.title}">공고 제목</p>
+        <span class="job-grid-meta" th:text="${job.workTime}">근무시간</span>
+        <span class="job-grid-meta" th:text="${job.workplaceAddress}">주소</span>
+        <span class="job-grid-wage" th:text="${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원/시간'">시급</span>
+        <a class="btn btn-outline btn-sm" th:href="@{/worker/home}">상세보기</a>
+      </article>
+    </div>
+  </section>
+</main>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

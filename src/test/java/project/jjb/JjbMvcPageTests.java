@@ -98,6 +98,54 @@ class JjbMvcPageTests {
 	}
 
 	@Test
+	void jobsPageListsOpenRecruitments() throws Exception {
+		MockHttpSession ownerSession = new MockHttpSession();
+		mockMvc.perform(post("/start")
+				.session(ownerSession)
+				.param("socialProvider", "naver")
+				.param("displayName", "Jobs Owner"))
+			.andExpect(status().is3xxRedirection());
+		mockMvc.perform(post("/role")
+				.session(ownerSession)
+				.param("role", "OWNER"))
+			.andExpect(status().is3xxRedirection());
+
+		mockMvc.perform(post("/boss/verify")
+				.session(ownerSession)
+				.param("businessRegistrationNumber", "123-45-67891")
+				.param("representativeName", "Jobs Owner")
+				.param("openingDate", "2024-03-12")
+				.param("storeName", "잡스카페")
+				.param("storeAddress", "서울 강남구")
+				.param("businessCategory", "카페")
+				.param("storeIntroduction", "공고 목록 테스트용 매장입니다."))
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/boss/home"));
+
+		mockMvc.perform(post("/boss/recruitments")
+				.session(ownerSession)
+				.param("title", "오픈 타임 홀 서빙")
+				.param("workDate", "2024-04-01")
+				.param("startTime", "09:00")
+				.param("endTime", "13:00")
+				.param("workplaceAddress", "서울 강남구 테헤란로 1")
+				.param("hourlyWage", "11000"))
+			.andExpect(status().is3xxRedirection());
+
+		mockMvc.perform(get("/jobs"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("잡스카페")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("오픈 타임 홀 서빙")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("11,000원/시간")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/css/style.css")));
+
+		mockMvc.perform(get("/"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("실시간 등록 공고")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("잡스카페")));
+	}
+
+	@Test
 	void oauth2AuthorizationEndpointsRedirectToProviders() throws Exception {
 		mockMvc.perform(get("/oauth2/authorization/kakao"))
 			.andExpect(status().is3xxRedirection())
