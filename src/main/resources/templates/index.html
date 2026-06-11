@@ -4,51 +4,31 @@
 <body>
 <main class="app-shell job-portal-shell public-portal">
   <section class="screen active no-bottom">
-    <header class="home-topbar">
-      <a class="logo-mark" th:href="@{/}">
-        <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
-        <span class="logo-text">바로<span>알바</span></span>
-      </a>
-      <div class="home-actions">
-        <a class="mode-switch-link" th:href="@{/signup}">회원가입</a>
-      </div>
-    </header>
+    <div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <nav class="portal-menu" aria-label="주요 메뉴">
-      <a th:href="@{/worker/home}">채용정보</a>
-      <a th:href="@{/boss/home}">인재정보</a>
-      <a th:href="@{/worker/home(region='서울특별시')}">지역별</a>
-      <a th:href="@{/worker/home(category='외식·음료')}">업종별</a>
-      <a th:href="@{/eval}">평가관리</a>
-      <a th:href="@{/role}">양방향 매칭</a>
-    </nav>
+    <div class="home-hero-grid">
+      <article class="hero-jobs-card">
+        <h2>
+          실시간 등록 공고
+          <a th:href="@{/jobs}">더보기</a>
+        </h2>
+        <div class="empty-state" th:if="${#lists.isEmpty(recentJobs)}">
+          아직 등록된 공고가 없습니다.
+        </div>
+        <a class="hero-job-item" th:each="job : ${recentJobs}" th:href="@{/jobs}">
+          <strong th:text="${job.storeName}">매장명</strong>
+          <span th:text="${job.title}">공고 제목</span>
+          <span th:text="${job.workTime} + ' · ' + ${job.workplaceAddress}">근무시간 · 주소</span>
+          <span class="hero-job-wage" th:text="${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원/시간'">시급</span>
+        </a>
+      </article>
 
-    <section class="public-main">
-      <div class="portal-hero public">
+      <article class="hero-banner-card">
         <p class="eyebrow">구인구직 포털 + 양방향 매칭</p>
         <h1 class="login-headline">급할 때 바로 매칭,<br>믿을 수 있는 단기 알바</h1>
         <p class="login-sub">구직자는 가게에 지원하고, 인증 사장님은 좋은 구직자에게 직접 제안합니다.</p>
-        <form class="portal-search" th:action="@{/worker/home}" method="get">
-          <label class="search-field">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input name="keyword" placeholder="알바, 지역, 업종을 검색하세요">
-          </label>
-          <div class="filter-row">
-            <input class="filter-input" name="region" placeholder="지역">
-            <input class="filter-input" name="category" placeholder="업종">
-          </div>
-          <div class="search-actions">
-            <span class="mini-check">로그인 후 맞춤 결과 제공</span>
-            <button class="btn btn-primary btn-sm" type="submit">검색</button>
-          </div>
-        </form>
-        <div class="quick-tabs" aria-label="빠른 필터">
-          <a th:href="@{/worker/home}">전체 알바</a>
-          <a th:href="@{/worker/home(region='서울특별시')}">서울</a>
-          <a th:href="@{/worker/home(category='카페')}">카페</a>
-          <a th:href="@{/boss/home}">인재 찾기</a>
-        </div>
-      </div>
+        <a class="btn btn-primary btn-sm" th:href="@{/role}">양방향 매칭 시작하기</a>
+      </article>
 
       <aside class="public-login-card">
         <p class="page-message error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
@@ -77,37 +57,42 @@
           <span class="social-btn-label">네이버로 시작하기</span>
         </a>
       </aside>
-    </section>
+    </div>
 
-    <section class="dual-match-strip">
-      <div>
-        <strong>바로알바의 킥 포인트: 양방향 매칭</strong>
-        <span>구직자 지원, 사장님 제안, 수락/거절, 근무 완료, 양방향 평가까지 한 계정에서 이어집니다.</span>
-      </div>
-      <a class="btn btn-outline btn-sm" th:href="@{/signup}">시작하기</a>
-    </section>
+    <div class="home-category-grid">
+      <section class="category-box">
+        <h3>지역·동네 알바</h3>
+        <div class="category-box-grid">
+          <a th:href="@{/worker/home(region='서울특별시')}"><i class="fa-solid fa-location-dot"></i> 서울</a>
+          <a th:href="@{/worker/home(region='경기도')}"><i class="fa-solid fa-location-dot"></i> 경기</a>
+          <a th:href="@{/worker/home(region='인천광역시')}"><i class="fa-solid fa-location-dot"></i> 인천</a>
+          <a th:href="@{/worker/home(region='부산광역시')}"><i class="fa-solid fa-location-dot"></i> 부산</a>
+          <a th:href="@{/worker/home(region='대구광역시')}"><i class="fa-solid fa-location-dot"></i> 대구</a>
+          <a th:href="@{/worker/home(region='대전광역시')}"><i class="fa-solid fa-location-dot"></i> 대전</a>
+        </div>
+      </section>
 
-    <div class="portal-feature-grid">
-      <div class="service-icon-item">
-        <div class="service-icon-circle"><i class="fa-solid fa-briefcase"></i></div>
-        <span class="service-icon-label">채용정보</span>
-        <p>인증된 가게를 지역과 업종으로 탐색합니다.</p>
-      </div>
-      <div class="service-icon-item">
-        <div class="service-icon-circle"><i class="fa-solid fa-users"></i></div>
-        <span class="service-icon-label">인재정보</span>
-        <p>사장님은 구직자 프로필을 보고 제안합니다.</p>
-      </div>
-      <div class="service-icon-item">
-        <div class="service-icon-circle"><i class="fa-solid fa-shield-halved"></i></div>
-        <span class="service-icon-label">신뢰장치</span>
-        <p>사업자 인증, 평가, 취소 기록을 함께 봅니다.</p>
-      </div>
-      <div class="service-icon-item">
-        <div class="service-icon-circle"><i class="fa-solid fa-star"></i></div>
-        <span class="service-icon-label">양방향 평가</span>
-        <p>구직자와 사장님 모두 평가 대상입니다.</p>
-      </div>
+      <section class="category-box">
+        <h3>대상별 알바</h3>
+        <div class="category-box-grid">
+          <a th:href="@{/worker/home(keyword='대학생')}"><i class="fa-solid fa-graduation-cap"></i> 대학생</a>
+          <a th:href="@{/worker/home(keyword='주부')}"><i class="fa-solid fa-house"></i> 주부</a>
+          <a th:href="@{/worker/home(keyword='청소년')}"><i class="fa-solid fa-child-reaching"></i> 청소년</a>
+          <a th:href="@{/worker/home(keyword='외국인')}"><i class="fa-solid fa-earth-asia"></i> 외국인</a>
+          <a th:href="@{/worker/home(keyword='시니어')}"><i class="fa-solid fa-user-tie"></i> 시니어</a>
+          <a th:href="@{/worker/home(category='카페')}"><i class="fa-solid fa-mug-hot"></i> 카페</a>
+        </div>
+      </section>
+
+      <section class="category-box">
+        <h3>양방향 매칭 가이드</h3>
+        <div class="category-box-grid">
+          <a th:href="@{/worker/home}"><i class="fa-solid fa-paper-plane"></i> 지원현황</a>
+          <a th:href="@{/boss/home}"><i class="fa-solid fa-handshake"></i> 받은 제안</a>
+          <a th:href="@{/eval}"><i class="fa-solid fa-star"></i> 평가관리</a>
+          <a th:href="@{/boss/recruitments/new}"><i class="fa-solid fa-bullhorn"></i> 공고등록</a>
+        </div>
+      </section>
     </div>
 
     <p class="terms-copy">가입하면 서비스 이용약관 및 개인정보처리방침에 동의합니다.</p>
