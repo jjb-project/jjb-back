@@ -3,10 +3,10 @@
 <head th:replace="~{fragments/layout :: head('회원가입')}"></head>
 <body>
 <main class="app-shell">
-  <section class="screen active">
+  <section class="screen active signup-screen">
     <div th:replace="~{fragments/layout :: topbar('아이디 회원가입', '/')}"></div>
 
-    <form class="form-screen" th:action="@{/signup/local}" method="post" data-signup-form>
+    <form class="form-screen signup-form" th:action="@{/signup/local}" method="post" data-signup-form>
       <div class="page-intro">
         <h1>아이디로 계정을 만들어요</h1>
         <p>가입 후 바로 이용 목적을 선택하고 필요한 프로필을 등록할 수 있습니다.</p>
@@ -38,8 +38,6 @@
         <i class="fa-solid fa-user-plus"></i>
         계정 만들기
       </button>
-
-      <a class="btn btn-secondary" th:href="@{/}">로그인으로 돌아가기</a>
     </form>
   </section>
 </main>
