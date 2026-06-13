@@ -1364,3 +1364,14 @@ select.form-input { appearance:none; background:white; }
   font-size: 16px;
   box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
 }
+
+/* ===== Public portal white tone ===== */
+.job-portal-shell.public-portal {
+  background: #FFFFFF;
+}
+.public-portal .hero-jobs-card,
+.public-portal .public-login-card,
+.public-portal .category-box {
+  background: #F8F9FA;
+  border: none;
+}
