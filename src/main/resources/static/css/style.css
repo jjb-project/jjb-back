@@ -1085,25 +1085,6 @@ select.form-input { appearance:none; background:white; }
 .site-gnb-menu a:last-child {
   color: var(--green-mid);
 }
-.site-gnb-actions {
-  display: flex;
-  gap: 8px;
-  padding: 8px 0;
-}
-.gnb-btn {
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 800;
-  color: white;
-  white-space: nowrap;
-}
-.gnb-btn-worker {
-  background: var(--green);
-}
-.gnb-btn-boss {
-  background: var(--blue);
-}
 
 /* Home hero (3-column) */
 .home-hero-grid {
