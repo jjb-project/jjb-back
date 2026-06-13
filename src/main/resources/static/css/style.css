@@ -1315,3 +1315,52 @@ select.form-input { appearance:none; background:white; }
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ===== Signup (Toss-style) ===== */
+.signup-screen {
+  background: #FFFFFF;
+}
+.signup-form {
+  padding: 0 20px 100px;
+}
+.signup-form .page-intro h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.signup-form .page-intro p {
+  font-size: 14px;
+  color: var(--gray-400);
+  line-height: 1.6;
+}
+.signup-form .form-label {
+  font-size: 13px;
+  color: var(--gray-400);
+  font-weight: 600;
+}
+.signup-form .form-input {
+  height: 56px;
+  padding: 0 16px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: #F2F4F6;
+  font-size: 16px;
+}
+.signup-form .form-input:focus {
+  background: #FFFFFF;
+  border-color: var(--blue);
+}
+.signup-form .email-check-btn {
+  height: 56px;
+  border-radius: 12px;
+  background: #F2F4F6;
+  color: var(--gray-600);
+}
+.signup-form [data-signup-submit] {
+  position: sticky;
+  bottom: 16px;
+  height: 56px;
+  border-radius: 12px;
+  font-size: 16px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+}
