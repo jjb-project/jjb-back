@@ -1162,8 +1162,6 @@ select.form-input { appearance:none; background:white; }
   font-weight: 800;
 }
 .hero-banner-card {
-  background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
-  color: white;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1173,17 +1171,18 @@ select.form-input { appearance:none; background:white; }
 .hero-banner-card .eyebrow {
   font-size: 12px;
   font-weight: 800;
-  opacity: 0.85;
+  color: var(--green);
 }
 .hero-banner-card h1 {
   font-size: 22px;
   font-weight: 800;
   line-height: 1.35;
+  color: var(--ink);
 }
 .hero-banner-card p {
   font-size: 13px;
   line-height: 1.6;
-  opacity: 0.92;
+  color: var(--gray-600);
 }
 .hero-banner-card .btn {
   width: auto;
@@ -1370,6 +1369,7 @@ select.form-input { appearance:none; background:white; }
   background: #FFFFFF;
 }
 .public-portal .hero-jobs-card,
+.public-portal .hero-banner-card,
 .public-portal .public-login-card,
 .public-portal .category-box {
   background: #F8F9FA;
