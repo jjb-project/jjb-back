@@ -620,7 +620,7 @@ select.form-input { appearance:none; background:white; }
   color:var(--blue);
 }
 .job-portal-shell {
-  max-width:1180px;
+  max-width:1440px;
   background:#F1F5F9;
 }
 .job-portal-shell .screen {
@@ -850,7 +850,7 @@ select.form-input { appearance:none; background:white; }
     max-width:720px;
   }
   .job-portal-shell {
-    max-width:1180px;
+    max-width:1440px;
   }
   .job-portal-shell .screen {
     min-height:100dvh;
@@ -983,7 +983,7 @@ select.form-input { appearance:none; background:white; }
     max-width:720px;
   }
   .job-portal-shell ~ .bottom-nav {
-    max-width:1180px;
+    max-width:1440px;
   }
 }
 
@@ -993,7 +993,7 @@ select.form-input { appearance:none; background:white; }
   border-bottom: 1px solid var(--gray-200);
 }
 .site-header-top {
-  max-width: 1180px;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -1063,7 +1063,7 @@ select.form-input { appearance:none; background:white; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1180px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 24px;
   flex-wrap: wrap;
@@ -1088,7 +1088,7 @@ select.form-input { appearance:none; background:white; }
 
 /* Home hero (3-column) */
 .home-hero-grid {
-  max-width: 1180px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 20px 24px;
   display: grid;
@@ -1176,7 +1176,7 @@ select.form-input { appearance:none; background:white; }
 
 /* Category grid */
 .home-category-grid {
-  max-width: 1180px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 24px 24px;
   display: grid;
@@ -1219,7 +1219,7 @@ select.form-input { appearance:none; background:white; }
 
 /* Jobs grid page */
 .jobs-page-head {
-  max-width: 1180px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 24px 24px 12px;
   display: flex;
@@ -1231,7 +1231,7 @@ select.form-input { appearance:none; background:white; }
   font-weight: 800;
 }
 .jobs-grid {
-  max-width: 1180px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 24px 32px;
   display: grid;
