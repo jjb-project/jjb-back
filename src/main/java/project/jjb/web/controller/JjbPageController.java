@@ -86,6 +86,7 @@ public class JjbPageController {
 		model.addAttribute("allJobs", jobListingCards(open));
 		model.addAttribute("allProfiles", allProfiles);
 		model.addAttribute("urgentJobs", nearbyUrgentJobs(open, member));
+		model.addAttribute("minimumHourlyWage", minimumHourlyWage);
 		return "index";
 	}
 
