@@ -83,7 +83,13 @@ public class MemberController {
 			request.desiredHourlyWage(),
 			request.experiencedIndustries(),
 			request.urgentSubstituteAvailable(),
-			request.introduction()
+			request.introduction(),
+			request.gender(),
+			request.militaryService(),
+			request.education(),
+			request.careerLevel(),
+			request.preferredDays(),
+			null
 		);
 		liveUpdateService.publish("profiles");
 		return member;
@@ -99,7 +105,8 @@ public class MemberController {
 			request.storeName(),
 			request.storeAddress(),
 			request.businessCategory(),
-			request.storeIntroduction()
+			request.storeIntroduction(),
+			null
 		);
 		liveUpdateService.publish("stores");
 		return member;
@@ -148,11 +155,16 @@ public class MemberController {
 
 	record JobSeekerProfileRequest(
 		@NotBlank String availableTime,
-		@NotBlank String preferredArea,
+		String preferredArea,
 		@Positive int desiredHourlyWage,
 		List<String> experiencedIndustries,
 		boolean urgentSubstituteAvailable,
-		@NotBlank String introduction
+		String introduction,
+		String gender,
+		String militaryService,
+		String education,
+		String careerLevel,
+		List<String> preferredDays
 	) {
 	}
 

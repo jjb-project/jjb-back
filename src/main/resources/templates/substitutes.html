@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('대타 마켓')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-detail">
+  <div class="inbox-head">
+    <h1><i class="fa-solid fa-people-arrows"></i> 대타 마켓</h1>
+    <a class="btn btn-primary btn-sm" th:href="@{/substitutes/new}"><i class="fa-solid fa-plus"></i> 대타 요청</a>
+  </div>
+  <p class="sub-intro">갑자기 근무가 어려워졌나요? 확정된 근무의 대타를 구하거나, 다른 사람의 대타를 맡을 수 있어요.</p>
+
+  <!-- 대타 구해요 (마켓) -->
+  <div class="section-header">
+    <span class="section-title">🔥 지금 대타 구해요</span>
+    <span class="section-more" th:text="${#lists.size(openRequests)} + '건'">0건</span>
+  </div>
+  <div class="empty-state" th:if="${#lists.isEmpty(openRequests)}">현재 대타를 구하는 근무가 없습니다.</div>
+  <div class="sub-card-list">
+    <article class="sub-card" th:each="s : ${openRequests}">
+      <div class="sub-card-main">
+        <div class="sub-card-top">
+          <span class="sub-store" th:text="${s.storeName}">매장명</span>
+          <span class="inbox-status inbox-status--requested" th:text="${s.status}">대타 구함</span>
+        </div>
+        <p class="sub-shift" th:text="${s.shiftInfo}">근무 정보</p>
+        <p class="sub-reason" th:text="'사유: ' + ${s.reason}">사유</p>
+        <span class="sub-requester" th:text="${s.requesterName} + '님 요청'">요청자</span>
+      </div>
+      <div class="sub-card-actions">
+        <form th:if="${s.canTake}" th:action="@{/substitutes/{id}/take(id=${s.id})}" method="post"
+              onsubmit="return confirm('이 대타를 맡을까요?')">
+          <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-hand"></i> 대타 맡기</button>
+        </form>
+        <span th:if="${s.mine}" class="sub-mine-tag">내 요청</span>
+      </div>
+    </article>
+  </div>
+
+  <!-- 내가 올린 대타 -->
+  <div class="section-header" style="margin-top:28px">
+    <span class="section-title">내가 올린 대타</span>
+    <span class="section-more" th:text="${#lists.size(myRequests)} + '건'">0건</span>
+  </div>
+  <div class="empty-state" th:if="${#lists.isEmpty(myRequests)}">아직 올린 대타 요청이 없습니다.</div>
+  <div class="sub-card-list">
+    <article class="sub-card" th:each="s : ${myRequests}">
+      <div class="sub-card-main">
+        <div class="sub-card-top">
+          <span class="sub-store" th:text="${s.storeName}">매장명</span>
+          <span class="inbox-status"
+                th:classappend="${s.statusCode == 'OPEN'} ? ' inbox-status--requested' : (${s.statusCode == 'FILLED'} ? ' inbox-status--accepted' : ' inbox-status--canceled')"
+                th:text="${s.status}">상태</span>
+        </div>
+        <p class="sub-shift" th:text="${s.shiftInfo}">근무 정보</p>
+        <p class="sub-reason" th:text="'사유: ' + ${s.reason}">사유</p>
+      </div>
+    </article>
+  </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

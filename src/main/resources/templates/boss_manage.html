@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('내 공고 관리')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-detail">
+  <div class="inbox-head">
+    <h1><i class="fa-solid fa-briefcase"></i> 내 공고 관리</h1>
+    <a class="btn btn-primary btn-sm" th:href="@{/boss/recruitments/new}"><i class="fa-solid fa-plus"></i> 공고 등록</a>
+  </div>
+
+  <div class="empty-state" th:if="${#lists.isEmpty(recruitments)}">아직 등록한 공고가 없습니다.</div>
+
+  <div class="manage-list">
+    <article class="manage-card" th:each="r : ${recruitments}">
+      <div class="manage-card-main">
+        <div class="manage-card-top">
+          <strong class="manage-title" th:text="${r.title}">공고 제목</strong>
+          <span class="inbox-status" th:classappend="${r.open} ? ' inbox-status--requested' : ' inbox-status--canceled'"
+                th:text="${r.status}">상태</span>
+        </div>
+        <span class="manage-meta" th:text="${r.workTime}">근무시간</span>
+        <span class="manage-meta" th:text="${r.workplaceAddress}">주소</span>
+        <span class="manage-wage" th:text="'시급 ' + ${#numbers.formatInteger(r.hourlyWage, 0, 'COMMA')} + '원'">시급</span>
+      </div>
+      <div class="manage-card-actions">
+        <a class="btn btn-secondary btn-sm" th:href="@{/boss/recruitments/{id}(id=${r.id})}">
+          <i class="fa-solid fa-users"></i> 지원자
+        </a>
+        <a class="btn btn-secondary btn-sm" th:href="@{/boss/recruitments/{id}/edit(id=${r.id})}">
+          <i class="fa-solid fa-pen"></i> 수정
+        </a>
+        <form th:if="${r.open}" th:action="@{/boss/recruitments/{id}/close(id=${r.id})}" method="post">
+          <button class="btn btn-secondary btn-sm" type="submit">마감</button>
+        </form>
+        <form th:action="@{/boss/recruitments/{id}/delete(id=${r.id})}" method="post"
+              onsubmit="return confirm('이 공고를 삭제할까요?')">
+          <button class="btn btn-danger btn-sm" type="submit"><i class="fa-solid fa-trash"></i></button>
+        </form>
+      </div>
+    </article>
+  </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

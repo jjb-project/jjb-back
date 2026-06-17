@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('매칭 요청')}"></head>
-<body>
-<main class="app-shell">
-  <section class="screen active">
-    <div th:replace="~{fragments/layout :: topbar('매칭 요청 상세', '/worker/home')}"></div>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <div class="detail-page">
-      <div class="detail-hero">
-        <div class="request-store-icon large"><i class="fa-solid fa-store"></i></div>
-        <div>
-          <h1 th:text="${request.storeName}">매장명</h1>
-          <p th:text="${request.message}">카운터와 음료 제조를 도와주세요.</p>
-        </div>
-      </div>
-
-      <dl class="detail-grid">
-        <div>
-          <dt>근무 일시</dt>
-          <dd th:text="${request.workTime}">오늘 17:00-22:00</dd>
-        </div>
-        <div>
-          <dt>시급</dt>
-          <dd th:text="${request.hourlyWage} + ' /시간'">13,000원 /시간</dd>
-        </div>
-        <div>
-          <dt>상태</dt>
-          <dd th:text="${request.status}">REQUESTED</dd>
-        </div>
-      </dl>
-
-      <div class="action-row">
-        <a class="btn btn-secondary" th:href="@{/worker/home}">나중에 보기</a>
-        <form th:action="@{/worker/requests/{id}/decline(id=${request.id})}" method="post">
-          <button class="btn btn-outline" type="submit">거절하기</button>
-        </form>
-        <form th:action="@{/worker/requests/{id}/accept(id=${request.id})}" method="post">
-          <button class="btn btn-primary" type="submit">수락하기</button>
-        </form>
+<div class="web-detail">
+  <div class="detail-page">
+    <div class="detail-hero">
+      <div class="request-store-icon large"><i class="fa-solid fa-store"></i></div>
+      <div>
+        <h1 th:text="${request.storeName}">매장명</h1>
+        <p th:text="${request.message}">카운터와 음료 제조를 도와주세요.</p>
       </div>
     </div>
-  </section>
-</main>
+
+    <dl class="detail-grid">
+      <div>
+        <dt>근무 일시</dt>
+        <dd th:text="${request.workTime}">오늘 17:00-22:00</dd>
+      </div>
+      <div>
+        <dt>시급</dt>
+        <dd th:text="${request.hourlyWage} + ' /시간'">13,000원 /시간</dd>
+      </div>
+      <div>
+        <dt>상태</dt>
+        <dd th:text="${request.status}">REQUESTED</dd>
+      </div>
+    </dl>
+
+    <div class="action-row">
+      <a class="btn btn-secondary" th:href="@{/worker/home}">나중에 보기</a>
+      <form th:action="@{/worker/requests/{id}/decline(id=${request.id})}" method="post">
+        <button class="btn btn-outline" type="submit">거절하기</button>
+      </form>
+      <form th:action="@{/worker/requests/{id}/accept(id=${request.id})}" method="post">
+        <button class="btn btn-primary" type="submit">수락하기</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

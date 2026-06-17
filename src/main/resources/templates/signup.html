@@ -1,50 +1,67 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('회원가입')}"></head>
-<body>
-<main class="app-shell job-portal-shell public-portal">
-  <section class="screen active no-bottom">
-    <div th:replace="~{fragments/layout :: siteHeader}"></div>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <div class="signup-page">
-      <div class="signup-card">
-        <div class="page-intro">
-          <h1>아이디로 계정을 만들어요</h1>
-          <p>가입 후 바로 이용 목적을 선택하고 필요한 프로필을 등록할 수 있습니다.</p>
-        </div>
+<div class="login-page-wrap">
+  <div class="login-page-card">
 
-        <p class="page-message error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+    <!-- 브랜드 -->
+    <a class="login-page-logo" th:href="@{/}">
+      <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+      <span class="logo-text">바로<span>알바</span></span>
+    </a>
 
-        <form class="local-auth-form" th:action="@{/signup/local}" method="post" data-signup-form>
-          <div class="form-group">
-            <label class="form-label" for="signupDisplayName">이름</label>
-            <input class="form-input" id="signupDisplayName" name="displayName" autocomplete="name" placeholder="홍길동" required>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="signupUsername">아이디</label>
-            <div class="email-check-row">
-              <input class="form-input" id="signupUsername" name="username" autocomplete="username"
-                     placeholder="영문/숫자 4자 이상" pattern="[A-Za-z0-9._-]{4,40}" required data-username-input>
-              <button class="btn btn-secondary email-check-btn" type="button" data-username-check-button>중복확인</button>
-            </div>
-            <p class="form-help" data-username-check-message role="status" aria-live="polite"></p>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="signupPassword">비밀번호</label>
-            <input class="form-input" id="signupPassword" name="password" type="password" autocomplete="new-password" minlength="8" required>
-          </div>
-
-          <button class="btn btn-primary" type="submit" data-signup-submit disabled>
-            <i class="fa-solid fa-user-plus"></i>
-            계정 만들기
-          </button>
-        </form>
-      </div>
+    <div class="page-intro" style="text-align:center;padding:0;margin-bottom:-4px">
+      <h1 style="font-size:18px">아이디로 계정을 만들어요</h1>
+      <p>가입 후 이용 목적을 선택하고 프로필을 등록할 수 있어요.</p>
     </div>
-  </section>
-</main>
+
+    <p class="page-message error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+
+    <form class="local-auth-form login-form" th:action="@{/signup/local}" method="post" data-signup-form>
+      <div class="form-group">
+        <input class="form-input" name="displayName" autocomplete="name" placeholder="이름" required>
+      </div>
+      <div class="form-group">
+        <div class="email-check-row">
+          <input class="form-input" name="username" autocomplete="username"
+                 placeholder="아이디 (영문/숫자 4자 이상)" pattern="[A-Za-z0-9._-]{4,40}" required data-username-input>
+          <button class="btn btn-secondary email-check-btn" type="button" data-username-check-button>중복확인</button>
+        </div>
+        <p class="form-help" data-username-check-message role="status" aria-live="polite"></p>
+      </div>
+      <div class="form-group">
+        <input class="form-input" name="password" type="password" autocomplete="new-password" placeholder="비밀번호 (8자 이상)" minlength="8" required>
+      </div>
+      <button class="btn btn-primary login-submit-btn" type="submit" data-signup-submit disabled>
+        <i class="fa-solid fa-user-plus"></i>
+        계정 만들기
+      </button>
+    </form>
+
+    <!-- 소셜 로그인 -->
+    <div class="login-divider"><span>소셜로 바로 시작하기</span></div>
+    <div class="login-social-btns">
+      <a class="social-btn social-btn-kakao" th:href="@{/oauth2/authorization/kakao}">
+        <span class="social-btn-icon">K</span>
+        <span class="social-btn-label">카카오로 시작하기</span>
+      </a>
+      <a class="social-btn social-btn-naver" th:href="@{/oauth2/authorization/naver}">
+        <span class="social-btn-icon">N</span>
+        <span class="social-btn-label">네이버로 시작하기</span>
+      </a>
+    </div>
+
+    <p class="login-signup-hint">
+      이미 계정이 있으신가요?
+      <a th:href="@{/login}">로그인</a>
+    </p>
+
+  </div>
+</div>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

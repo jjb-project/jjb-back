@@ -23,11 +23,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import project.jjb.common.ApiException;
+import project.jjb.matching.domain.ChatMessage;
 import project.jjb.matching.domain.FavoriteTargetType;
+import project.jjb.matching.domain.MatchRequestInitiator;
 import project.jjb.matching.domain.MatchRequestSnapshot;
+import project.jjb.matching.domain.MatchRequestStatus;
 import project.jjb.matching.domain.MatchingRecommendation;
 import project.jjb.matching.domain.Recruitment;
 import project.jjb.matching.domain.Review;
+import project.jjb.matching.domain.SubstituteRequest;
 import project.jjb.matching.service.MatchingRecommendationService;
 import project.jjb.matching.service.MatchingService;
 import project.jjb.member.domain.JobSeekerProfile;
@@ -35,6 +39,9 @@ import project.jjb.member.domain.MemberRole;
 import project.jjb.member.domain.MemberSnapshot;
 import project.jjb.member.domain.OwnerProfile;
 import project.jjb.member.service.MemberService;
+import project.jjb.notification.domain.Notification;
+import project.jjb.notification.domain.NotificationType;
+import project.jjb.notification.service.NotificationService;
 import project.jjb.web.LiveUpdateService;
 import project.jjb.web.WebSessionKeys;
 
@@ -47,6 +54,8 @@ public class JjbPageController {
 	private final MatchingService matchingService;
 	private final MatchingRecommendationService matchingRecommendationService;
 	private final LiveUpdateService liveUpdateService;
+	private final NotificationService notificationService;
+	private final project.jjb.common.FileStorageService fileStorageService;
 	private final int minimumHourlyWage;
 
 	public JjbPageController(
@@ -54,26 +63,111 @@ public class JjbPageController {
 		MatchingService matchingService,
 		MatchingRecommendationService matchingRecommendationService,
 		LiveUpdateService liveUpdateService,
+		NotificationService notificationService,
+		project.jjb.common.FileStorageService fileStorageService,
 		@Value("${jjb.minimum-hourly-wage:10320}") int minimumHourlyWage
 	) {
 		this.memberService = memberService;
 		this.matchingService = matchingService;
 		this.matchingRecommendationService = matchingRecommendationService;
 		this.liveUpdateService = liveUpdateService;
+		this.notificationService = notificationService;
+		this.fileStorageService = fileStorageService;
 		this.minimumHourlyWage = minimumHourlyWage;
 	}
 
 	@GetMapping("/")
 	String start(Model model, HttpSession session) {
-		addSessionMember(model, session);
-		model.addAttribute("recentJobs", jobListingCards(openRecruitments().stream().limit(5).toList()));
+		MemberSnapshot member = addSessionMember(model, session);
+		List<Recruitment> open = openRecruitments();
+		List<ProfileCard> allProfiles = profileCards();
+		model.addAttribute("recentJobs", jobListingCards(open.stream().limit(3).toList()));
+		model.addAttribute("recentProfiles", allProfiles.stream().limit(2).toList());
+		model.addAttribute("allJobs", jobListingCards(open));
+		model.addAttribute("allProfiles", allProfiles);
+		model.addAttribute("urgentJobs", nearbyUrgentJobs(open, member));
 		return "index";
 	}
 
-	@GetMapping("/jobs")
-	String jobs(Model model, HttpSession session) {
+	private List<JobListingCard> nearbyUrgentJobs(List<Recruitment> open, MemberSnapshot member) {
+		String myRegion = member != null && member.jobSeekerProfile() != null
+			? regionToken(member.jobSeekerProfile().preferredArea())
+			: "";
+		return open.stream()
+			.filter(r -> isUrgent(r.workDate(), r.startTime()) || r.tags().contains("급구") || r.instantHire())
+			.filter(r -> myRegion.isBlank() || containsIgnoreCase(r.workplaceAddress(), myRegion))
+			.sorted(java.util.Comparator.comparing(r -> java.time.LocalDateTime.of(r.workDate(), r.startTime())))
+			.limit(8)
+			.flatMap(r -> {
+				try {
+					return java.util.stream.Stream.of(jobListingCard(r));
+				}
+				catch (Exception ignored) {
+					return java.util.stream.Stream.empty();
+				}
+			})
+			.toList();
+	}
+
+	private String regionToken(String area) {
+		if (area == null || area.isBlank()) {
+			return "";
+		}
+		String first = area.trim().split("\\s+")[0];
+		return first.length() >= 2 ? first.substring(0, 2) : first;
+	}
+
+	@GetMapping("/jobs/{id}")
+	String jobDetail(@PathVariable UUID id, Model model, HttpSession session) {
 		addSessionMember(model, session);
-		model.addAttribute("jobCards", jobListingCards(openRecruitments()));
+		try {
+			Recruitment recruitment = matchingService.getRecruitment(id);
+			MemberSnapshot owner = memberService.getMember(recruitment.ownerId());
+			OwnerProfile ownerProfile = owner.ownerProfile();
+			model.addAttribute("job", jobListingCard(recruitment));
+			model.addAttribute("tags", recruitment.tags());
+			model.addAttribute("description", recruitment.description());
+			model.addAttribute("storeIntroduction", ownerProfile == null ? "" : ownerProfile.storeIntroduction());
+			model.addAttribute("reviews", reviewCards(matchingService.listReviewsForTarget(owner.id())));
+			model.addAttribute("reviewSummary", reviewSummary(owner.id()));
+			model.addAttribute("ownerId", owner.id());
+		}
+		catch (Exception ignored) {
+			return "redirect:/";
+		}
+		return "job_detail";
+	}
+
+	private static final int JOBS_PAGE_SIZE = 12;
+
+	@GetMapping("/jobs")
+	String jobs(
+		@RequestParam(defaultValue = "") String keyword,
+		@RequestParam(defaultValue = "") String region,
+		@RequestParam(defaultValue = "") String category,
+		@RequestParam(defaultValue = "0") int page,
+		Model model,
+		HttpSession session
+	) {
+		addSessionMember(model, session);
+		List<JobListingCard> cards = jobListingCards(openRecruitments());
+		if (!keyword.isBlank() || !region.isBlank() || !category.isBlank()) {
+			cards = filterJobCards(cards, keyword, region, category);
+		}
+		int total = cards.size();
+		int totalPages = Math.max(1, (int) Math.ceil((double) total / JOBS_PAGE_SIZE));
+		int current = Math.max(0, Math.min(page, totalPages - 1));
+		List<JobListingCard> pageCards = cards.stream()
+			.skip((long) current * JOBS_PAGE_SIZE)
+			.limit(JOBS_PAGE_SIZE)
+			.toList();
+		model.addAttribute("jobCards", pageCards);
+		model.addAttribute("totalCount", total);
+		model.addAttribute("currentPage", current);
+		model.addAttribute("totalPages", totalPages);
+		model.addAttribute("keyword", keyword);
+		model.addAttribute("region", region);
+		model.addAttribute("category", category);
 		return "jobs";
 	}
 
@@ -102,9 +196,15 @@ public class JjbPageController {
 		return "redirect:" + nextPath(member);
 	}
 
+	@GetMapping("/login")
+	String loginPage(Model model, HttpSession session) {
+		addSessionMember(model, session);
+		return "login";
+	}
+
 	@GetMapping("/login/local")
 	String loginLocalFallback() {
-		return "redirect:/";
+		return "redirect:/login";
 	}
 
 	@GetMapping("/signup")
@@ -139,35 +239,12 @@ public class JjbPageController {
 		MemberSnapshot member = requireMember(session);
 		MemberSnapshot updated = memberService.switchRole(member.id(), role);
 		setSessionMember(session, updated);
-		return role == MemberRole.OWNER ? "redirect:/boss/home" : "redirect:/worker/home";
+		return "redirect:/";
 	}
 
 	@GetMapping("/worker/home")
-	String workerHome(
-		@RequestParam(defaultValue = "") String keyword,
-		@RequestParam(defaultValue = "") String region,
-		@RequestParam(defaultValue = "") String category,
-		@RequestParam(defaultValue = "false") boolean favoritesOnly,
-		Model model,
-		HttpSession session
-	) {
-		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
-		model.addAttribute("member", member);
-		model.addAttribute("activeRole", member.activeRole());
-		List<MatchRequestSnapshot> requests = matchingService.listMatchRequestsForJobSeeker(member.id());
-		model.addAttribute("requestCards", requestCards(requests.stream()
-			.filter(request -> request.requestedBy().name().equals("OWNER"))
-			.toList()));
-		model.addAttribute("sentRequestCards", requestCards(requests.stream()
-			.filter(request -> request.requestedBy().name().equals("JOB_SEEKER"))
-			.toList()));
-		model.addAttribute("storeCards", filterStoreCards(storeCards(member.id()), keyword, region, category, favoritesOnly));
-		model.addAttribute("keyword", keyword);
-		model.addAttribute("region", region);
-		model.addAttribute("category", category);
-		model.addAttribute("favoritesOnly", favoritesOnly);
-		model.addAttribute("recommendationUrl", "/api/members/" + member.id() + "/store-recommendations");
-		return "worker_home";
+	String workerHome() {
+		return "redirect:/";
 	}
 
 	@GetMapping({"/worker/profile/new", "/worker/profile/edit"})
@@ -191,14 +268,24 @@ public class JjbPageController {
 	@PostMapping("/worker/profile")
 	String saveWorkerProfile(
 		@RequestParam String availableTime,
-		@RequestParam String preferredArea,
+		@RequestParam(defaultValue = "") String preferredArea,
 		@RequestParam int desiredHourlyWage,
 		@RequestParam(defaultValue = "") String experiencedIndustries,
 		@RequestParam(defaultValue = "false") boolean urgentSubstituteAvailable,
-		@RequestParam String introduction,
-		HttpSession session
+		@RequestParam(defaultValue = "") String introduction,
+		@RequestParam(defaultValue = "") String gender,
+		@RequestParam(defaultValue = "") String militaryService,
+		@RequestParam(defaultValue = "") String education,
+		@RequestParam(defaultValue = "") String careerLevel,
+		@RequestParam(defaultValue = "") String preferredDays,
+		@RequestParam(required = false) org.springframework.web.multipart.MultipartFile photo,
+		HttpSession session,
+		RedirectAttributes redirectAttributes
 	) {
 		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
+		String uploadedUrl = fileStorageService.store(photo);
+		String imageUrl = uploadedUrl != null ? uploadedUrl
+			: (member.jobSeekerProfile() == null ? null : member.jobSeekerProfile().imageUrl());
 		MemberSnapshot updated = memberService.updateJobSeekerProfile(
 			member.id(),
 			availableTime,
@@ -206,11 +293,18 @@ public class JjbPageController {
 			desiredHourlyWage,
 			splitList(experiencedIndustries),
 			urgentSubstituteAvailable,
-			introduction
+			introduction,
+			gender,
+			militaryService,
+			education,
+			careerLevel,
+			splitList(preferredDays),
+			imageUrl
 		);
 		setSessionMember(session, updated);
 		liveUpdateService.publish("profiles");
-		return "redirect:/worker/home";
+		redirectAttributes.addFlashAttribute("successMessage", "이력서가 등록되었습니다!");
+		return "redirect:/";
 	}
 
 	@GetMapping("/worker/requests/{id}")
@@ -225,7 +319,10 @@ public class JjbPageController {
 	@PostMapping("/worker/requests/{id}/accept")
 	String acceptRequest(@PathVariable UUID id, HttpSession session) {
 		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
-		matchingService.acceptMatchRequest(id, member.id());
+		MatchRequestSnapshot updated = matchingService.acceptMatchRequest(id, member.id());
+		notificationService.notify(updated.ownerId(), NotificationType.MATCH_ACCEPTED,
+			member.displayName() + "님이 제안을 수락했어요", "매칭이 확정되었습니다. 근무를 준비해주세요.",
+			"/match-confirmed?matchRequestId=" + id);
 		liveUpdateService.publish("match-requests");
 		return "redirect:/match-confirmed?matchRequestId=" + id;
 	}
@@ -233,9 +330,11 @@ public class JjbPageController {
 	@PostMapping("/worker/requests/{id}/decline")
 	String declineRequest(@PathVariable UUID id, HttpSession session) {
 		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
-		matchingService.declineMatchRequest(id, member.id());
+		MatchRequestSnapshot updated = matchingService.declineMatchRequest(id, member.id());
+		notificationService.notify(updated.ownerId(), NotificationType.MATCH_DECLINED,
+			member.displayName() + "님이 제안을 거절했어요", "다른 후보에게 제안해보세요.", "/inbox");
 		liveUpdateService.publish("match-requests");
-		return "redirect:/worker/home";
+		return "redirect:/inbox";
 	}
 
 	@PostMapping("/worker/requests/{id}/cancel")
@@ -243,7 +342,7 @@ public class JjbPageController {
 		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
 		matchingService.cancelMatchRequestByJobSeeker(id, member.id());
 		liveUpdateService.publish("match-requests");
-		return "redirect:/worker/home";
+		return "redirect:/inbox";
 	}
 
 	@PostMapping("/worker/match-requests")
@@ -254,8 +353,120 @@ public class JjbPageController {
 	) {
 		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
 		MatchRequestSnapshot request = matchingService.createMatchRequestFromJobSeeker(member.id(), ownerId, message);
+		notificationService.notify(ownerId, NotificationType.MATCH_REQUEST,
+			member.displayName() + "님이 지원했어요", message, "/inbox");
 		liveUpdateService.publish("match-requests");
 		return "redirect:/match-confirmed?matchRequestId=" + request.id();
+	}
+
+	@PostMapping("/worker/instant-apply")
+	String instantApply(
+		@RequestParam UUID ownerId,
+		@RequestParam UUID recruitmentId,
+		HttpSession session,
+		RedirectAttributes redirectAttributes
+	) {
+		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
+		Recruitment recruitment = matchingService.getRecruitment(recruitmentId);
+		if (!recruitment.instantHire()) {
+			throw ApiException.conflict("NOT_INSTANT_HIRE", "즉시확정 공고가 아닙니다.");
+		}
+		MatchRequestSnapshot request = matchingService.createMatchRequestFromJobSeeker(
+			member.id(), ownerId, "[즉시확정] " + recruitment.title() + " 지원합니다.");
+		MatchRequestSnapshot accepted = matchingService.acceptMatchRequestByOwner(request.id(), ownerId);
+		notificationService.notify(ownerId, NotificationType.MATCH_ACCEPTED,
+			member.displayName() + "님이 즉시확정으로 매칭됐어요", recruitment.title() + " 근무가 확정되었습니다.",
+			"/match-confirmed?matchRequestId=" + accepted.id());
+		liveUpdateService.publish("match-requests");
+		redirectAttributes.addFlashAttribute("successMessage", "즉시 확정되었습니다! 근무를 준비해주세요.");
+		return "redirect:/match-confirmed?matchRequestId=" + accepted.id();
+	}
+
+	@GetMapping("/substitutes")
+	String substitutes(Model model, HttpSession session) {
+		MemberSnapshot member = requireMember(session);
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		model.addAttribute("openRequests", substituteCards(matchingService.listOpenSubstituteRequests(), member.id()));
+		model.addAttribute("myRequests", substituteCards(matchingService.listSubstituteRequestsByRequester(member.id()), member.id()));
+		return "substitutes";
+	}
+
+	@GetMapping("/substitutes/new")
+	String substituteForm(Model model, HttpSession session) {
+		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		model.addAttribute("shiftOptions", myAcceptedShiftOptions(member.id()));
+		return "substitute_new";
+	}
+
+	@PostMapping("/substitutes")
+	String createSubstitute(
+		@RequestParam UUID ownerId,
+		@RequestParam(required = false) UUID recruitmentId,
+		@RequestParam(defaultValue = "") String storeName,
+		@RequestParam(defaultValue = "") String shiftInfo,
+		@RequestParam String reason,
+		HttpSession session,
+		RedirectAttributes redirectAttributes
+	) {
+		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
+		matchingService.createSubstituteRequest(member.id(), ownerId, recruitmentId, storeName, shiftInfo, reason);
+		notificationService.notify(ownerId, NotificationType.SUBSTITUTE_REQUEST,
+			member.displayName() + "님이 대타를 요청했어요", reason, "/substitutes");
+		liveUpdateService.publish("substitutes");
+		redirectAttributes.addFlashAttribute("successMessage", "대타 요청을 등록했어요. 대타 마켓에 노출됩니다.");
+		return "redirect:/substitutes";
+	}
+
+	@PostMapping("/substitutes/{id}/take")
+	String takeSubstitute(@PathVariable UUID id, HttpSession session, RedirectAttributes redirectAttributes) {
+		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
+		SubstituteRequest request = matchingService.takeSubstituteRequest(id, member.id());
+		notificationService.notify(request.requesterId(), NotificationType.SUBSTITUTE_REQUEST,
+			member.displayName() + "님이 대타를 맡아줬어요", request.shiftInfo() + " 대타가 구해졌습니다.", "/substitutes");
+		notificationService.notify(request.ownerId(), NotificationType.SUBSTITUTE_REQUEST,
+			"대타자가 배정됐어요", member.displayName() + "님이 " + request.shiftInfo() + " 대타를 맡았습니다.", "/inbox");
+		liveUpdateService.publish("substitutes");
+		redirectAttributes.addFlashAttribute("successMessage", "대타를 맡았어요! 근무를 준비해주세요.");
+		return "redirect:/substitutes";
+	}
+
+	@GetMapping("/chat/{matchRequestId}")
+	String chat(@PathVariable UUID matchRequestId, Model model, HttpSession session) {
+		MemberSnapshot member = requireMember(session);
+		MatchRequestSnapshot request = matchingService.getMatchRequest(matchRequestId);
+		boolean memberIsOwner = request.ownerId().equals(member.id());
+		UUID otherId = memberIsOwner ? request.jobSeekerId() : request.ownerId();
+		MemberSnapshot other = memberService.getMember(otherId);
+		String otherName = memberIsOwner ? other.displayName() : storeName(other);
+		List<ChatBubble> messages = matchingService.listChatMessages(matchRequestId, member.id()).stream()
+			.map(m -> new ChatBubble(m.senderId().equals(member.id()), m.body(), shortTime(m.createdAt())))
+			.toList();
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		model.addAttribute("matchRequestId", matchRequestId);
+		model.addAttribute("otherName", otherName);
+		model.addAttribute("messages", messages);
+		return "chat";
+	}
+
+	@PostMapping("/chat/{matchRequestId}")
+	String sendChat(@PathVariable UUID matchRequestId, @RequestParam String body, HttpSession session) {
+		MemberSnapshot member = requireMember(session);
+		matchingService.sendChatMessage(matchRequestId, member.id(), body);
+		MatchRequestSnapshot request = matchingService.getMatchRequest(matchRequestId);
+		UUID otherId = request.ownerId().equals(member.id()) ? request.jobSeekerId() : request.ownerId();
+		notificationService.notify(otherId, NotificationType.GENERAL,
+			member.displayName() + "님의 새 메시지", body, "/chat/" + matchRequestId);
+		liveUpdateService.publish("chat");
+		return "redirect:/chat/" + matchRequestId;
+	}
+
+	private String shortTime(java.time.Instant instant) {
+		return java.time.LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
+			.format(java.time.format.DateTimeFormatter.ofPattern("MM/dd HH:mm"));
 	}
 
 	@GetMapping("/worker/stores/{id}")
@@ -279,27 +490,8 @@ public class JjbPageController {
 	}
 
 	@GetMapping("/boss/home")
-	String bossHome(
-		@RequestParam(defaultValue = "") String keyword,
-		@RequestParam(defaultValue = "") String region,
-		@RequestParam(defaultValue = "") String industry,
-		@RequestParam(defaultValue = "false") boolean favoritesOnly,
-		Model model,
-		HttpSession session
-	) {
-		MemberSnapshot member = ensureRole(session, MemberRole.OWNER);
-		model.addAttribute("member", member);
-		model.addAttribute("activeRole", member.activeRole());
-		model.addAttribute("recruitments", recruitmentCards(matchingService.listRecruitmentsForOwner(member.id())));
-		model.addAttribute("candidates", filterCandidateCards(member.id(), candidates(member.id()), keyword, region, industry, favoritesOnly));
-		model.addAttribute("workerRequests", ownerRequestCards(member.id()));
-		model.addAttribute("memberVerified", member.verification().businessVerified());
-		model.addAttribute("keyword", keyword);
-		model.addAttribute("region", region);
-		model.addAttribute("industry", industry);
-		model.addAttribute("favoritesOnly", favoritesOnly);
-		model.addAttribute("recommendationUrl", "/api/members/" + member.id() + "/candidate-recommendations");
-		return "boss_home";
+	String bossHome() {
+		return "redirect:/";
 	}
 
 	@GetMapping("/boss/verify")
@@ -319,10 +511,14 @@ public class JjbPageController {
 		@RequestParam String storeAddress,
 		@RequestParam String businessCategory,
 		@RequestParam(defaultValue = "") String storeIntroduction,
+		@RequestParam(required = false) org.springframework.web.multipart.MultipartFile storePhoto,
 		HttpSession session
 	) {
 		MemberSnapshot owner = ensureRole(session, MemberRole.OWNER);
-		memberService.updateOwnerProfile(owner.id(), storeName, storeAddress, businessCategory, storeIntroduction);
+		String uploadedUrl = fileStorageService.store(storePhoto);
+		String imageUrl = uploadedUrl != null ? uploadedUrl
+			: (owner.ownerProfile() == null ? null : owner.ownerProfile().imageUrl());
+		memberService.updateOwnerProfile(owner.id(), storeName, storeAddress, businessCategory, storeIntroduction, imageUrl);
 		MemberSnapshot verified = memberService.verifyBusiness(
 			owner.id(),
 			businessRegistrationNumber,
@@ -350,20 +546,55 @@ public class JjbPageController {
 		@RequestParam LocalTime endTime,
 		@RequestParam String workplaceAddress,
 		@RequestParam int hourlyWage,
-		HttpSession session
+		@RequestParam(defaultValue = "") String tags,
+		@RequestParam(defaultValue = "") String description,
+		@RequestParam(defaultValue = "false") boolean instantHire,
+		HttpSession session,
+		RedirectAttributes redirectAttributes
 	) {
 		MemberSnapshot member = requireBusinessVerifiedOwner(session);
-		Recruitment recruitment = matchingService.createRecruitment(
+		Recruitment created = matchingService.createRecruitment(
 			member.id(),
 			title,
 			workDate,
 			startTime,
 			endTime,
 			workplaceAddress,
-			hourlyWage
+			hourlyWage,
+			splitList(tags),
+			description,
+			instantHire
 		);
+		notifyMatchingSeekers(created, storeName(member));
 		liveUpdateService.publish("recruitments");
-		return "redirect:/boss/recruitments/" + recruitment.id();
+		redirectAttributes.addFlashAttribute("successMessage", "공고가 등록되었습니다!");
+		return "redirect:/";
+	}
+
+	private void notifyMatchingSeekers(Recruitment recruitment, String storeName) {
+		String category = recruitment.tags().isEmpty() ? "" : String.join(" ", recruitment.tags());
+		for (MemberSnapshot seeker : memberService.listJobSeekersWithProfiles()) {
+			JobSeekerProfile profile = seeker.jobSeekerProfile();
+			if (profile == null) {
+				continue;
+			}
+			String region = regionToken(profile.preferredArea());
+			boolean regionMatch = !region.isBlank() && containsIgnoreCase(recruitment.workplaceAddress(), region);
+			boolean industryMatch = !profile.experiencedIndustries().isEmpty()
+				&& profile.experiencedIndustries().stream()
+					.anyMatch(ind -> containsIgnoreCase(recruitment.title() + " " + category, ind));
+			if (regionMatch || industryMatch) {
+				try {
+					notificationService.notify(seeker.id(), NotificationType.NEW_RECOMMENDED_JOB,
+						"내 조건에 맞는 새 공고가 올라왔어요",
+						storeName + " · " + recruitment.title(),
+						"/jobs/" + recruitment.id());
+				}
+				catch (Exception ignored) {
+					// 알림 실패는 무시 (공고 등록 자체는 성공)
+				}
+			}
+		}
 	}
 
 	@GetMapping("/boss/recruitments/{id}")
@@ -373,7 +604,13 @@ public class JjbPageController {
 		if (!recruitment.ownerId().equals(member.id())) {
 			throw ApiException.forbidden("RECRUITMENT_NOT_OWNED", "Only the recruitment owner can view recommendations.");
 		}
-		List<MatchingRecommendation> recommendations = matchingRecommendationService.recommendForRecruitment(id);
+		List<MatchingRecommendation> recommendations;
+		try {
+			recommendations = matchingRecommendationService.recommendForRecruitment(id);
+		}
+		catch (Exception ignored) {
+			recommendations = List.of();
+		}
 		model.addAttribute("member", member);
 		model.addAttribute("activeRole", member.activeRole());
 		model.addAttribute("recruitment", recruitmentCard(recruitment));
@@ -412,6 +649,8 @@ public class JjbPageController {
 	) {
 		MemberSnapshot owner = requireBusinessVerifiedOwner(session);
 		MatchRequestSnapshot request = matchingService.createMatchRequest(owner.id(), jobSeekerId, recruitmentId, message);
+		notificationService.notify(jobSeekerId, NotificationType.MATCH_REQUEST,
+			storeName(owner) + " 사장님이 매칭을 제안했어요", message, "/inbox");
 		liveUpdateService.publish("match-requests");
 		return "redirect:/match-confirmed?matchRequestId=" + request.id();
 	}
@@ -419,7 +658,10 @@ public class JjbPageController {
 	@PostMapping("/boss/requests/{id}/accept")
 	String acceptWorkerRequest(@PathVariable UUID id, HttpSession session) {
 		MemberSnapshot owner = requireBusinessVerifiedOwner(session);
-		matchingService.acceptMatchRequestByOwner(id, owner.id());
+		MatchRequestSnapshot updated = matchingService.acceptMatchRequestByOwner(id, owner.id());
+		notificationService.notify(updated.jobSeekerId(), NotificationType.MATCH_ACCEPTED,
+			storeName(owner) + " 사장님이 지원을 수락했어요", "매칭이 확정되었습니다. 근무를 준비해주세요.",
+			"/match-confirmed?matchRequestId=" + id);
 		liveUpdateService.publish("match-requests");
 		return "redirect:/match-confirmed?matchRequestId=" + id;
 	}
@@ -427,9 +669,11 @@ public class JjbPageController {
 	@PostMapping("/boss/requests/{id}/decline")
 	String declineWorkerRequest(@PathVariable UUID id, HttpSession session) {
 		MemberSnapshot owner = requireBusinessVerifiedOwner(session);
-		matchingService.declineMatchRequestByOwner(id, owner.id());
+		MatchRequestSnapshot updated = matchingService.declineMatchRequestByOwner(id, owner.id());
+		notificationService.notify(updated.jobSeekerId(), NotificationType.MATCH_DECLINED,
+			storeName(owner) + " 사장님이 지원을 거절했어요", "다른 공고에 지원해보세요.", "/");
 		liveUpdateService.publish("match-requests");
-		return "redirect:/boss/home";
+		return "redirect:/inbox";
 	}
 
 	@GetMapping("/match-confirmed")
@@ -444,6 +688,19 @@ public class JjbPageController {
 		}
 		model.addAttribute("member", member);
 		return "match_confirmed";
+	}
+
+	@PostMapping("/profile/name")
+	String changeDisplayName(
+		@RequestParam String displayName,
+		HttpSession session,
+		RedirectAttributes redirectAttributes
+	) {
+		MemberSnapshot member = requireMember(session);
+		MemberSnapshot updated = memberService.changeDisplayName(member.id(), displayName);
+		setSessionMember(session, updated);
+		redirectAttributes.addFlashAttribute("successMessage", "이름이 변경되었습니다.");
+		return "redirect:/mypage";
 	}
 
 	@GetMapping("/mypage")
@@ -476,8 +733,125 @@ public class JjbPageController {
 	) {
 		MemberSnapshot member = requireMember(session);
 		matchingService.createReview(matchRequestId, member.id(), targetId, rating, review);
+		notificationService.notify(targetId, NotificationType.REVIEW_RECEIVED,
+			member.displayName() + "님이 평가를 남겼어요", rating + "점 · " + review, "/mypage");
 		liveUpdateService.publish("reviews");
 		return "redirect:/mypage";
+	}
+
+	@GetMapping("/notifications")
+	String notifications(Model model, HttpSession session) {
+		MemberSnapshot member = requireMember(session);
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		List<Notification> items = notificationService.list(member.id());
+		model.addAttribute("notifications", items);
+		notificationService.markAllRead(member.id());
+		return "notifications";
+	}
+
+	@PostMapping("/notifications/{id}/read")
+	String readNotification(@PathVariable UUID id, HttpSession session) {
+		MemberSnapshot member = requireMember(session);
+		Notification notification = notificationService.markRead(id, member.id());
+		String link = notification.linkUrl();
+		return "redirect:" + (link == null || link.isBlank() ? "/notifications" : link);
+	}
+
+	@PostMapping("/notifications/read-all")
+	String readAllNotifications(HttpSession session) {
+		MemberSnapshot member = requireMember(session);
+		notificationService.markAllRead(member.id());
+		return "redirect:/notifications";
+	}
+
+	@GetMapping("/inbox")
+	String inbox(Model model, HttpSession session) {
+		MemberSnapshot member = requireMember(session);
+		boolean viewerIsOwner = member.activeRole() == MemberRole.OWNER;
+		List<MatchRequestSnapshot> all = viewerIsOwner
+			? matchingService.listMatchRequestsForOwner(member.id())
+			: matchingService.listMatchRequestsForJobSeeker(member.id());
+		MatchRequestInitiator counterpartInitiator = viewerIsOwner
+			? MatchRequestInitiator.JOB_SEEKER
+			: MatchRequestInitiator.OWNER;
+		List<InboxCard> received = all.stream()
+			.filter(r -> r.requestedBy() == counterpartInitiator)
+			.map(r -> inboxCard(r, viewerIsOwner, true))
+			.toList();
+		List<InboxCard> sent = all.stream()
+			.filter(r -> r.requestedBy() != counterpartInitiator)
+			.map(r -> inboxCard(r, viewerIsOwner, false))
+			.toList();
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		model.addAttribute("viewerIsOwner", viewerIsOwner);
+		model.addAttribute("receivedRequests", received);
+		model.addAttribute("sentRequests", sent);
+		return "inbox";
+	}
+
+	@GetMapping("/boss/recruitments/manage")
+	String manageRecruitments(Model model, HttpSession session) {
+		MemberSnapshot member = ensureRole(session, MemberRole.OWNER);
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		model.addAttribute("recruitments", recruitmentCards(matchingService.listRecruitmentsForOwner(member.id())));
+		return "boss_manage";
+	}
+
+	@PostMapping("/boss/recruitments/{id}/close")
+	String closeRecruitment(@PathVariable UUID id, HttpSession session, RedirectAttributes redirectAttributes) {
+		MemberSnapshot member = ensureRole(session, MemberRole.OWNER);
+		matchingService.closeRecruitment(id, member.id());
+		liveUpdateService.publish("recruitments");
+		redirectAttributes.addFlashAttribute("successMessage", "공고를 마감했습니다.");
+		return "redirect:/boss/recruitments/manage";
+	}
+
+	@PostMapping("/boss/recruitments/{id}/delete")
+	String deleteRecruitment(@PathVariable UUID id, HttpSession session, RedirectAttributes redirectAttributes) {
+		MemberSnapshot member = ensureRole(session, MemberRole.OWNER);
+		matchingService.deleteRecruitment(id, member.id());
+		liveUpdateService.publish("recruitments");
+		redirectAttributes.addFlashAttribute("successMessage", "공고를 삭제했습니다.");
+		return "redirect:/boss/recruitments/manage";
+	}
+
+	@GetMapping("/boss/recruitments/{id}/edit")
+	String editRecruitmentForm(@PathVariable UUID id, Model model, HttpSession session) {
+		MemberSnapshot member = ensureRole(session, MemberRole.OWNER);
+		Recruitment recruitment = matchingService.getRecruitment(id);
+		if (!recruitment.ownerId().equals(member.id())) {
+			throw ApiException.forbidden("RECRUITMENT_NOT_OWNED", "본인 공고만 수정할 수 있습니다.");
+		}
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		model.addAttribute("recruitment", recruitment);
+		return "boss_post_edit";
+	}
+
+	@PostMapping("/boss/recruitments/{id}/edit")
+	String updateRecruitment(
+		@PathVariable UUID id,
+		@RequestParam String title,
+		@RequestParam LocalDate workDate,
+		@RequestParam LocalTime startTime,
+		@RequestParam LocalTime endTime,
+		@RequestParam String workplaceAddress,
+		@RequestParam int hourlyWage,
+		@RequestParam(defaultValue = "") String tags,
+		@RequestParam(defaultValue = "") String description,
+		@RequestParam(defaultValue = "false") boolean instantHire,
+		HttpSession session,
+		RedirectAttributes redirectAttributes
+	) {
+		MemberSnapshot member = ensureRole(session, MemberRole.OWNER);
+		matchingService.updateRecruitment(id, member.id(), title, workDate, startTime, endTime,
+			workplaceAddress, hourlyWage, splitList(tags), description, instantHire);
+		liveUpdateService.publish("recruitments");
+		redirectAttributes.addFlashAttribute("successMessage", "공고를 수정했습니다.");
+		return "redirect:/boss/recruitments/manage";
 	}
 
 	@GetMapping("/demo")
@@ -499,7 +873,26 @@ public class JjbPageController {
 		if (requestUri != null && requestUri.startsWith("/signup")) {
 			return "redirect:/signup";
 		}
+		if (requestUri != null && requestUri.startsWith("/login")) {
+			return "redirect:/login";
+		}
 		return "redirect:/";
+	}
+
+	@ExceptionHandler(Exception.class)
+	String handleUnexpectedException(
+		Exception exception,
+		HttpServletRequest request,
+		RedirectAttributes redirectAttributes
+	) {
+		redirectAttributes.addFlashAttribute("errorMessage", "오류가 발생했습니다: " + exception.getMessage());
+		return "redirect:/";
+	}
+
+	@org.springframework.web.bind.annotation.ModelAttribute
+	void injectNotificationBadge(Model model, HttpSession session) {
+		long unread = currentMember(session).map(m -> notificationService.unreadCount(m.id())).orElse(0L);
+		model.addAttribute("unreadNotifications", unread);
 	}
 
 	private MemberSnapshot addSessionMember(Model model, HttpSession session) {
@@ -556,7 +949,7 @@ public class JjbPageController {
 		if (member.activeRole() == null) {
 			return "/role";
 		}
-		return member.activeRole() == MemberRole.OWNER ? "/boss/home" : "/worker/home";
+		return "/";
 	}
 
 	private String localIdentifier(String username, String email) {
@@ -611,6 +1004,65 @@ public class JjbPageController {
 		);
 	}
 
+	private List<SubstituteCard> substituteCards(List<SubstituteRequest> requests, UUID viewerId) {
+		return requests.stream()
+			.map(request -> {
+				String requesterName;
+				try {
+					requesterName = memberService.getMember(request.requesterId()).displayName();
+				}
+				catch (Exception ignored) {
+					requesterName = "구직자";
+				}
+				boolean mine = request.requesterId().equals(viewerId);
+				boolean canTake = request.isOpen() && !mine;
+				return new SubstituteCard(
+					request.id(),
+					requesterName,
+					request.storeName() == null || request.storeName().isBlank() ? "매장" : request.storeName(),
+					request.shiftInfo() == null ? "" : request.shiftInfo(),
+					request.reason(),
+					substituteStatusLabel(request.status().name()),
+					request.status().name(),
+					canTake,
+					mine
+				);
+			})
+			.toList();
+	}
+
+	private List<ShiftOption> myAcceptedShiftOptions(UUID memberId) {
+		return matchingService.listAcceptedMatchRequestsForParticipant(memberId).stream()
+			.filter(request -> request.jobSeekerId().equals(memberId))
+			.map(request -> {
+				MemberSnapshot owner = memberService.getMember(request.ownerId());
+				String shiftInfo;
+				if (request.recruitmentId() != null) {
+					try {
+						Recruitment recruitment = matchingService.getRecruitment(request.recruitmentId());
+						shiftInfo = recruitment.title() + " (" + recruitment.workTime() + ")";
+					}
+					catch (Exception ignored) {
+						shiftInfo = request.message();
+					}
+				}
+				else {
+					shiftInfo = request.message();
+				}
+				return new ShiftOption(request.ownerId(), request.recruitmentId(), storeName(owner), shiftInfo);
+			})
+			.toList();
+	}
+
+	private String substituteStatusLabel(String status) {
+		return switch (status) {
+			case "OPEN" -> "대타 구함";
+			case "FILLED" -> "대타 구함 완료";
+			case "CANCELED" -> "취소됨";
+			default -> status;
+		};
+	}
+
 	private List<RecruitmentCard> recruitmentCards(List<Recruitment> recruitments) {
 		return recruitments.stream()
 			.map(this::recruitmentCard)
@@ -624,7 +1076,35 @@ public class JjbPageController {
 			recruitment.workTime(),
 			recruitment.workplaceAddress(),
 			recruitment.hourlyWage(),
-			statusLabel(recruitment.status().name())
+			statusLabel(recruitment.status().name()),
+			recruitment.isOpen()
+		);
+	}
+
+	private InboxCard inboxCard(MatchRequestSnapshot request, boolean viewerIsOwner, boolean received) {
+		UUID counterpartId = viewerIsOwner ? request.jobSeekerId() : request.ownerId();
+		MemberSnapshot counterpart = memberService.getMember(counterpartId);
+		String name = viewerIsOwner ? counterpart.displayName() : storeName(counterpart);
+		String context = "";
+		if (request.recruitmentId() != null) {
+			try {
+				context = matchingService.getRecruitment(request.recruitmentId()).title();
+			}
+			catch (Exception ignored) {
+				context = "";
+			}
+		}
+		boolean actionable = received && request.status() == MatchRequestStatus.REQUESTED;
+		boolean cancelable = !received && request.status() == MatchRequestStatus.REQUESTED;
+		return new InboxCard(
+			request.id(),
+			name,
+			request.message(),
+			context,
+			statusLabel(request.status().name()),
+			request.status().name(),
+			actionable,
+			cancelable
 		);
 	}
 
@@ -634,9 +1114,42 @@ public class JjbPageController {
 			.toList();
 	}
 
+	private List<ProfileCard> profileCards() {
+		return memberService.listJobSeekersWithProfiles().stream()
+			.map(this::profileCard)
+			.toList();
+	}
+
+	private ProfileCard profileCard(MemberSnapshot member) {
+		JobSeekerProfile profile = member.jobSeekerProfile();
+		String industries = profile.experiencedIndustries().isEmpty()
+			? "경력 미입력"
+			: String.join(", ", profile.experiencedIndustries());
+		return new ProfileCard(
+			member.id(),
+			member.displayName(),
+			profile.preferredArea() == null || profile.preferredArea().isBlank() ? "지역 미설정" : profile.preferredArea(),
+			industries,
+			profile.availableTime(),
+			profile.desiredHourlyWage(),
+			profile.careerLevel() == null || profile.careerLevel().isBlank() ? "" : profile.careerLevel(),
+			profile.education() == null || profile.education().isBlank() ? "" : profile.education(),
+			profile.gender() == null || profile.gender().isBlank() ? "" : profile.gender(),
+			profile.militaryService() == null || profile.militaryService().isBlank() ? "" : profile.militaryService(),
+			profile.imageUrl() == null ? "" : profile.imageUrl()
+		);
+	}
+
 	private List<JobListingCard> jobListingCards(List<Recruitment> recruitments) {
 		return recruitments.stream()
-			.map(this::jobListingCard)
+			.flatMap(r -> {
+				try {
+					return java.util.stream.Stream.of(jobListingCard(r));
+				}
+				catch (Exception ignored) {
+					return java.util.stream.Stream.empty();
+				}
+			})
 			.toList();
 	}
 
@@ -651,8 +1164,38 @@ public class JjbPageController {
 			recruitment.workplaceAddress(),
 			recruitment.workTime(),
 			recruitment.hourlyWage(),
-			statusLabel(recruitment.status().name())
+			statusLabel(recruitment.status().name()),
+			recruitment.tags(),
+			countdownLabel(recruitment.workDate(), recruitment.startTime()),
+			isUrgent(recruitment.workDate(), recruitment.startTime()),
+			recruitment.instantHire(),
+			recruitment.ownerId(),
+			profile == null || profile.imageUrl() == null ? "" : profile.imageUrl()
 		);
+	}
+
+	private String countdownLabel(LocalDate workDate, LocalTime startTime) {
+		java.time.LocalDateTime start = java.time.LocalDateTime.of(workDate, startTime);
+		java.time.LocalDateTime now = java.time.LocalDateTime.now();
+		if (!start.isAfter(now)) {
+			return "";
+		}
+		java.time.Duration d = java.time.Duration.between(now, start);
+		long minutes = d.toMinutes();
+		if (minutes < 60) {
+			return minutes + "분 후 시작";
+		}
+		long hours = d.toHours();
+		if (hours < 24) {
+			return hours + "시간 후 시작";
+		}
+		return d.toDays() + "일 후 시작";
+	}
+
+	private boolean isUrgent(LocalDate workDate, LocalTime startTime) {
+		java.time.LocalDateTime start = java.time.LocalDateTime.of(workDate, startTime);
+		java.time.LocalDateTime now = java.time.LocalDateTime.now();
+		return start.isAfter(now) && java.time.Duration.between(now, start).toHours() < 24;
 	}
 
 	private String storeName(MemberSnapshot owner) {
@@ -828,6 +1371,14 @@ public class JjbPageController {
 			.toList();
 	}
 
+	private List<JobListingCard> filterJobCards(List<JobListingCard> cards, String keyword, String region, String category) {
+		return cards.stream()
+			.filter(c -> containsIgnoreCase(c.title() + " " + c.storeName() + " " + c.workTime() + " " + String.join(" ", c.tags()), keyword))
+			.filter(c -> containsIgnoreCase(c.workplaceAddress(), region))
+			.filter(c -> containsIgnoreCase(c.businessCategory(), category))
+			.toList();
+	}
+
 	private boolean containsIgnoreCase(String source, String keyword) {
 		if (keyword == null || keyword.isBlank()) {
 			return true;
@@ -850,10 +1401,22 @@ public class JjbPageController {
 	record RequestCard(UUID id, String storeName, String workTime, String message, String hourlyWage, String status) {
 	}
 
-	record RecruitmentCard(UUID id, String title, String workTime, String workplaceAddress, int hourlyWage, String status) {
+	record RecruitmentCard(UUID id, String title, String workTime, String workplaceAddress, int hourlyWage, String status, boolean open) {
 	}
 
-	record JobListingCard(UUID id, String title, String storeName, String businessCategory, String workplaceAddress, String workTime, int hourlyWage, String status) {
+	record InboxCard(UUID id, String counterpartName, String message, String context, String status, String statusCode, boolean actionable, boolean cancelable) {
+	}
+
+	record SubstituteCard(UUID id, String requesterName, String storeName, String shiftInfo, String reason, String status, String statusCode, boolean canTake, boolean mine) {
+	}
+
+	record ShiftOption(UUID ownerId, UUID recruitmentId, String storeName, String shiftInfo) {
+	}
+
+	record ChatBubble(boolean mine, String body, String time) {
+	}
+
+	record JobListingCard(UUID id, String title, String storeName, String businessCategory, String workplaceAddress, String workTime, int hourlyWage, String status, List<String> tags, String countdown, boolean urgent, boolean instantHire, UUID ownerId, String storeImageUrl) {
 	}
 
 	record CandidateCard(UUID id, String name, String availableTime, String area, String skills, int desiredHourlyWage, double averageRating, int reviewCount, boolean favorite, String trustLabel) {
@@ -872,5 +1435,8 @@ public class JjbPageController {
 	}
 
 	record ReviewCard(UUID id, int rating, String review, String evaluatorName, String targetName, String context, String createdAt) {
+	}
+
+	record ProfileCard(UUID id, String name, String area, String industries, String availableTime, int desiredHourlyWage, String careerLevel, String education, String gender, String militaryService, String imageUrl) {
 	}
 }

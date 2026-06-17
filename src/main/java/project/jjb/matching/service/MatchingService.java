@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.jjb.common.ApiException;
+import project.jjb.matching.domain.ChatMessage;
 import project.jjb.matching.domain.Favorite;
 import project.jjb.matching.domain.FavoriteTargetType;
 import project.jjb.matching.domain.MatchRequest;
@@ -20,6 +21,7 @@ import project.jjb.matching.domain.MatchRequestStatus;
 import project.jjb.matching.domain.Review;
 import project.jjb.matching.domain.Recruitment;
 import project.jjb.matching.domain.RecruitmentStatus;
+import project.jjb.matching.domain.SubstituteRequest;
 import project.jjb.matching.repository.MatchingRepository;
 import project.jjb.member.service.MemberService;
 
@@ -44,7 +46,10 @@ public class MatchingService {
 		LocalTime startTime,
 		LocalTime endTime,
 		String workplaceAddress,
-		int hourlyWage
+		int hourlyWage,
+		List<String> tags,
+		String description,
+		boolean instantHire
 	) {
 		memberService.requireOwnerReady(ownerId);
 		validateRecruitment(title, workDate, startTime, endTime, workplaceAddress, hourlyWage);
@@ -58,7 +63,10 @@ public class MatchingService {
 			workplaceAddress.trim(),
 			hourlyWage,
 			RecruitmentStatus.OPEN,
-			Instant.now()
+			Instant.now(),
+			tags == null ? List.of() : tags,
+			description == null ? "" : description.trim(),
+			instantHire
 		);
 		return matchingRepository.saveRecruitment(recruitment);
 	}
@@ -72,7 +80,7 @@ public class MatchingService {
 		int hourlyWage
 	) {
 		WorkSchedule schedule = parseWorkSchedule(workTime);
-		return createRecruitment(ownerId, title, schedule.workDate(), schedule.startTime(), schedule.endTime(), workplaceAddress, hourlyWage);
+		return createRecruitment(ownerId, title, schedule.workDate(), schedule.startTime(), schedule.endTime(), workplaceAddress, hourlyWage, List.of(), "", false);
 	}
 
 	@Transactional(readOnly = true)
@@ -89,6 +97,48 @@ public class MatchingService {
 	public Recruitment getRecruitment(UUID recruitmentId) {
 		return matchingRepository.findRecruitmentById(recruitmentId)
 			.orElseThrow(() -> ApiException.notFound("RECRUITMENT_NOT_FOUND", "Recruitment was not found."));
+	}
+
+	@Transactional
+	public Recruitment closeRecruitment(UUID recruitmentId, UUID ownerId) {
+		Recruitment recruitment = requireOwnedRecruitment(recruitmentId, ownerId);
+		return matchingRepository.saveRecruitment(recruitment.close());
+	}
+
+	@Transactional
+	public void deleteRecruitment(UUID recruitmentId, UUID ownerId) {
+		requireOwnedRecruitment(recruitmentId, ownerId);
+		matchingRepository.deleteRecruitment(recruitmentId);
+	}
+
+	@Transactional
+	public Recruitment updateRecruitment(
+		UUID recruitmentId,
+		UUID ownerId,
+		String title,
+		LocalDate workDate,
+		LocalTime startTime,
+		LocalTime endTime,
+		String workplaceAddress,
+		int hourlyWage,
+		List<String> tags,
+		String description,
+		boolean instantHire
+	) {
+		Recruitment recruitment = requireOwnedRecruitment(recruitmentId, ownerId);
+		validateRecruitment(title, workDate, startTime, endTime, workplaceAddress, hourlyWage);
+		Recruitment updated = recruitment.withDetails(
+			title.trim(), workDate, startTime, endTime, workplaceAddress.trim(), hourlyWage,
+			tags == null ? List.of() : tags, description == null ? "" : description.trim(), instantHire);
+		return matchingRepository.saveRecruitment(updated);
+	}
+
+	private Recruitment requireOwnedRecruitment(UUID recruitmentId, UUID ownerId) {
+		Recruitment recruitment = getRecruitment(recruitmentId);
+		if (!recruitment.ownerId().equals(ownerId)) {
+			throw ApiException.forbidden("RECRUITMENT_NOT_OWNED", "본인 공고만 관리할 수 있습니다.");
+		}
+		return recruitment;
 	}
 
 	@Transactional
@@ -299,6 +349,80 @@ public class MatchingService {
 		return matchingRepository.findFavoritesByMemberIdAndTargetType(memberId, targetType).stream()
 			.map(Favorite::targetId)
 			.toList();
+	}
+
+	@Transactional
+	public SubstituteRequest createSubstituteRequest(
+		UUID requesterId,
+		UUID ownerId,
+		UUID recruitmentId,
+		String storeName,
+		String shiftInfo,
+		String reason
+	) {
+		memberService.requireJobSeekerReady(requesterId);
+		if (reason == null || reason.isBlank()) {
+			throw ApiException.badRequest("INVALID_SUBSTITUTE_REASON", "대타 사유를 입력해주세요.");
+		}
+		SubstituteRequest request = SubstituteRequest.open(requesterId, ownerId, recruitmentId,
+			storeName, shiftInfo, reason.trim());
+		return matchingRepository.saveSubstituteRequest(request);
+	}
+
+	@Transactional(readOnly = true)
+	public List<SubstituteRequest> listOpenSubstituteRequests() {
+		return matchingRepository.findOpenSubstituteRequests();
+	}
+
+	@Transactional(readOnly = true)
+	public List<SubstituteRequest> listSubstituteRequestsByRequester(UUID requesterId) {
+		return matchingRepository.findSubstituteRequestsByRequesterId(requesterId);
+	}
+
+	@Transactional(readOnly = true)
+	public SubstituteRequest getSubstituteRequest(UUID id) {
+		return matchingRepository.findSubstituteRequestById(id)
+			.orElseThrow(() -> ApiException.notFound("SUBSTITUTE_NOT_FOUND", "대타 요청을 찾을 수 없습니다."));
+	}
+
+	@Transactional
+	public SubstituteRequest takeSubstituteRequest(UUID id, UUID takerId) {
+		memberService.requireJobSeekerReady(takerId);
+		SubstituteRequest request = getSubstituteRequest(id);
+		if (!request.isOpen()) {
+			throw ApiException.conflict("SUBSTITUTE_NOT_OPEN", "이미 마감된 대타 요청입니다.");
+		}
+		if (request.requesterId().equals(takerId)) {
+			throw ApiException.conflict("SUBSTITUTE_SELF_TAKE", "본인이 올린 대타는 맡을 수 없습니다.");
+		}
+		return matchingRepository.saveSubstituteRequest(request.fill(takerId));
+	}
+
+	@Transactional(readOnly = true)
+	public List<ChatMessage> listChatMessages(UUID matchRequestId, UUID viewerId) {
+		requireChatParticipant(matchRequestId, viewerId);
+		return matchingRepository.findChatMessages(matchRequestId);
+	}
+
+	@Transactional
+	public ChatMessage sendChatMessage(UUID matchRequestId, UUID senderId, String body) {
+		MatchRequest matchRequest = requireChatParticipant(matchRequestId, senderId);
+		if (matchRequest.status() != MatchRequestStatus.ACCEPTED) {
+			throw ApiException.conflict("CHAT_NOT_ALLOWED", "확정된 매칭에서만 대화할 수 있습니다.");
+		}
+		if (body == null || body.isBlank()) {
+			throw ApiException.badRequest("INVALID_CHAT_MESSAGE", "메시지를 입력해주세요.");
+		}
+		return matchingRepository.saveChatMessage(ChatMessage.create(matchRequestId, senderId, body.trim()));
+	}
+
+	private MatchRequest requireChatParticipant(UUID matchRequestId, UUID memberId) {
+		MatchRequest matchRequest = matchingRepository.findMatchRequestById(matchRequestId)
+			.orElseThrow(() -> ApiException.notFound("MATCH_REQUEST_NOT_FOUND", "Match request was not found."));
+		if (!matchRequest.ownerId().equals(memberId) && !matchRequest.jobSeekerId().equals(memberId)) {
+			throw ApiException.forbidden("CHAT_NOT_PARTICIPANT", "대화 참여자만 접근할 수 있습니다.");
+		}
+		return matchRequest;
 	}
 
 	private void validateRecruitment(

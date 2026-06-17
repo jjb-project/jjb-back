@@ -1,64 +1,75 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('마이페이지')}"></head>
-<body>
-<main class="app-shell">
-  <section class="screen active">
-    <div th:replace="~{fragments/layout :: topbar('마이페이지', '/worker/home')}"></div>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <div class="mypage-header">
-      <div class="avatar avatar-72 avatar-worker"><i class="fa-regular fa-user"></i></div>
-      <div>
-        <h1 th:text="${member == null ? '바로알바 회원' : member.displayName()}">바로알바 회원</h1>
-        <p th:text="${member != null && member.activeRole() != null ? '현재 모드 ' + member.activeRole() : '이용 목적을 선택해주세요'}">
-          이용 목적을 선택해주세요
-        </p>
-        <p th:if="${reviewSummary != null}"
-           th:text="'신뢰 평점 ' + ${reviewSummary.averageRating} + '점 · 평가 ' + ${reviewSummary.reviewCount} + '개'">
-          신뢰 평점 0.0점 · 평가 0개
-        </p>
+<div class="web-mypage">
+  <div class="mypage-header">
+    <div class="avatar avatar-72 avatar-worker"><i class="fa-regular fa-user"></i></div>
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <h1 id="displayNameText" th:text="${member == null ? '바로알바 회원' : member.displayName()}">바로알바 회원</h1>
+        <button type="button" class="btn btn-secondary" style="font-size:12px;padding:3px 10px"
+                onclick="document.getElementById('nameEditForm').style.display=document.getElementById('nameEditForm').style.display==='none'?'flex':'none'">
+          이름 변경
+        </button>
       </div>
+      <form id="nameEditForm" th:action="@{/profile/name}" method="post"
+            style="display:none;gap:8px;margin-top:6px;align-items:center">
+        <input class="form-input" name="displayName" style="width:160px;padding:6px 10px"
+               th:value="${member == null ? '' : member.displayName()}" placeholder="새 이름 입력" required>
+        <button class="btn btn-primary" type="submit" style="padding:6px 14px">저장</button>
+      </form>
+      <p th:if="${successMessage}" th:text="${successMessage}" style="color:var(--blue);font-size:13px;margin-top:4px"></p>
+      <p th:text="${member != null && member.activeRole() != null ? '현재 모드 ' + member.activeRole() : '이용 목적을 선택해주세요'}">
+        이용 목적을 선택해주세요
+      </p>
+      <p th:if="${reviewSummary != null}"
+         th:text="'신뢰 평점 ' + ${reviewSummary.averageRating} + '점 · 평가 ' + ${reviewSummary.reviewCount} + '개'">
+        신뢰 평점 0.0점 · 평가 0개
+      </p>
     </div>
+  </div>
 
-    <div class="menu-list">
-      <a class="menu-item" th:href="@{/worker/profile/edit}">
-        <i class="fa-solid fa-id-card"></i>
-        구직자 프로필
-      </a>
-      <a class="menu-item" th:href="@{/boss/verify}">
-        <i class="fa-solid fa-store"></i>
-        사업자 인증
-      </a>
-      <a class="menu-item" th:href="@{/eval}">
-        <i class="fa-solid fa-star"></i>
-        평가하기
-      </a>
-    </div>
+  <div class="menu-list">
+    <a class="menu-item" th:href="@{/worker/profile/edit}">
+      <i class="fa-solid fa-id-card"></i>
+      구직자 프로필
+    </a>
+    <a class="menu-item" th:if="${activeRole != null and activeRole.name() == 'OWNER'}" th:href="@{/boss/verify}">
+      <i class="fa-solid fa-store"></i>
+      사업자 인증
+    </a>
+    <a class="menu-item" th:href="@{/eval}">
+      <i class="fa-solid fa-star"></i>
+      평가하기
+    </a>
+  </div>
 
-    <div class="section-header">
-      <span class="section-title">받은 평가</span>
-      <span class="section-more" th:text="${#lists.size(receivedReviews)} + '개'">0개</span>
-    </div>
-    <div class="empty-state" th:if="${#lists.isEmpty(receivedReviews)}">아직 받은 평가가 없습니다.</div>
-    <article class="review-card" th:each="review : ${receivedReviews}">
-      <strong th:text="${review.rating} + '점 · ' + ${review.evaluatorName}">5점</strong>
-      <p th:text="${review.review}">후기</p>
-      <span th:text="${review.context}">매칭 내용</span>
-    </article>
+  <div class="section-header">
+    <span class="section-title">받은 평가</span>
+    <span class="section-more" th:text="${#lists.size(receivedReviews)} + '개'">0개</span>
+  </div>
+  <div class="empty-state" th:if="${#lists.isEmpty(receivedReviews)}">아직 받은 평가가 없습니다.</div>
+  <article class="review-card" th:each="review : ${receivedReviews}">
+    <strong th:text="${review.rating} + '점 · ' + ${review.evaluatorName}">5점</strong>
+    <p th:text="${review.review}">후기</p>
+    <span th:text="${review.context}">매칭 내용</span>
+  </article>
 
-    <div class="section-header">
-      <span class="section-title">내가 작성한 평가</span>
-      <span class="section-more" th:text="${#lists.size(writtenReviews)} + '개'">0개</span>
-    </div>
-    <div class="empty-state" th:if="${#lists.isEmpty(writtenReviews)}">아직 작성한 평가가 없습니다.</div>
-    <article class="review-card" th:each="review : ${writtenReviews}">
-      <strong th:text="${review.rating} + '점 · ' + ${review.targetName}">5점</strong>
-      <p th:text="${review.review}">후기</p>
-      <span th:text="${review.context}">매칭 내용</span>
-    </article>
-  </section>
-</main>
-<div th:replace="~{fragments/layout :: bottomNav('my')}"></div>
+  <div class="section-header">
+    <span class="section-title">내가 작성한 평가</span>
+    <span class="section-more" th:text="${#lists.size(writtenReviews)} + '개'">0개</span>
+  </div>
+  <div class="empty-state" th:if="${#lists.isEmpty(writtenReviews)}">아직 작성한 평가가 없습니다.</div>
+  <article class="review-card" th:each="review : ${writtenReviews}">
+    <strong th:text="${review.rating} + '점 · ' + ${review.targetName}">5점</strong>
+    <p th:text="${review.review}">후기</p>
+    <span th:text="${review.context}">매칭 내용</span>
+  </article>
+</div>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

@@ -76,6 +76,21 @@ class MemberJpaEntity {
 	@Column(length = 300)
 	private String jobSeekerIntroduction;
 
+	@Column(length = 10)
+	private String gender;
+
+	@Column(length = 20)
+	private String militaryService;
+
+	@Column(length = 40)
+	private String education;
+
+	@Column(length = 20)
+	private String careerLevel;
+
+	@Column(length = 120)
+	private String preferredDays;
+
 	@Column(length = 120)
 	private String storeName;
 
@@ -87,6 +102,12 @@ class MemberJpaEntity {
 
 	@Column(length = 300)
 	private String storeIntroduction;
+
+	@Column(length = 300)
+	private String jobSeekerImageUrl;
+
+	@Column(length = 300)
+	private String storeImageUrl;
 
 	protected MemberJpaEntity() {
 	}
@@ -111,6 +132,12 @@ class MemberJpaEntity {
 			entity.experiencedIndustries = String.join(",", jobSeekerProfile.experiencedIndustries());
 			entity.urgentSubstituteAvailable = jobSeekerProfile.urgentSubstituteAvailable();
 			entity.jobSeekerIntroduction = jobSeekerProfile.introduction();
+			entity.gender = jobSeekerProfile.gender();
+			entity.militaryService = jobSeekerProfile.militaryService();
+			entity.education = jobSeekerProfile.education();
+			entity.careerLevel = jobSeekerProfile.careerLevel();
+			entity.preferredDays = String.join(",", jobSeekerProfile.preferredDays());
+			entity.jobSeekerImageUrl = jobSeekerProfile.imageUrl();
 		}
 
 		OwnerProfile ownerProfile = member.ownerProfile();
@@ -119,6 +146,7 @@ class MemberJpaEntity {
 			entity.storeAddress = ownerProfile.storeAddress();
 			entity.businessCategory = ownerProfile.businessCategory();
 			entity.storeIntroduction = ownerProfile.storeIntroduction();
+			entity.storeImageUrl = ownerProfile.imageUrl();
 		}
 		return entity;
 	}
@@ -130,13 +158,20 @@ class MemberJpaEntity {
 			desiredHourlyWage == null ? 0 : desiredHourlyWage,
 			decodeList(experiencedIndustries),
 			urgentSubstituteAvailable,
-			jobSeekerIntroduction
+			jobSeekerIntroduction,
+			gender,
+			militaryService,
+			education,
+			careerLevel,
+			decodeList(preferredDays),
+			jobSeekerImageUrl
 		);
 		OwnerProfile ownerProfile = storeName == null ? null : new OwnerProfile(
 			storeName,
 			storeAddress,
 			businessCategory,
-			storeIntroduction
+			storeIntroduction,
+			storeImageUrl
 		);
 		return Member.restore(
 			id,

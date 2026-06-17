@@ -9,9 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import project.jjb.matching.domain.Favorite;
 import project.jjb.matching.domain.FavoriteTargetType;
 import project.jjb.matching.domain.MatchRequest;
+import project.jjb.matching.domain.ChatMessage;
 import project.jjb.matching.domain.Review;
 import project.jjb.matching.repository.MatchingRepository;
 import project.jjb.matching.domain.Recruitment;
+import project.jjb.matching.domain.SubstituteRequest;
+import project.jjb.matching.domain.SubstituteStatus;
 
 @Repository
 public class JpaMatchingRepository implements MatchingRepository {
@@ -20,17 +23,23 @@ public class JpaMatchingRepository implements MatchingRepository {
 	private final MatchRequestJpaDataRepository matchRequestJpaDataRepository;
 	private final ReviewJpaDataRepository reviewJpaDataRepository;
 	private final FavoriteJpaDataRepository favoriteJpaDataRepository;
+	private final SubstituteRequestJpaDataRepository substituteRequestJpaDataRepository;
+	private final ChatMessageJpaDataRepository chatMessageJpaDataRepository;
 
 	public JpaMatchingRepository(
 		RecruitmentJpaDataRepository recruitmentJpaDataRepository,
 		MatchRequestJpaDataRepository matchRequestJpaDataRepository,
 		ReviewJpaDataRepository reviewJpaDataRepository,
-		FavoriteJpaDataRepository favoriteJpaDataRepository
+		FavoriteJpaDataRepository favoriteJpaDataRepository,
+		SubstituteRequestJpaDataRepository substituteRequestJpaDataRepository,
+		ChatMessageJpaDataRepository chatMessageJpaDataRepository
 	) {
 		this.recruitmentJpaDataRepository = recruitmentJpaDataRepository;
 		this.matchRequestJpaDataRepository = matchRequestJpaDataRepository;
 		this.reviewJpaDataRepository = reviewJpaDataRepository;
 		this.favoriteJpaDataRepository = favoriteJpaDataRepository;
+		this.substituteRequestJpaDataRepository = substituteRequestJpaDataRepository;
+		this.chatMessageJpaDataRepository = chatMessageJpaDataRepository;
 	}
 
 	@Override
@@ -56,6 +65,12 @@ public class JpaMatchingRepository implements MatchingRepository {
 	public Optional<Recruitment> findRecruitmentById(UUID id) {
 		return recruitmentJpaDataRepository.findById(id)
 			.map(RecruitmentJpaEntity::toDomain);
+	}
+
+	@Override
+	@Transactional
+	public void deleteRecruitment(UUID id) {
+		recruitmentJpaDataRepository.deleteById(id);
 	}
 
 	@Override
@@ -134,6 +149,42 @@ public class JpaMatchingRepository implements MatchingRepository {
 	public List<Favorite> findFavoritesByMemberIdAndTargetType(UUID memberId, FavoriteTargetType targetType) {
 		return favoriteJpaDataRepository.findByMemberIdAndTargetType(memberId, targetType).stream()
 			.map(FavoriteJpaEntity::toDomain)
+			.toList();
+	}
+
+	@Override
+	public SubstituteRequest saveSubstituteRequest(SubstituteRequest request) {
+		return substituteRequestJpaDataRepository.save(SubstituteRequestJpaEntity.fromDomain(request)).toDomain();
+	}
+
+	@Override
+	public Optional<SubstituteRequest> findSubstituteRequestById(UUID id) {
+		return substituteRequestJpaDataRepository.findById(id).map(SubstituteRequestJpaEntity::toDomain);
+	}
+
+	@Override
+	public List<SubstituteRequest> findOpenSubstituteRequests() {
+		return substituteRequestJpaDataRepository.findByStatusOrderByCreatedAtDesc(SubstituteStatus.OPEN).stream()
+			.map(SubstituteRequestJpaEntity::toDomain)
+			.toList();
+	}
+
+	@Override
+	public List<SubstituteRequest> findSubstituteRequestsByRequesterId(UUID requesterId) {
+		return substituteRequestJpaDataRepository.findByRequesterIdOrderByCreatedAtDesc(requesterId).stream()
+			.map(SubstituteRequestJpaEntity::toDomain)
+			.toList();
+	}
+
+	@Override
+	public ChatMessage saveChatMessage(ChatMessage message) {
+		return chatMessageJpaDataRepository.save(ChatMessageJpaEntity.fromDomain(message)).toDomain();
+	}
+
+	@Override
+	public List<ChatMessage> findChatMessages(UUID matchRequestId) {
+		return chatMessageJpaDataRepository.findByMatchRequestIdOrderByCreatedAtAsc(matchRequestId).stream()
+			.map(ChatMessageJpaEntity::toDomain)
 			.toList();
 	}
 }

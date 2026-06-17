@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('대타 요청')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-narrow">
+  <div class="page-intro">
+    <h1>대타를 요청해요</h1>
+    <p>확정된 근무 중 못 나가게 된 일정을 골라 대타를 구하세요.</p>
+  </div>
+
+  <div class="empty-state" th:if="${#lists.isEmpty(shiftOptions)}">
+    대타를 요청할 수 있는 확정된 근무가 없습니다. 먼저 매칭이 확정되어야 해요.
+  </div>
+
+  <form class="form-screen" th:action="@{/substitutes}" method="post" th:unless="${#lists.isEmpty(shiftOptions)}">
+    <div class="form-group">
+      <label class="form-label" for="shiftSelect">대타가 필요한 근무</label>
+      <select class="form-input" id="shiftSelect" required onchange="syncShift()">
+        <option value="">근무 선택</option>
+        <option th:each="opt, i : ${shiftOptions}"
+                th:value="${i.index}"
+                th:attr="data-owner=${opt.ownerId},data-rec=${opt.recruitmentId},data-store=${opt.storeName},data-shift=${opt.shiftInfo}"
+                th:text="${opt.storeName} + ' · ' + ${opt.shiftInfo}">근무</option>
+      </select>
+    </div>
+
+    <input type="hidden" name="ownerId" id="ownerId">
+    <input type="hidden" name="recruitmentId" id="recruitmentId">
+    <input type="hidden" name="storeName" id="storeName">
+    <input type="hidden" name="shiftInfo" id="shiftInfo">
+
+    <div class="form-group">
+      <label class="form-label" for="reason">대타 사유</label>
+      <textarea class="form-input" id="reason" name="reason" rows="4" required
+                placeholder="예: 갑자기 일이 생겨 이번 주말 근무가 어렵게 됐어요. 대타 구합니다!"></textarea>
+    </div>
+
+    <button class="btn btn-primary" type="submit"><i class="fa-solid fa-people-arrows"></i> 대타 요청 등록</button>
+  </form>
+</div>
+
+<script>
+function syncShift() {
+  var sel = document.getElementById('shiftSelect');
+  var opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  document.getElementById('ownerId').value = opt.getAttribute('data-owner') || '';
+  var rec = opt.getAttribute('data-rec');
+  document.getElementById('recruitmentId').value = (rec && rec !== 'null') ? rec : '';
+  document.getElementById('storeName').value = opt.getAttribute('data-store') || '';
+  document.getElementById('shiftInfo').value = opt.getAttribute('data-shift') || '';
+}
+</script>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

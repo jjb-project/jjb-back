@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" width="140" height="175">
+  <!-- 왼쪽 귀 -->
+  <circle cx="42" cy="44" r="22" fill="white" opacity="0.92"/>
+  <circle cx="42" cy="44" r="13" fill="#93C5FD"/>
+  <!-- 오른쪽 귀 -->
+  <circle cx="118" cy="44" r="22" fill="white" opacity="0.92"/>
+  <circle cx="118" cy="44" r="13" fill="#93C5FD"/>
+
+  <!-- 머리 -->
+  <ellipse cx="80" cy="82" rx="46" ry="44" fill="white"/>
+
+  <!-- 왼쪽 눈 -->
+  <circle cx="64" cy="74" r="7" fill="#1E40AF"/>
+  <circle cx="66.5" cy="71.5" r="2.8" fill="white"/>
+  <!-- 오른쪽 눈 -->
+  <circle cx="96" cy="74" r="7" fill="#1E40AF"/>
+  <circle cx="98.5" cy="71.5" r="2.8" fill="white"/>
+
+  <!-- 코 -->
+  <ellipse cx="80" cy="88" rx="7" ry="5" fill="#93C5FD"/>
+
+  <!-- 입 (웃음) -->
+  <path d="M66 98 Q80 112 94 98" stroke="#93C5FD" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- 볼터치 -->
+  <ellipse cx="50" cy="89" rx="9" ry="6.5" fill="#BFDBFE" opacity="0.65"/>
+  <ellipse cx="110" cy="89" rx="9" ry="6.5" fill="#BFDBFE" opacity="0.65"/>
+
+  <!-- 몸통 -->
+  <ellipse cx="80" cy="162" rx="34" ry="36" fill="white" opacity="0.9"/>
+
+  <!-- 왼쪽 팔 (위로 올림) -->
+  <path d="M48 148 C32 128 26 100 32 76" stroke="white" stroke-width="18" stroke-linecap="round" fill="none" opacity="0.92"/>
+  <circle cx="32" cy="72" r="14" fill="white" opacity="0.92"/>
+
+  <!-- 오른쪽 팔 (위로 올림) -->
+  <path d="M112 148 C128 128 134 100 128 76" stroke="white" stroke-width="18" stroke-linecap="round" fill="none" opacity="0.92"/>
+  <circle cx="128" cy="72" r="14" fill="white" opacity="0.92"/>
+
+  <!-- 오른손에 번개 -->
+  <path d="M126 55 L141 34 L134 34 L149 13" stroke="#FCD34D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- 왼발 -->
+  <ellipse cx="62" cy="194" rx="18" ry="9" fill="white" opacity="0.85"/>
+  <!-- 오른발 -->
+  <ellipse cx="98" cy="194" rx="18" ry="9" fill="white" opacity="0.85"/>
+</svg>

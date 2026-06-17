@@ -1,67 +1,66 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('후보 상세')}"></head>
-<body>
-<main class="app-shell">
-  <section class="screen active">
-    <div th:replace="~{fragments/layout :: topbar('후보 상세', '/boss/home')}"></div>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <div class="detail-page">
-      <div class="detail-hero">
-        <div class="avatar avatar-72 avatar-worker"><i class="fa-regular fa-user"></i></div>
-        <div>
-          <h1 th:text="${candidate.name}">구직자명</h1>
-          <p th:text="${candidate.availableTime}">오늘 17:00-22:00 가능</p>
-          <p th:text="'평점 ' + ${reviewSummary.averageRating} + '점 · 후기 ' + ${reviewSummary.reviewCount} + '개'">평점 0.0점 · 후기 0개</p>
-        </div>
+<div class="web-detail">
+  <div class="detail-page">
+    <div class="detail-hero">
+      <div class="avatar avatar-72 avatar-worker"><i class="fa-regular fa-user"></i></div>
+      <div>
+        <h1 th:text="${candidate.name}">구직자명</h1>
+        <p th:text="${candidate.availableTime}">오늘 17:00-22:00 가능</p>
+        <p th:text="'평점 ' + ${reviewSummary.averageRating} + '점 · 후기 ' + ${reviewSummary.reviewCount} + '개'">평점 0.0점 · 후기 0개</p>
       </div>
-
-      <form th:action="@{/boss/candidates/{id}/favorite(id=${candidate.id})}" method="post">
-        <button class="btn btn-secondary" type="submit" th:text="${favorite ? '찜 해제' : '찜하기'}">찜하기</button>
-      </form>
-
-      <dl class="detail-grid">
-        <div>
-          <dt>희망 지역</dt>
-          <dd th:text="${candidate.area}">서울 강남구</dd>
-        </div>
-        <div>
-          <dt>희망 시급</dt>
-          <dd th:text="${candidate.desiredHourlyWage} + '원 이상'">13,000원 이상</dd>
-        </div>
-        <div>
-          <dt>경험</dt>
-          <dd th:text="${candidate.skills}">입력한 경험 업종</dd>
-        </div>
-      </dl>
-
-      <div class="empty-state" th:if="${!memberVerified}">
-        매칭 요청은 사업자 인증 후 보낼 수 있습니다.
-        <a class="btn btn-primary" th:href="@{/boss/verify}">사업자 인증하기</a>
-      </div>
-
-      <form class="form-screen compact" th:if="${memberVerified}" th:action="@{/boss/match-requests}" method="post">
-        <input type="hidden" name="jobSeekerId" th:value="${candidate.id}">
-        <div class="form-group">
-          <label class="form-label" for="message">요청 메시지</label>
-          <textarea class="form-input" id="message" name="message" rows="3">오늘 근무 가능하실까요?</textarea>
-        </div>
-        <button class="btn btn-primary" type="submit">매칭 요청 보내기</button>
-      </form>
-
-      <div class="section-header">
-        <span class="section-title">구직자 평가</span>
-        <span class="section-more" th:text="${reviewSummary.reviewCount} + '개'">0개</span>
-      </div>
-      <div class="empty-state" th:if="${#lists.isEmpty(reviews)}">아직 받은 평가가 없습니다.</div>
-      <article class="review-card" th:each="review : ${reviews}">
-        <strong th:text="${review.rating} + '점 · ' + ${review.evaluatorName}">5점</strong>
-        <p th:text="${review.review}">후기</p>
-        <span th:text="${review.context}">매칭 내용</span>
-      </article>
     </div>
-  </section>
-</main>
+
+    <form th:action="@{/boss/candidates/{id}/favorite(id=${candidate.id})}" method="post">
+      <button class="btn btn-secondary" type="submit" th:text="${favorite ? '찜 해제' : '찜하기'}">찜하기</button>
+    </form>
+
+    <dl class="detail-grid">
+      <div>
+        <dt>희망 지역</dt>
+        <dd th:text="${candidate.area}">서울 강남구</dd>
+      </div>
+      <div>
+        <dt>희망 시급</dt>
+        <dd th:text="${candidate.desiredHourlyWage} + '원 이상'">13,000원 이상</dd>
+      </div>
+      <div>
+        <dt>경험</dt>
+        <dd th:text="${candidate.skills}">입력한 경험 업종</dd>
+      </div>
+    </dl>
+
+    <div class="empty-state" th:if="${!memberVerified}">
+      매칭 요청은 사업자 인증 후 보낼 수 있습니다.
+      <a class="btn btn-primary" th:href="@{/boss/verify}">사업자 인증하기</a>
+    </div>
+
+    <form class="form-screen compact" th:if="${memberVerified}" th:action="@{/boss/match-requests}" method="post">
+      <input type="hidden" name="jobSeekerId" th:value="${candidate.id}">
+      <div class="form-group">
+        <label class="form-label" for="message">요청 메시지</label>
+        <textarea class="form-input" id="message" name="message" rows="3">오늘 근무 가능하실까요?</textarea>
+      </div>
+      <button class="btn btn-primary" type="submit">매칭 요청 보내기</button>
+    </form>
+
+    <div class="section-header">
+      <span class="section-title">구직자 평가</span>
+      <span class="section-more" th:text="${reviewSummary.reviewCount} + '개'">0개</span>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(reviews)}">아직 받은 평가가 없습니다.</div>
+    <article class="review-card" th:each="review : ${reviews}">
+      <strong th:text="${review.rating} + '점 · ' + ${review.evaluatorName}">5점</strong>
+      <p th:text="${review.review}">후기</p>
+      <span th:text="${review.context}">매칭 내용</span>
+    </article>
+  </div>
+</div>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

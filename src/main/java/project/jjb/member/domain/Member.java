@@ -10,7 +10,7 @@ public class Member {
 
 	private final UUID id;
 	private final SocialIdentity socialIdentity;
-	private final String displayName;
+	private String displayName;
 	private final String passwordHash;
 	private boolean businessVerified;
 	private BusinessOperatingStatus businessOperatingStatus;
@@ -50,6 +50,13 @@ public class Member {
 		member.jobSeekerProfile = jobSeekerProfile;
 		member.ownerProfile = ownerProfile;
 		return member;
+	}
+
+	public void updateDisplayName(String newName) {
+		if (newName == null || newName.isBlank()) {
+			throw ApiException.badRequest("INVALID_DISPLAY_NAME", "이름을 입력해주세요.");
+		}
+		displayName = newName.trim();
 	}
 
 	public void switchRole(MemberRole role) {

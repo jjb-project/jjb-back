@@ -119,6 +119,13 @@ public class MemberService {
 	}
 
 	@Transactional
+	public MemberSnapshot changeDisplayName(UUID memberId, String newName) {
+		Member member = requireMember(memberId);
+		member.updateDisplayName(newName);
+		return MemberSnapshot.from(memberRepository.save(member));
+	}
+
+	@Transactional
 	public MemberSnapshot switchRole(UUID memberId, MemberRole role) {
 		Member member = requireMember(memberId);
 		member.switchRole(role);
@@ -133,7 +140,13 @@ public class MemberService {
 		int desiredHourlyWage,
 		List<String> experiencedIndustries,
 		boolean urgentSubstituteAvailable,
-		String introduction
+		String introduction,
+		String gender,
+		String militaryService,
+		String education,
+		String careerLevel,
+		List<String> preferredDays,
+		String imageUrl
 	) {
 		Member member = requireMember(memberId);
 		member.updateJobSeekerProfile(new JobSeekerProfile(
@@ -142,7 +155,13 @@ public class MemberService {
 			desiredHourlyWage,
 			experiencedIndustries,
 			urgentSubstituteAvailable,
-			introduction
+			introduction,
+			gender,
+			militaryService,
+			education,
+			careerLevel,
+			preferredDays,
+			imageUrl
 		));
 		return MemberSnapshot.from(memberRepository.save(member));
 	}
@@ -153,10 +172,11 @@ public class MemberService {
 		String storeName,
 		String storeAddress,
 		String businessCategory,
-		String storeIntroduction
+		String storeIntroduction,
+		String imageUrl
 	) {
 		Member member = requireMember(memberId);
-		member.updateOwnerProfile(new OwnerProfile(storeName, storeAddress, businessCategory, storeIntroduction));
+		member.updateOwnerProfile(new OwnerProfile(storeName, storeAddress, businessCategory, storeIntroduction, imageUrl));
 		return MemberSnapshot.from(memberRepository.save(member));
 	}
 

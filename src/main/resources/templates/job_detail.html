@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('공고 상세')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-detail">
+
+  <!-- 공고 헤더 -->
+  <div class="jd-hero">
+    <div class="jd-store-icon"
+         th:classappend="${job.storeImageUrl != null and !job.storeImageUrl.isEmpty()} ? ' has-img'"
+         th:style="${job.storeImageUrl != null and !job.storeImageUrl.isEmpty()} ? 'background-image:url(' + ${job.storeImageUrl} + ')' : ''">
+      <i class="fa-solid fa-store" th:if="${job.storeImageUrl == null or job.storeImageUrl.isEmpty()}"></i>
+    </div>
+    <div class="jd-hero-info">
+      <span class="jd-category-badge" th:text="${job.businessCategory != null and !job.businessCategory.isEmpty()} ? ${job.businessCategory} : '업종 미분류'">카페</span>
+      <h1 class="jd-title" th:text="${job.title}">공고 제목</h1>
+      <p class="jd-store" th:text="${job.storeName}">매장명</p>
+    </div>
+    <span class="jd-status-badge"
+          th:classappend="${job.status == '모집 중'} ? ' jd-status--open' : ' jd-status--closed'"
+          th:text="${job.status}">모집 중</span>
+  </div>
+
+  <!-- 긴급/즉시확정 배지 -->
+  <div class="jd-urgent-row" th:if="${job.urgent or job.instantHire or (job.countdown != null and !job.countdown.isEmpty())}">
+    <span class="jd-badge jd-badge--instant" th:if="${job.instantHire}"><i class="fa-solid fa-bolt"></i> 즉시확정</span>
+    <span class="jd-badge jd-badge--urgent" th:if="${job.urgent}"><i class="fa-solid fa-fire"></i> 급구</span>
+    <span class="jd-badge jd-badge--countdown" th:if="${job.countdown != null and !job.countdown.isEmpty()}"
+          th:text="'⏰ ' + ${job.countdown}">⏰ 3시간 후 시작</span>
+  </div>
+
+  <!-- 테마 태그 -->
+  <div class="jd-tags" th:if="${!#lists.isEmpty(tags)}">
+    <span class="jd-tag" th:each="tag : ${tags}" th:text="${tag}">역세권</span>
+  </div>
+
+  <!-- 근무 조건 -->
+  <div class="jd-info-card">
+    <div class="jd-info-row">
+      <span class="jd-info-label"><i class="fa-regular fa-calendar"></i> 근무 일시</span>
+      <span class="jd-info-value" th:text="${job.workTime}">2026-06-25 18:00-23:00</span>
+    </div>
+    <div class="jd-info-row">
+      <span class="jd-info-label"><i class="fa-solid fa-location-dot"></i> 근무지</span>
+      <span class="jd-info-value" th:text="${job.workplaceAddress}">서울특별시 강남구</span>
+    </div>
+    <div class="jd-info-row jd-info-wage">
+      <span class="jd-info-label"><i class="fa-solid fa-won-sign"></i> 시급</span>
+      <span class="jd-wage-value" th:text="'시급 ' + ${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원'">시급 12,000원</span>
+    </div>
+  </div>
+
+  <!-- 근무지 지도 -->
+  <div class="jd-section" th:if="${job.workplaceAddress != null and !job.workplaceAddress.isEmpty()}">
+    <h3 class="jd-section-title">근무지 위치</h3>
+    <div class="jd-map">
+      <iframe title="근무지 지도" loading="lazy" allowfullscreen
+              th:src="'https://maps.google.com/maps?q=' + ${#uris.escapeQueryParam(job.workplaceAddress)} + '&z=15&hl=ko&output=embed'"></iframe>
+    </div>
+  </div>
+
+  <!-- 상세 설명 -->
+  <div class="jd-section" th:if="${description != null and !description.isEmpty()}">
+    <h3 class="jd-section-title">상세 설명</h3>
+    <p class="jd-desc" th:text="${description}">상세 설명</p>
+  </div>
+
+  <!-- 가게 소개 -->
+  <div class="jd-section" th:if="${storeIntroduction != null and !storeIntroduction.isEmpty()}">
+    <h3 class="jd-section-title">가게 소개</h3>
+    <p class="jd-desc" th:text="${storeIntroduction}">소개</p>
+  </div>
+
+  <!-- 지원 버튼 -->
+  <div class="jd-apply-area">
+    <a th:if="${member == null}" class="btn btn-primary jd-apply-btn" th:href="@{/login}">
+      <i class="fa-solid fa-paper-plane"></i> 로그인 후 지원하기
+    </a>
+    <!-- 즉시확정 공고: 바로 확정 -->
+    <form th:if="${member != null and (activeRole == null or activeRole.name() == 'JOB_SEEKER') and job.instantHire}"
+          th:action="@{/worker/instant-apply}" method="post" style="width:100%">
+      <input type="hidden" name="ownerId" th:value="${ownerId}">
+      <input type="hidden" name="recruitmentId" th:value="${job.id}">
+      <button type="submit" class="btn btn-primary jd-apply-btn jd-apply-btn--instant">
+        <i class="fa-solid fa-bolt"></i> 즉시 지원 (바로 확정)
+      </button>
+    </form>
+    <!-- 일반 공고: 지원 -->
+    <form th:if="${member != null and (activeRole == null or activeRole.name() == 'JOB_SEEKER') and !job.instantHire}"
+          th:action="@{/worker/match-requests}" method="post" style="width:100%">
+      <input type="hidden" name="ownerId" th:value="${ownerId}">
+      <input type="hidden" name="message" th:value="'[' + ${job.title} + '] 지원합니다.'">
+      <button type="submit" class="btn btn-primary jd-apply-btn">
+        <i class="fa-solid fa-paper-plane"></i> 지원하기
+      </button>
+    </form>
+    <a th:if="${member != null and activeRole != null and activeRole.name() == 'OWNER'}"
+       class="btn btn-secondary jd-apply-btn" th:href="@{/}">
+      <i class="fa-solid fa-arrow-left"></i> 목록으로
+    </a>
+  </div>
+
+  <!-- 가게 후기 -->
+  <div class="jd-section">
+    <div class="jd-section-header">
+      <h3 class="jd-section-title">가게 후기</h3>
+      <span class="jd-review-summary" th:if="${reviewSummary.reviewCount > 0}"
+            th:text="'평균 ' + ${reviewSummary.averageRating} + '점 · ' + ${reviewSummary.reviewCount} + '개'">
+        평균 4.5점 · 3개
+      </span>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(reviews)}">
+      아직 등록된 후기가 없습니다.
+    </div>
+    <div class="jd-review-list">
+      <article class="jd-review-card" th:each="review : ${reviews}">
+        <div class="jd-review-top">
+          <span class="jd-review-stars">
+            <span th:each="i : ${#numbers.sequence(1,5)}"
+                  th:class="${i <= review.rating} ? 'star star-on' : 'star star-off'">★</span>
+          </span>
+          <strong class="jd-reviewer" th:text="${review.evaluatorName}">평가자</strong>
+          <span class="jd-review-date" th:text="${#strings.substring(review.createdAt, 0, 10)}">2026-06-01</span>
+        </div>
+        <p class="jd-review-text" th:text="${review.review}">후기 내용</p>
+      </article>
+    </div>
+  </div>
+
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

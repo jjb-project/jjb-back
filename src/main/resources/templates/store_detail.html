@@ -1,46 +1,45 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('가게 상세')}"></head>
-<body>
-<main class="app-shell">
-  <section class="screen active">
-    <div th:replace="~{fragments/layout :: topbar('가게 상세', '/worker/home')}"></div>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <section class="profile-detail-hero">
-      <div class="avatar avatar-72 avatar-boss"><i class="fa-solid fa-store"></i></div>
-      <h1 th:text="${store.storeName}">매장명</h1>
-      <p th:text="${store.storeAddress} + ' · ' + ${store.businessCategory}">지역 · 업종</p>
-      <p th:text="'평점 ' + ${reviewSummary.averageRating} + '점 · 후기 ' + ${reviewSummary.reviewCount} + '개'">평점 0.0점 · 후기 0개</p>
-    </section>
-
-    <section class="detail-page">
-      <form th:action="@{/worker/stores/{id}/favorite(id=${store.id})}" method="post">
-        <button class="btn btn-secondary" type="submit" th:text="${favorite ? '찜 해제' : '찜하기'}">찜하기</button>
-      </form>
-
-      <p class="profile-summary-card" th:text="${#strings.isEmpty(store.storeIntroduction) ? '가게 소개가 아직 없습니다.' : store.storeIntroduction}">
-        가게 소개
-      </p>
-
-      <form class="store-request-form" th:action="@{/worker/match-requests}" method="post">
-        <input type="hidden" name="ownerId" th:value="${store.id}">
-        <input class="form-input" name="message" value="근무 지원합니다." aria-label="지원 메시지">
-        <button class="btn btn-primary" type="submit">지원하기</button>
-      </form>
-
-      <div class="section-header">
-        <span class="section-title">가게 평가</span>
-        <span class="section-more" th:text="${reviewSummary.reviewCount} + '개'">0개</span>
-      </div>
-      <div class="empty-state" th:if="${#lists.isEmpty(reviews)}">아직 받은 평가가 없습니다.</div>
-      <article class="review-card" th:each="review : ${reviews}">
-        <strong th:text="${review.rating} + '점 · ' + ${review.evaluatorName}">5점</strong>
-        <p th:text="${review.review}">후기</p>
-        <span th:text="${review.context}">매칭 내용</span>
-      </article>
-    </section>
+<div class="web-detail">
+  <section class="profile-detail-hero">
+    <div class="avatar avatar-72 avatar-boss"><i class="fa-solid fa-store"></i></div>
+    <h1 th:text="${store.storeName}">매장명</h1>
+    <p th:text="${store.storeAddress} + ' · ' + ${store.businessCategory}">지역 · 업종</p>
+    <p th:text="'평점 ' + ${reviewSummary.averageRating} + '점 · 후기 ' + ${reviewSummary.reviewCount} + '개'">평점 0.0점 · 후기 0개</p>
   </section>
-</main>
+
+  <section class="detail-page">
+    <form th:action="@{/worker/stores/{id}/favorite(id=${store.id})}" method="post">
+      <button class="btn btn-secondary" type="submit" th:text="${favorite ? '찜 해제' : '찜하기'}">찜하기</button>
+    </form>
+
+    <p class="profile-summary-card" th:text="${#strings.isEmpty(store.storeIntroduction) ? '가게 소개가 아직 없습니다.' : store.storeIntroduction}">
+      가게 소개
+    </p>
+
+    <form class="store-request-form" th:action="@{/worker/match-requests}" method="post">
+      <input type="hidden" name="ownerId" th:value="${store.id}">
+      <input class="form-input" name="message" value="근무 지원합니다." aria-label="지원 메시지">
+      <button class="btn btn-primary" type="submit">지원하기</button>
+    </form>
+
+    <div class="section-header">
+      <span class="section-title">가게 평가</span>
+      <span class="section-more" th:text="${reviewSummary.reviewCount} + '개'">0개</span>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(reviews)}">아직 받은 평가가 없습니다.</div>
+    <article class="review-card" th:each="review : ${reviews}">
+      <strong th:text="${review.rating} + '점 · ' + ${review.evaluatorName}">5점</strong>
+      <p th:text="${review.review}">후기</p>
+      <span th:text="${review.context}">매칭 내용</span>
+    </article>
+  </section>
+</div>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

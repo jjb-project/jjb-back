@@ -1,67 +1,65 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('모집 상세')}"></head>
-<body>
-<main class="app-shell">
-  <section class="screen active">
-    <div th:replace="~{fragments/layout :: topbar('모집 상세', '/boss/home')}"></div>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <div class="detail-page">
-      <div class="detail-hero">
-        <div class="request-store-icon large"><i class="fa-solid fa-briefcase"></i></div>
-        <div>
-          <span class="badge badge-blue" th:text="${recruitment.status}">모집 중</span>
-          <h1 th:text="${recruitment.title}">카페 마감 알바 급구</h1>
-          <p th:text="${recruitment.workplaceAddress}">서울 강남구</p>
-        </div>
+<div class="web-detail">
+  <div class="detail-page">
+    <div class="detail-hero">
+      <div class="request-store-icon large"><i class="fa-solid fa-briefcase"></i></div>
+      <div>
+        <span class="badge badge-blue" th:text="${recruitment.status}">모집 중</span>
+        <h1 th:text="${recruitment.title}">카페 마감 알바 급구</h1>
+        <p th:text="${recruitment.workplaceAddress}">서울 강남구</p>
       </div>
-
-      <dl class="detail-grid">
-        <div>
-          <dt>근무 일시</dt>
-          <dd th:text="${recruitment.workTime}">2026-06-01 17:00-22:00</dd>
-        </div>
-        <div>
-          <dt>시급</dt>
-          <dd th:text="${recruitment.hourlyWage} + '원 /시간'">13,000원 /시간</dd>
-        </div>
-      </dl>
     </div>
 
-    <div class="section-header">
-      <span class="section-title">AI 추천 인재</span>
-      <span class="section-more" th:text="${#lists.size(recommendations)} + '명'">0명</span>
-    </div>
-
-    <div class="empty-state" th:if="${#lists.isEmpty(recommendations)}">
-      추천할 수 있는 구직자 프로필이 아직 없습니다.
-    </div>
-
-    <div class="candidate-card" th:each="recommendation : ${recommendations}">
-      <div class="candidate-top">
-        <div class="avatar avatar-48 avatar-worker"><i class="fa-regular fa-user"></i></div>
-        <div class="candidate-info">
-          <strong class="candidate-name" th:text="${recommendation.displayName}">구직자명</strong>
-          <span th:text="${recommendation.profileSummary}">오늘 가능 · 서울 강남구</span>
-          <span th:text="${recommendation.reason}">조건이 잘 맞습니다.</span>
-        </div>
+    <dl class="detail-grid">
+      <div>
+        <dt>근무 일시</dt>
+        <dd th:text="${recruitment.workTime}">2026-06-01 17:00-22:00</dd>
       </div>
-      <div class="candidate-tags">
-        <span class="tag-chip active" th:text="'추천 점수 ' + ${recommendation.score}">추천 점수 90</span>
+      <div>
+        <dt>시급</dt>
+        <dd th:text="${recruitment.hourlyWage} + '원 /시간'">13,000원 /시간</dd>
       </div>
-      <form class="action-row" th:if="${memberVerified}" th:action="@{/boss/match-requests}" method="post">
-        <input type="hidden" name="recruitmentId" th:value="${recruitment.id}">
-        <input type="hidden" name="jobSeekerId" th:value="${recommendation.jobSeekerId}">
-        <input type="hidden" name="message"
-               th:value="${recruitment.title} + ' 근무 가능하실까요? 추천 사유: ' + ${recommendation.reason}">
-        <a class="btn btn-secondary" th:href="@{/boss/candidates/{id}(id=${recommendation.jobSeekerId})}">프로필 보기</a>
-        <button class="btn btn-primary" type="submit">매칭 요청</button>
-      </form>
-      <a class="btn btn-primary" th:if="${!memberVerified}" th:href="@{/boss/verify}">사업자 인증 후 요청</a>
+    </dl>
+  </div>
+
+  <div class="section-header">
+    <span class="section-title">AI 추천 인재</span>
+    <span class="section-more" th:text="${#lists.size(recommendations)} + '명'">0명</span>
+  </div>
+
+  <div class="empty-state" th:if="${#lists.isEmpty(recommendations)}">
+    추천할 수 있는 구직자 프로필이 아직 없습니다.
+  </div>
+
+  <div class="candidate-card" th:each="recommendation : ${recommendations}">
+    <div class="candidate-top">
+      <div class="avatar avatar-48 avatar-worker"><i class="fa-regular fa-user"></i></div>
+      <div class="candidate-info">
+        <strong class="candidate-name" th:text="${recommendation.displayName}">구직자명</strong>
+        <span th:text="${recommendation.profileSummary}">오늘 가능 · 서울 강남구</span>
+        <span th:text="${recommendation.reason}">조건이 잘 맞습니다.</span>
+      </div>
     </div>
-  </section>
-</main>
-<div th:replace="~{fragments/layout :: bottomNav('post')}"></div>
+    <div class="candidate-tags">
+      <span class="tag-chip active" th:text="'추천 점수 ' + ${recommendation.score}">추천 점수 90</span>
+    </div>
+    <form class="action-row" th:if="${memberVerified}" th:action="@{/boss/match-requests}" method="post">
+      <input type="hidden" name="recruitmentId" th:value="${recruitment.id}">
+      <input type="hidden" name="jobSeekerId" th:value="${recommendation.jobSeekerId}">
+      <input type="hidden" name="message"
+             th:value="${recruitment.title} + ' 근무 가능하실까요? 추천 사유: ' + ${recommendation.reason}">
+      <a class="btn btn-secondary" th:href="@{/boss/candidates/{id}(id=${recommendation.jobSeekerId})}">프로필 보기</a>
+      <button class="btn btn-primary" type="submit">매칭 요청</button>
+    </form>
+    <a class="btn btn-primary" th:if="${!memberVerified}" th:href="@{/boss/verify}">사업자 인증 후 요청</a>
+  </div>
+</div>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

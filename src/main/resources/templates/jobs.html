@@ -1,33 +1,54 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('실시간 공고')}"></head>
-<body>
-<main class="app-shell job-portal-shell public-portal">
-  <section class="screen active no-bottom">
-    <div th:replace="~{fragments/layout :: siteHeader}"></div>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <div class="jobs-page-head">
-      <h1>실시간 등록 공고</h1>
-      <span class="section-sub" th:text="${#lists.size(jobCards)} + '개의 공고'">0개의 공고</span>
-    </div>
+<div class="jobs-page-head">
+  <div>
+    <h1 th:text="${(keyword != null and !keyword.isEmpty()) ? keyword + ' 공고' : (region != null and !region.isEmpty()) ? region + ' 공고' : (category != null and !category.isEmpty()) ? category + ' 공고' : '실시간 등록 공고'}">실시간 등록 공고</h1>
+    <span class="section-sub" th:text="${totalCount} + '개의 공고'">0개의 공고</span>
+  </div>
+  <a th:href="@{/jobs}" th:if="${(keyword != null and !keyword.isEmpty()) or (region != null and !region.isEmpty()) or (category != null and !category.isEmpty())}"
+     style="font-size:13px;font-weight:700;color:var(--text-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px">
+    <i class="fa-solid fa-xmark"></i> 필터 해제
+  </a>
+</div>
 
-    <div class="empty-state" th:if="${#lists.isEmpty(jobCards)}">
-      아직 등록된 공고가 없습니다.
-    </div>
+<div class="empty-state" th:if="${#lists.isEmpty(jobCards)}">
+  아직 등록된 공고가 없습니다.
+</div>
 
-    <div class="jobs-grid" th:unless="${#lists.isEmpty(jobCards)}">
-      <article class="job-grid-card" th:each="job : ${jobCards}">
-        <span class="tag-chip" th:text="${job.businessCategory}">업종</span>
-        <strong class="job-grid-store" th:text="${job.storeName}">매장명</strong>
-        <p class="job-grid-title" th:text="${job.title}">공고 제목</p>
-        <span class="job-grid-meta" th:text="${job.workTime}">근무시간</span>
-        <span class="job-grid-meta" th:text="${job.workplaceAddress}">주소</span>
-        <span class="job-grid-wage" th:text="${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원/시간'">시급</span>
-        <a class="btn btn-outline btn-sm" th:href="@{/worker/home}">상세보기</a>
-      </article>
+<div class="jobs-grid" th:unless="${#lists.isEmpty(jobCards)}">
+  <a class="job-grid-card" th:each="job : ${jobCards}" th:href="@{/jobs/{id}(id=${job.id})}">
+    <div class="job-grid-logo"><i class="fa-solid fa-store"></i></div>
+    <div class="job-grid-body">
+      <span class="job-grid-store" th:text="${job.storeName}">매장명</span>
+      <p class="job-grid-title" th:text="${job.title}">공고 제목</p>
+      <span class="job-grid-meta" th:text="${job.workTime}">근무시간</span>
+      <span class="job-grid-meta" th:text="${job.workplaceAddress}">주소</span>
+      <span class="job-grid-wage" th:text="'시급 ' + ${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원'">시급</span>
+      <span class="job-grid-link">공고 보기 <i class="fa-solid fa-chevron-right"></i></span>
     </div>
-  </section>
-</main>
+  </a>
+</div>
+
+<!-- 페이지네이션 -->
+<nav class="pagination" th:if="${totalPages > 1}">
+  <a class="page-btn" th:classappend="${currentPage == 0} ? ' page-btn--disabled'"
+     th:href="@{/jobs(keyword=${keyword},region=${region},category=${category},page=${currentPage - 1})}">
+    <i class="fa-solid fa-chevron-left"></i>
+  </a>
+  <a class="page-btn" th:each="p : ${#numbers.sequence(0, totalPages - 1)}"
+     th:classappend="${p == currentPage} ? ' page-btn--active'"
+     th:href="@{/jobs(keyword=${keyword},region=${region},category=${category},page=${p})}"
+     th:text="${p + 1}">1</a>
+  <a class="page-btn" th:classappend="${currentPage == totalPages - 1} ? ' page-btn--disabled'"
+     th:href="@{/jobs(keyword=${keyword},region=${region},category=${category},page=${currentPage + 1})}">
+    <i class="fa-solid fa-chevron-right"></i>
+  </a>
+</nav>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

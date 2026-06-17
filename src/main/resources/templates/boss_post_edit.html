@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('공고 수정')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-narrow">
+  <form class="form-screen" th:action="@{/boss/recruitments/{id}/edit(id=${recruitment.id})}" method="post">
+    <div class="page-intro">
+      <h1>공고를 수정해요</h1>
+      <p>변경할 내용을 입력하고 저장하세요.</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="title">모집 제목</label>
+      <input class="form-input" id="title" name="title" th:value="${recruitment.title}" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="workDate">근무일</label>
+      <input class="form-input" id="workDate" name="workDate" type="date" th:value="${recruitment.workDate}" required>
+    </div>
+    <div class="inline-field">
+      <div class="form-group">
+        <label class="form-label" for="startTime">시작</label>
+        <input class="form-input" id="startTime" name="startTime" type="time" th:value="${recruitment.startTime}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="endTime">종료</label>
+        <input class="form-input" id="endTime" name="endTime" type="time" th:value="${recruitment.endTime}" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="workplaceAddress">근무지</label>
+      <input class="form-input" id="workplaceAddress" name="workplaceAddress"
+             th:value="${recruitment.workplaceAddress}" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="hourlyWage">시급</label>
+      <div class="wage-input-wrap">
+        <input class="form-input" id="hourlyWage" name="hourlyWage" type="number" min="10000" step="10"
+               th:value="${recruitment.hourlyWage}" required>
+        <span class="wage-suffix">원</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">테마 태그 <span style="font-weight:400;color:var(--text-3)">(중복 선택 가능)</span></label>
+      <input type="hidden" name="tags" id="tagsInput">
+      <div class="toggle-group" data-multi-toggle="tags">
+        <button type="button" class="toggle-item" data-val="역세권"
+                th:classappend="${recruitment.tags.contains('역세권')} ? ' selected'">🚇 역세권</button>
+        <button type="button" class="toggle-item" data-val="단시간"
+                th:classappend="${recruitment.tags.contains('단시간')} ? ' selected'">⏱ 단시간</button>
+        <button type="button" class="toggle-item" data-val="급구"
+                th:classappend="${recruitment.tags.contains('급구')} ? ' selected'">⚡ 급구</button>
+        <button type="button" class="toggle-item" data-val="풀타임"
+                th:classappend="${recruitment.tags.contains('풀타임')} ? ' selected'">☀ 풀타임</button>
+        <button type="button" class="toggle-item" data-val="대학가"
+                th:classappend="${recruitment.tags.contains('대학가')} ? ' selected'">🎓 대학가</button>
+        <button type="button" class="toggle-item" data-val="브랜드"
+                th:classappend="${recruitment.tags.contains('브랜드')} ? ' selected'">🏷 브랜드</button>
+        <button type="button" class="toggle-item" data-val="야간"
+                th:classappend="${recruitment.tags.contains('야간')} ? ' selected'">🌙 야간</button>
+        <button type="button" class="toggle-item" data-val="주말"
+                th:classappend="${recruitment.tags.contains('주말')} ? ' selected'">📅 주말</button>
+      </div>
+    </div>
+
+    <label class="instant-hire-row">
+      <input type="checkbox" name="instantHire" value="true" th:checked="${recruitment.instantHire}">
+      <span class="instant-hire-text">
+        <strong><i class="fa-solid fa-bolt"></i> 즉시확정(선착순) 공고</strong>
+        <small>지원자가 별도 승인 없이 바로 매칭 확정됩니다.</small>
+      </span>
+    </label>
+
+    <div class="form-group">
+      <div class="form-label-row">
+        <label class="form-label" for="description">상세 설명</label>
+        <button type="button" class="ai-assist-btn" id="aiRecruitmentBtn">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> AI로 작성
+        </button>
+      </div>
+      <textarea class="form-input" id="description" name="description" rows="5"
+                th:text="${recruitment.description}"
+                placeholder="근무 내용·분위기·우대사항을 적어주세요."></textarea>
+    </div>
+
+    <button class="btn btn-primary" type="submit"><i class="fa-solid fa-check"></i> 저장</button>
+  </form>
+</div>
+
+<script>
+document.getElementById('aiRecruitmentBtn').addEventListener('click', function() {
+  if (!document.getElementById('title').value.trim()) {
+    alert('먼저 모집 제목을 입력해주세요.');
+    return;
+  }
+  aiFill(this, '/api/ai/recruitment', {
+    title: document.getElementById('title').value,
+    address: document.getElementById('workplaceAddress').value,
+    hourlyWage: document.getElementById('hourlyWage').value,
+    tags: document.getElementById('tagsInput').value
+  }, 'description');
+});
+</script>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

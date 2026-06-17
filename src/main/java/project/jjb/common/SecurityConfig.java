@@ -17,8 +17,9 @@ public class SecurityConfig {
 			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
 			.oauth2Login(oauth2 -> oauth2
+				.loginPage("/login")
 				.successHandler(successHandler)
-				.failureHandler((request, response, exception) -> response.sendRedirect("/"))
+				.failureHandler((request, response, exception) -> response.sendRedirect("/login?error"))
 			)
 			.logout(logout -> logout.logoutSuccessUrl("/"))
 			.build();

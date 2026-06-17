@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('알림')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-detail">
+  <div class="inbox-head">
+    <h1><i class="fa-regular fa-bell"></i> 알림</h1>
+  </div>
+
+  <div class="empty-state" th:if="${#lists.isEmpty(notifications)}">
+    아직 받은 알림이 없습니다.
+  </div>
+
+  <div class="notif-list" th:unless="${#lists.isEmpty(notifications)}">
+    <a class="notif-item" th:each="n : ${notifications}"
+       th:classappend="${!n.read()} ? ' notif-item--unread'"
+       th:href="${n.linkUrl() != null and !n.linkUrl().isBlank()} ? ${n.linkUrl()} : '#'">
+      <span class="notif-icon"
+            th:classappend="' notif-icon--' + ${n.type().name().toLowerCase()}">
+        <i th:class="${n.type().name() == 'MATCH_REQUEST'} ? 'fa-solid fa-handshake'
+            : (${n.type().name() == 'MATCH_ACCEPTED'} ? 'fa-solid fa-circle-check'
+            : (${n.type().name() == 'MATCH_DECLINED'} ? 'fa-solid fa-circle-xmark'
+            : (${n.type().name() == 'NEW_RECOMMENDED_JOB'} ? 'fa-solid fa-bolt'
+            : (${n.type().name() == 'SUBSTITUTE_REQUEST'} ? 'fa-solid fa-people-arrows'
+            : (${n.type().name() == 'REVIEW_RECEIVED'} ? 'fa-solid fa-star'
+            : 'fa-regular fa-bell')))))"></i>
+      </span>
+      <div class="notif-body">
+        <strong class="notif-title" th:text="${n.title()}">알림 제목</strong>
+        <span class="notif-text" th:text="${n.body()}">알림 내용</span>
+      </div>
+      <span class="notif-unread-dot" th:if="${!n.read()}"></span>
+    </a>
+  </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

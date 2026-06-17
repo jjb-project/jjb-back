@@ -4,6 +4,7 @@ public record OwnerProfile(
 	String storeName,
 	String storeAddress,
 	String businessCategory,
-	String storeIntroduction
+	String storeIntroduction,
+	String imageUrl
 ) {
 }

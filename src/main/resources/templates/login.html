@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('로그인')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="login-page-wrap">
+  <div class="login-page-card">
+
+    <a class="login-page-logo" th:href="@{/}">
+      <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+      <span class="logo-text">바로<span>알바</span></span>
+    </a>
+
+    <p class="page-message error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+
+    <form class="local-auth-form login-form" th:action="@{/login/local}" method="post">
+      <div class="form-group">
+        <input class="form-input" name="username" autocomplete="username" placeholder="아이디" required>
+      </div>
+      <div class="form-group">
+        <input class="form-input" name="password" type="password" autocomplete="current-password" placeholder="비밀번호" minlength="8" required>
+      </div>
+      <button class="btn btn-primary login-submit-btn" type="submit">로그인</button>
+    </form>
+
+    <div class="login-divider"><span>소셜 로그인</span></div>
+    <div class="login-social-btns">
+      <a class="social-btn social-btn-kakao" th:href="@{/oauth2/authorization/kakao}">
+        <span class="social-btn-icon">K</span>
+        <span class="social-btn-label">카카오로 시작하기</span>
+      </a>
+      <a class="social-btn social-btn-naver" th:href="@{/oauth2/authorization/naver}">
+        <span class="social-btn-icon">N</span>
+        <span class="social-btn-label">네이버로 시작하기</span>
+      </a>
+    </div>
+
+    <p class="login-signup-hint">
+      아직 계정이 없으신가요?
+      <a th:href="@{/signup}">회원가입</a>
+    </p>
+
+  </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

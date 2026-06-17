@@ -49,6 +49,15 @@ class RecruitmentJpaEntity {
 	@Column(nullable = false)
 	private Instant createdAt;
 
+	@Column(length = 200)
+	private String tags;
+
+	@Column(length = 1000)
+	private String description;
+
+	@Column(nullable = false)
+	private boolean instantHire;
+
 	protected RecruitmentJpaEntity() {
 	}
 
@@ -64,10 +73,17 @@ class RecruitmentJpaEntity {
 		entity.hourlyWage = recruitment.hourlyWage();
 		entity.status = recruitment.status();
 		entity.createdAt = recruitment.createdAt();
+		entity.tags = recruitment.tags().isEmpty() ? null : String.join(",", recruitment.tags());
+		entity.description = recruitment.description() == null || recruitment.description().isBlank()
+			? null : recruitment.description();
+		entity.instantHire = recruitment.instantHire();
 		return entity;
 	}
 
 	Recruitment toDomain() {
-		return new Recruitment(id, ownerId, title, workDate, startTime, endTime, workplaceAddress, hourlyWage, status, createdAt);
+		java.util.List<String> tagList = tags == null || tags.isBlank()
+			? java.util.List.of()
+			: java.util.Arrays.stream(tags.split(",")).filter(s -> !s.isBlank()).toList();
+		return new Recruitment(id, ownerId, title, workDate, startTime, endTime, workplaceAddress, hourlyWage, status, createdAt, tagList, description, instantHire);
 	}
 }

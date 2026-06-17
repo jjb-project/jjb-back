@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+  ['toastSuccess', 'toastError'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) setTimeout(() => el.remove(), 3400);
+  });
   const signupForm = document.querySelector('[data-signup-form]');
   if (signupForm) {
     const usernameInput = signupForm.querySelector('[data-username-input]');
@@ -110,30 +114,35 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-region-picker]').forEach((picker) => {
     const provinceSelect = picker.querySelector('[data-region-province]');
     const districtSelect = picker.querySelector('[data-region-district]');
-    const hiddenInput = document.querySelector('[data-preferred-area-input]');
+    const detailInput = picker.querySelector('[data-region-detail]');
+    const targetId = picker.dataset.regionTarget;
+    const hiddenInput = targetId
+      ? document.getElementById(targetId)
+      : document.querySelector('[data-preferred-area-input]');
     const districtsByProvince = JSON.parse(picker.dataset.regionDistricts || '{}');
     const syncDistricts = () => {
       const province = provinceSelect.value;
       const districts = districtsByProvince[province] || [];
-      districtSelect.innerHTML = '<option value="">구/시 선택</option>';
+      districtSelect.innerHTML = '<option value="">구/시/군 선택</option>';
       districts.forEach((district) => {
         const option = document.createElement('option');
         option.value = district;
         option.textContent = district;
         districtSelect.appendChild(option);
       });
-      syncPreferredArea();
+      syncArea();
     };
-    const syncPreferredArea = () => {
-      if (!hiddenInput) {
-        return;
-      }
-      hiddenInput.value = provinceSelect.value && districtSelect.value
+    const syncArea = () => {
+      if (!hiddenInput) return;
+      const detail = detailInput ? detailInput.value.trim() : '';
+      const base = provinceSelect.value && districtSelect.value
         ? `${provinceSelect.value} ${districtSelect.value}`
         : '';
+      hiddenInput.value = base && detail ? `${base} ${detail}` : base;
     };
     provinceSelect.addEventListener('change', syncDistricts);
-    districtSelect.addEventListener('change', syncPreferredArea);
+    districtSelect.addEventListener('change', syncArea);
+    if (detailInput) detailInput.addEventListener('input', syncArea);
   });
 
   document.querySelectorAll('[data-industry-picker]').forEach((picker) => {
@@ -163,6 +172,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     groupSelect.addEventListener('change', syncDetails);
     detailSelect.addEventListener('change', syncExperiencedIndustry);
+  });
+
+  document.querySelectorAll('[data-multi-toggle]').forEach((group) => {
+    const targetId = group.dataset.multiToggle;
+    const hiddenInput = document.getElementById(targetId) || document.querySelector(`[name="${targetId}"]`);
+    const getVal = (btn) => btn.dataset.val || btn.textContent.trim();
+    const syncValues = () => {
+      if (!hiddenInput) return;
+      const selected = [...group.querySelectorAll('.toggle-item.selected')].map(getVal);
+      hiddenInput.value = selected.join(',');
+    };
+    group.querySelectorAll('.toggle-item').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('selected');
+        syncValues();
+      });
+    });
+    syncValues();
   });
 
   document.querySelectorAll('[data-recommendation-trigger]').forEach((button) => {
@@ -221,6 +248,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+function previewPhoto(input, targetId) {
+  if (!input.files || !input.files[0]) return;
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    target.style.backgroundImage = 'url(' + e.target.result + ')';
+    target.classList.add('has-img');
+    target.innerHTML = '';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function aiFill(button, url, payload, targetId) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const original = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 작성 중...';
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error('AI 생성에 실패했습니다.');
+      return res.json();
+    })
+    .then((data) => {
+      if (data && data.text) {
+        target.value = data.text;
+        target.focus();
+      }
+    })
+    .catch((err) => {
+      alert(err.message || 'AI 생성에 실패했습니다.');
+    })
+    .finally(() => {
+      button.disabled = false;
+      button.innerHTML = original;
+    });
+}
 
 function escapeHtml(value) {
   return String(value ?? '')

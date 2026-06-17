@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('대화')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-narrow">
+  <div class="chat-head">
+    <a class="chat-back" th:href="@{/inbox}"><i class="fa-solid fa-chevron-left"></i></a>
+    <h1 th:text="${otherName}">상대방</h1>
+  </div>
+
+  <div class="chat-thread" id="chatThread">
+    <div class="empty-state" th:if="${#lists.isEmpty(messages)}">
+      매칭이 확정되었습니다. 첫 메시지를 보내보세요!
+    </div>
+    <div class="chat-bubble-row" th:each="m : ${messages}"
+         th:classappend="${m.mine} ? ' chat-bubble-row--mine'">
+      <div class="chat-bubble" th:classappend="${m.mine} ? ' chat-bubble--mine'">
+        <span class="chat-bubble-text" th:text="${m.body}">메시지</span>
+        <span class="chat-bubble-time" th:text="${m.time}">시간</span>
+      </div>
+    </div>
+  </div>
+
+  <form class="chat-input-bar" th:action="@{/chat/{id}(id=${matchRequestId})}" method="post">
+    <input class="chat-input" name="body" placeholder="메시지를 입력하세요" autocomplete="off" required autofocus>
+    <button class="chat-send" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+  </form>
+</div>
+
+<script>
+  var t = document.getElementById('chatThread');
+  if (t) t.scrollTop = t.scrollHeight;
+</script>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

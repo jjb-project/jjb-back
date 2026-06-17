@@ -7,8 +7,10 @@ import java.util.UUID;
 import project.jjb.matching.domain.Favorite;
 import project.jjb.matching.domain.FavoriteTargetType;
 import project.jjb.matching.domain.MatchRequest;
+import project.jjb.matching.domain.ChatMessage;
 import project.jjb.matching.domain.Review;
 import project.jjb.matching.domain.Recruitment;
+import project.jjb.matching.domain.SubstituteRequest;
 
 public interface MatchingRepository {
 
@@ -19,6 +21,8 @@ public interface MatchingRepository {
 	List<Recruitment> findRecruitmentsByOwnerId(UUID ownerId);
 
 	Optional<Recruitment> findRecruitmentById(UUID id);
+
+	void deleteRecruitment(UUID id);
 
 	MatchRequest saveMatchRequest(MatchRequest matchRequest);
 
@@ -45,4 +49,16 @@ public interface MatchingRepository {
 	boolean existsFavorite(UUID memberId, UUID targetId, FavoriteTargetType targetType);
 
 	List<Favorite> findFavoritesByMemberIdAndTargetType(UUID memberId, FavoriteTargetType targetType);
+
+	SubstituteRequest saveSubstituteRequest(SubstituteRequest request);
+
+	Optional<SubstituteRequest> findSubstituteRequestById(UUID id);
+
+	List<SubstituteRequest> findOpenSubstituteRequests();
+
+	List<SubstituteRequest> findSubstituteRequestsByRequesterId(UUID requesterId);
+
+	ChatMessage saveChatMessage(ChatMessage message);
+
+	List<ChatMessage> findChatMessages(UUID matchRequestId);
 }

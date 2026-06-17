@@ -1,103 +1,379 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('시작')}"></head>
-<body>
-<main class="app-shell job-portal-shell public-portal">
-  <section class="screen active no-bottom">
-    <div th:replace="~{fragments/layout :: siteHeader}"></div>
+<head th:replace="~{fragments/layout :: head('홈')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
 
-    <div class="home-hero-grid">
-      <article class="hero-jobs-card">
-        <h2>
-          실시간 등록 공고
-          <a th:href="@{/jobs}">더보기</a>
-        </h2>
-        <div class="empty-state" th:if="${#lists.isEmpty(recentJobs)}">
-          아직 등록된 공고가 없습니다.
-        </div>
-        <a class="hero-job-item" th:each="job : ${recentJobs}" th:href="@{/jobs}">
-          <strong th:text="${job.storeName}">매장명</strong>
-          <span th:text="${job.title}">공고 제목</span>
-          <span th:text="${job.workTime} + ' · ' + ${job.workplaceAddress}">근무시간 · 주소</span>
-          <span class="hero-job-wage" th:text="${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원/시간'">시급</span>
-        </a>
-      </article>
+<!-- 3컬럼 히어로 그리드 -->
+<div class="home-hero-grid">
 
-      <article class="hero-banner-card">
-        <p class="eyebrow">구인구직 포털 + 양방향 매칭</p>
-        <h1 class="login-headline">급할 때 바로 매칭,<br>믿을 수 있는 단기 알바</h1>
-        <p class="login-sub">구직자는 가게에 지원하고, 인증 사장님은 좋은 구직자에게 직접 제안합니다.</p>
-        <a class="btn btn-primary btn-sm" th:href="@{/role}">양방향 매칭 시작하기</a>
-      </article>
+  <!-- 좌: 오늘의 공고 + 이력서 혼합 -->
+  <article class="hero-jobs-card">
+    <h2>오늘의 업데이트 <a th:href="@{/jobs}">더보기</a></h2>
+    <div class="empty-state" th:if="${#lists.isEmpty(recentJobs) and #lists.isEmpty(recentProfiles)}">아직 등록된 내용이 없습니다.</div>
+    <a class="hero-job-item" th:each="job : ${recentJobs}" th:href="@{/jobs/{id}(id=${job.id})}">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="hero-type-badge hero-type-badge--job">공고</span>
+        <strong th:text="${job.storeName}">매장명</strong>
+      </div>
+      <span th:text="${job.title}">공고 제목</span>
+      <span th:text="${job.workTime} + ' · ' + ${job.workplaceAddress}">근무시간 · 주소</span>
+      <span class="hero-job-wage" th:text="${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원/시간'">시급</span>
+    </a>
+    <a class="hero-job-item" th:each="p : ${recentProfiles}" th:href="@{/worker/profile/edit}">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="hero-type-badge hero-type-badge--resume">이력서</span>
+        <strong th:text="${p.name}">이름</strong>
+      </div>
+      <span th:text="${p.industries}">업종</span>
+      <span th:text="${p.area}">지역</span>
+      <span class="hero-job-wage" th:text="'희망 시급 ' + ${#numbers.formatInteger(p.desiredHourlyWage, 0, 'COMMA')} + '원'">희망 시급</span>
+    </a>
+  </article>
 
-      <aside class="public-login-card">
-        <p class="page-message error" th:if="${errorMessage}" th:text="${errorMessage}"></p>
-        <form class="local-auth-form" th:action="@{/login/local}" method="post">
-          <div class="form-group">
-            <label class="form-label" for="loginUsername">아이디</label>
-            <input class="form-input" id="loginUsername" name="username" autocomplete="username" placeholder="아이디" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="loginPassword">비밀번호</label>
-            <input class="form-input" id="loginPassword" name="password" type="password" autocomplete="current-password" minlength="8" required>
-          </div>
-          <button class="btn btn-primary" type="submit">
-            <i class="fa-regular fa-user"></i>
-            아이디로 로그인
-          </button>
-        </form>
-        <a class="btn btn-secondary" th:href="@{/signup}">아이디로 회원가입</a>
-        <div class="login-divider"><span>소셜 로그인</span></div>
-        <a class="social-btn social-btn-kakao" th:href="@{/oauth2/authorization/kakao}">
-          <span class="social-btn-icon">K</span>
-          <span class="social-btn-label">카카오로 시작하기</span>
-        </a>
-        <a class="social-btn social-btn-naver" th:href="@{/oauth2/authorization/naver}">
-          <span class="social-btn-icon">N</span>
-          <span class="social-btn-label">네이버로 시작하기</span>
-        </a>
-      </aside>
+  <!-- 중: 서비스 배너 -->
+  <article class="hero-banner-card">
+    <div class="hero-banner-card-text">
+      <p class="eyebrow">구인구직 포털 + 양방향 매칭</p>
+      <h1>급할 때 바로 매칭,<br>믿을 수 있는 단기 알바</h1>
+      <p>구직자는 가게에 지원하고,<br>사장님은 좋은 구직자에게 직접 제안합니다.</p>
+      <a class="btn" th:href="${member == null} ? @{/login} : '#portal-section'"
+         th:onclick="${member != null} ? 'event.preventDefault();document.getElementById(\'portal-section\').scrollIntoView({behavior:\'smooth\'})' : ''">
+        <span th:text="${member == null} ? '지금 시작하기' : '양방향 매칭 시작하기'">지금 시작하기</span>
+      </a>
     </div>
+    <div class="hero-banner-mascot"><img src="/img/mascot.svg" alt="바로알바 마스코트"></div>
+  </article>
 
-    <div class="home-category-grid">
-      <section class="category-box">
-        <h3>지역·동네 알바</h3>
-        <div class="category-box-grid">
-          <a th:href="@{/worker/home(region='서울특별시')}"><i class="fa-solid fa-location-dot"></i> 서울</a>
-          <a th:href="@{/worker/home(region='경기도')}"><i class="fa-solid fa-location-dot"></i> 경기</a>
-          <a th:href="@{/worker/home(region='인천광역시')}"><i class="fa-solid fa-location-dot"></i> 인천</a>
-          <a th:href="@{/worker/home(region='부산광역시')}"><i class="fa-solid fa-location-dot"></i> 부산</a>
-          <a th:href="@{/worker/home(region='대구광역시')}"><i class="fa-solid fa-location-dot"></i> 대구</a>
-          <a th:href="@{/worker/home(region='대전광역시')}"><i class="fa-solid fa-location-dot"></i> 대전</a>
-        </div>
-      </section>
-
-      <section class="category-box">
-        <h3>대상별 알바</h3>
-        <div class="category-box-grid">
-          <a th:href="@{/worker/home(keyword='대학생')}"><i class="fa-solid fa-graduation-cap"></i> 대학생</a>
-          <a th:href="@{/worker/home(keyword='주부')}"><i class="fa-solid fa-house"></i> 주부</a>
-          <a th:href="@{/worker/home(keyword='청소년')}"><i class="fa-solid fa-child-reaching"></i> 청소년</a>
-          <a th:href="@{/worker/home(keyword='외국인')}"><i class="fa-solid fa-earth-asia"></i> 외국인</a>
-          <a th:href="@{/worker/home(keyword='시니어')}"><i class="fa-solid fa-user-tie"></i> 시니어</a>
-          <a th:href="@{/worker/home(category='카페')}"><i class="fa-solid fa-mug-hot"></i> 카페</a>
-        </div>
-      </section>
-
-      <section class="category-box">
-        <h3>양방향 매칭 가이드</h3>
-        <div class="category-box-grid">
-          <a th:href="@{/worker/home}"><i class="fa-solid fa-paper-plane"></i> 지원현황</a>
-          <a th:href="@{/boss/home}"><i class="fa-solid fa-handshake"></i> 받은 제안</a>
-          <a th:href="@{/eval}"><i class="fa-solid fa-star"></i> 평가관리</a>
-          <a th:href="@{/boss/recruitments/new}"><i class="fa-solid fa-bullhorn"></i> 공고등록</a>
-        </div>
-      </section>
+  <!-- 우: 비로그인 → 로그인 카드 / 로그인 → 사용자 카드 -->
+  <aside class="public-login-card" th:if="${member == null}">
+    <div class="login-card-header">로그인</div>
+    <div class="login-member-tabs">
+      <a class="login-member-tab" th:href="@{/login}">
+        <i class="fa-regular fa-circle-user"></i>
+        <span class="tab-name">개인회원</span>
+        <span class="tab-desc">알바 찾기</span>
+      </a>
+      <a class="login-member-tab" th:href="@{/login}">
+        <i class="fa-regular fa-building"></i>
+        <span class="tab-name">기업회원</span>
+        <span class="tab-desc">인재 찾기</span>
+      </a>
     </div>
+    <div class="login-card-links">
+      <a th:href="@{/signup}">회원가입</a>
+    </div>
+  </aside>
 
-    <p class="terms-copy">가입하면 서비스 이용약관 및 개인정보처리방침에 동의합니다.</p>
-  </section>
-</main>
+  <aside class="public-login-card home-user-card" th:if="${member != null}">
+    <div class="home-user-greet">
+      <div class="home-user-avatar"><i class="fa-regular fa-user"></i></div>
+      <div>
+        <p class="home-user-name" th:text="${member.displayName()} + '님'">홍길동님</p>
+        <span class="mode-badge"
+              th:classappend="${activeRole != null and activeRole.name() == 'OWNER'} ? ' mode-badge--boss'"
+              th:text="${activeRole != null and activeRole.name() == 'OWNER'} ? '사장님 모드' : '구직자 모드'">구직자 모드</span>
+      </div>
+    </div>
+    <div class="home-user-actions">
+      <a th:if="${activeRole == null or activeRole.name() == 'JOB_SEEKER'}" class="btn btn-primary" th:href="@{/worker/profile/edit}">
+        <i class="fa-regular fa-circle-user"></i> 이력서 등록
+      </a>
+      <a th:if="${activeRole != null and activeRole.name() == 'OWNER'}" class="btn btn-primary" th:href="@{/boss/recruitments/new}">
+        <i class="fa-solid fa-plus"></i> 공고 등록
+      </a>
+      <a class="btn btn-secondary" th:href="@{/inbox}">
+        <i class="fa-regular fa-paper-plane"></i> 매칭 제안함
+      </a>
+      <a th:if="${activeRole == null or activeRole.name() == 'JOB_SEEKER'}" class="btn btn-secondary" th:href="@{/substitutes}">
+        <i class="fa-solid fa-people-arrows"></i> 대타 마켓
+      </a>
+      <a th:if="${activeRole != null and activeRole.name() == 'OWNER'}" class="btn btn-secondary" th:href="@{/boss/recruitments/manage}">
+        <i class="fa-solid fa-briefcase"></i> 내 공고 관리
+      </a>
+      <a class="btn btn-secondary" th:href="@{/role}">모드 전환</a>
+    </div>
+    <div class="login-card-links">
+      <a th:href="@{/mypage}">마이페이지</a>
+      <a th:href="@{/eval}">평가관리</a>
+    </div>
+  </aside>
+
+</div>
+
+<!-- 🔥 내 주변 급구 (긴급 매칭) -->
+<section class="urgent-rail-wrap" th:if="${!#lists.isEmpty(urgentJobs)}">
+  <div class="urgent-rail-head">
+    <h2><span class="urgent-fire">🔥</span> 지금 급구 · 곧 시작</h2>
+    <span class="urgent-rail-sub">마감 임박 / 즉시확정 공고</span>
+  </div>
+  <div class="urgent-rail">
+    <a class="urgent-card" th:each="job : ${urgentJobs}" th:href="@{/jobs/{id}(id=${job.id})}">
+      <div class="urgent-card-badges">
+        <span class="jd-badge jd-badge--instant" th:if="${job.instantHire}"><i class="fa-solid fa-bolt"></i> 즉시확정</span>
+        <span class="jd-badge jd-badge--countdown" th:if="${job.countdown != null and !job.countdown.isEmpty()}"
+              th:text="${job.countdown}">3시간 후</span>
+      </div>
+      <p class="urgent-card-title" th:text="${job.title}">공고 제목</p>
+      <span class="urgent-card-store" th:text="${job.storeName}">매장명</span>
+      <span class="urgent-card-addr" th:text="${job.workplaceAddress}">주소</span>
+      <span class="urgent-card-wage" th:text="'시급 ' + ${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원'">시급</span>
+    </a>
+  </div>
+</section>
+
+<!-- 카테고리 -->
+<div class="home-category-wrap">
+  <div class="home-category-grid">
+    <section class="category-box">
+      <h3>지역·동네 알바</h3>
+      <div class="category-box-grid">
+        <a th:href="@{/jobs(region='서울특별시')}"><i class="fa-solid fa-location-dot"></i> 서울</a>
+        <a th:href="@{/jobs(region='경기도')}"><i class="fa-solid fa-location-dot"></i> 경기</a>
+        <a th:href="@{/jobs(region='인천광역시')}"><i class="fa-solid fa-location-dot"></i> 인천</a>
+        <a th:href="@{/jobs(region='부산광역시')}"><i class="fa-solid fa-location-dot"></i> 부산</a>
+        <a th:href="@{/jobs(region='대구광역시')}"><i class="fa-solid fa-location-dot"></i> 대구</a>
+        <a th:href="@{/jobs(region='대전광역시')}"><i class="fa-solid fa-location-dot"></i> 대전</a>
+        <a th:href="@{/jobs(region='경상남도')}"><i class="fa-solid fa-location-dot"></i> 경남</a>
+        <a th:href="@{/jobs(region='전라남도')}"><i class="fa-solid fa-location-dot"></i> 전남</a>
+        <a th:href="@{/jobs(region='충청북도')}"><i class="fa-solid fa-location-dot"></i> 충북</a>
+        <a th:href="@{/jobs(region='강원도')}"><i class="fa-solid fa-location-dot"></i> 강원</a>
+        <a th:href="@{/jobs(region='제주특별자치도')}"><i class="fa-solid fa-location-dot"></i> 제주</a>
+        <a th:href="@{/jobs}"><i class="fa-solid fa-location-dot"></i> 전국</a>
+      </div>
+    </section>
+    <section class="category-box">
+      <h3>테마별 알바</h3>
+      <div class="category-box-grid two-col">
+        <a th:href="@{/jobs(keyword='역세권')}"><i class="fa-solid fa-train-subway"></i> 역세권알바</a>
+        <a th:href="@{/jobs(keyword='단시간')}"><i class="fa-regular fa-clock"></i> 단시간 알바</a>
+        <a th:href="@{/jobs(keyword='급구')}"><i class="fa-solid fa-bolt"></i> 급구알바</a>
+        <a th:href="@{/jobs(keyword='풀타임')}"><i class="fa-solid fa-sun"></i> 풀알바</a>
+        <a th:href="@{/jobs(category='카페')}"><i class="fa-solid fa-mug-hot"></i> 카페·음료</a>
+        <a th:href="@{/jobs(keyword='대학가')}"><i class="fa-solid fa-graduation-cap"></i> 대학가</a>
+        <a th:href="@{/jobs(keyword='브랜드')}"><i class="fa-solid fa-tag"></i> 브랜드알바</a>
+        <a th:href="@{/jobs(keyword='콜센터')}"><i class="fa-solid fa-headset"></i> 콜센터</a>
+      </div>
+    </section>
+    <section class="category-box">
+      <h3>직종별 알바</h3>
+      <div class="category-box-grid two-col">
+        <a th:href="@{/jobs(category='카페')}"><i class="fa-solid fa-mug-hot"></i> 카페·음료</a>
+        <a th:href="@{/jobs(category='편의점')}"><i class="fa-solid fa-store"></i> 편의점</a>
+        <a th:href="@{/jobs(category='식당')}"><i class="fa-solid fa-utensils"></i> 식당·주방</a>
+        <a th:href="@{/jobs(category='배달')}"><i class="fa-solid fa-motorcycle"></i> 배달·물류</a>
+        <a th:href="@{/jobs(category='사무')}"><i class="fa-solid fa-laptop"></i> 사무보조</a>
+        <a th:href="@{/jobs(category='매장')}"><i class="fa-solid fa-bag-shopping"></i> 매장관리</a>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 전체 공고/이력서 탭 -->
+<section class="home-jobs-section" id="portal-section">
+  <div class="home-jobs-section-header">
+    <div class="portal-tab-bar">
+      <button class="portal-tab active" data-tab="jobs" onclick="switchPortalTab('jobs')">
+        <i class="fa-solid fa-briefcase"></i> 공고 보기
+      </button>
+      <button class="portal-tab" data-tab="resumes" onclick="switchPortalTab('resumes')">
+        <i class="fa-regular fa-id-card"></i> 이력서 보기
+      </button>
+    </div>
+    <a th:href="@{/jobs}" data-tab-link="jobs">전체보기 <i class="fa-solid fa-chevron-right"></i></a>
+  </div>
+
+  <!-- 공고 필터 바 -->
+  <div class="portal-filter-bar" id="portalFilters">
+    <select class="portal-filter-select" id="fJobRegion" onchange="applyJobFilters()">
+      <option value="">지역 전체</option>
+      <option value="서울">서울</option>
+      <option value="경기">경기</option>
+      <option value="인천">인천</option>
+      <option value="부산">부산</option>
+      <option value="대구">대구</option>
+      <option value="대전">대전</option>
+      <option value="광주">광주</option>
+      <option value="울산">울산</option>
+      <option value="세종">세종</option>
+      <option value="강원">강원</option>
+      <option value="충청">충청</option>
+      <option value="전라">전라</option>
+      <option value="경상">경상</option>
+      <option value="제주">제주</option>
+    </select>
+    <select class="portal-filter-select" id="fJobCategory" onchange="applyJobFilters()">
+      <option value="">업종 전체</option>
+      <option value="카페">카페·음료</option>
+      <option value="편의점">편의점</option>
+      <option value="식당">식당·주방</option>
+      <option value="배달">배달·물류</option>
+      <option value="사무">사무보조</option>
+      <option value="매장">매장관리</option>
+    </select>
+    <select class="portal-filter-select" id="fJobWage" onchange="applyJobFilters()">
+      <option value="">시급 전체</option>
+      <option value="10000">1만원 이상</option>
+      <option value="11000">1.1만원 이상</option>
+      <option value="12000">1.2만원 이상</option>
+      <option value="13000">1.3만원 이상</option>
+      <option value="15000">1.5만원 이상</option>
+    </select>
+  </div>
+
+  <!-- 이력서 필터 바 -->
+  <div class="portal-filter-bar" id="portalResumeFilters" style="display:none">
+    <select class="portal-filter-select" id="fResumeRegion" onchange="applyResumeFilters()">
+      <option value="">지역 전체</option>
+      <option value="서울">서울</option>
+      <option value="경기">경기</option>
+      <option value="인천">인천</option>
+      <option value="부산">부산</option>
+      <option value="대구">대구</option>
+      <option value="대전">대전</option>
+      <option value="광주">광주</option>
+      <option value="울산">울산</option>
+      <option value="강원">강원</option>
+      <option value="제주">제주</option>
+    </select>
+    <select class="portal-filter-select" id="fResumeCareer" onchange="applyResumeFilters()">
+      <option value="">경력 전체</option>
+      <option value="신입">신입</option>
+      <option value="1년 미만">1년 미만</option>
+      <option value="1~3년">1~3년</option>
+      <option value="3년 이상">3년 이상</option>
+    </select>
+    <select class="portal-filter-select" id="fResumeWage" onchange="applyResumeFilters()">
+      <option value="">시급 전체</option>
+      <option value="10000">1만원 이상</option>
+      <option value="11000">1.1만원 이상</option>
+      <option value="12000">1.2만원 이상</option>
+      <option value="13000">1.3만원 이상</option>
+      <option value="15000">1.5만원 이상</option>
+    </select>
+  </div>
+
+  <!-- 공고 탭 -->
+  <div id="tab-jobs">
+    <div class="jobs-empty-cta" th:if="${#lists.isEmpty(allJobs)}">
+      <p class="jobs-empty-desc">아직 등록된 공고가 없어요. 먼저 시작해보세요!</p>
+      <div class="jobs-empty-cards">
+        <a class="jobs-empty-card" th:href="${member == null} ? @{/login} : @{/worker/profile/edit}">
+          <span class="jobs-empty-card-icon"><i class="fa-regular fa-circle-user"></i></span>
+          <strong>구직자라면</strong>
+          <span>이력서를 등록하고<br>사장님의 제안을 받아보세요</span>
+          <span class="jobs-empty-card-btn">이력서 등록하기</span>
+        </a>
+        <a class="jobs-empty-card jobs-empty-card--boss" th:href="${member == null} ? @{/login} : @{/boss/recruitments/new}">
+          <span class="jobs-empty-card-icon"><i class="fa-regular fa-building"></i></span>
+          <strong>사장님이라면</strong>
+          <span>공고를 올리고<br>딱 맞는 알바생을 찾아보세요</span>
+          <span class="jobs-empty-card-btn">공고 등록하기</span>
+        </a>
+      </div>
+    </div>
+    <div class="home-portal-grid" th:unless="${#lists.isEmpty(allJobs)}">
+      <a class="portal-card portal-card--job" th:each="job : ${allJobs}"
+         th:href="@{/jobs/{id}(id=${job.id})}"
+         th:attr="data-category=${job.businessCategory},data-region=${job.workplaceAddress},data-wage=${job.hourlyWage}">
+        <div class="portal-card-logo portal-card-logo--job"
+             th:classappend="${job.storeImageUrl != null and !job.storeImageUrl.isEmpty()} ? ' has-img'"
+             th:style="${job.storeImageUrl != null and !job.storeImageUrl.isEmpty()} ? 'background-image:url(' + ${job.storeImageUrl} + ')' : ''">
+          <i class="fa-solid fa-store" th:if="${job.storeImageUrl == null or job.storeImageUrl.isEmpty()}"></i>
+          <span class="portal-card-flag portal-card-flag--instant" th:if="${job.instantHire}"><i class="fa-solid fa-bolt"></i> 즉시확정</span>
+          <span class="portal-card-flag portal-card-flag--urgent" th:if="${job.urgent and !job.instantHire}"><i class="fa-solid fa-fire"></i> 급구</span>
+        </div>
+        <div class="portal-card-body">
+          <span class="portal-card-tag" th:text="${job.businessCategory != null and !job.businessCategory.isEmpty()} ? ${job.businessCategory} : '업종 미분류'">업종</span>
+          <p class="portal-card-title" th:text="${job.title}">공고 제목</p>
+          <span class="portal-card-sub" th:text="${job.storeName}">매장명</span>
+          <span class="portal-card-sub" th:text="${job.workplaceAddress}">주소</span>
+          <span class="portal-card-countdown" th:if="${job.countdown != null and !job.countdown.isEmpty()}"
+                th:text="'⏰ ' + ${job.countdown}">⏰ 3시간 후</span>
+          <span class="portal-card-wage" th:text="'시급 ' + ${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원'">시급</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 이력서 탭 -->
+  <div id="tab-resumes" style="display:none">
+    <div class="jobs-empty-cta" th:if="${#lists.isEmpty(allProfiles)}">
+      <p class="jobs-empty-desc">아직 등록된 이력서가 없어요. 첫 번째로 등록해보세요!</p>
+      <div class="jobs-empty-cards">
+        <a class="jobs-empty-card" th:href="${member == null} ? @{/login} : @{/worker/profile/edit}">
+          <span class="jobs-empty-card-icon"><i class="fa-regular fa-id-card"></i></span>
+          <strong>이력서 등록하기</strong>
+          <span>나의 이력서를 등록하고<br>사장님의 제안을 받아보세요</span>
+          <span class="jobs-empty-card-btn">이력서 등록</span>
+        </a>
+      </div>
+    </div>
+    <div class="home-portal-grid" th:unless="${#lists.isEmpty(allProfiles)}">
+      <a class="portal-card portal-card--resume" th:each="p : ${allProfiles}"
+         th:href="${member != null and activeRole != null and activeRole.name() == 'OWNER'} ? @{/boss/candidates/{id}(id=${p.id})} : @{/worker/profile/edit}"
+         th:attr="data-area=${p.area},data-career=${p.careerLevel},data-wage=${p.desiredHourlyWage}">
+        <div class="portal-card-logo portal-card-logo--resume"
+             th:classappend="${p.imageUrl != null and !p.imageUrl.isEmpty()} ? ' has-img'"
+             th:style="${p.imageUrl != null and !p.imageUrl.isEmpty()} ? 'background-image:url(' + ${p.imageUrl} + ')' : ''">
+          <i class="fa-regular fa-user" th:if="${p.imageUrl == null or p.imageUrl.isEmpty()}"></i>
+        </div>
+        <div class="portal-card-body">
+          <span class="portal-card-tag" th:text="${p.careerLevel != null and !p.careerLevel.isEmpty()} ? ${p.careerLevel} : '경력 미입력'">경력</span>
+          <p class="portal-card-title" th:text="${p.name}">이름</p>
+          <span class="portal-card-sub" th:text="${p.area}">지역</span>
+          <span class="portal-card-sub" th:text="${p.industries}">업종</span>
+          <span class="portal-card-wage" th:text="'희망 시급 ' + ${#numbers.formatInteger(p.desiredHourlyWage, 0, 'COMMA')} + '원'">희망 시급</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+function switchPortalTab(name) {
+  document.querySelectorAll('.portal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.getElementById('tab-jobs').style.display = name === 'jobs' ? '' : 'none';
+  document.getElementById('tab-resumes').style.display = name === 'resumes' ? '' : 'none';
+  var link = document.querySelector('[data-tab-link]');
+  if (link) link.style.display = name === 'jobs' ? '' : 'none';
+  document.getElementById('portalFilters').style.display = name === 'jobs' ? '' : 'none';
+  document.getElementById('portalResumeFilters').style.display = name === 'resumes' ? '' : 'none';
+}
+
+function applyJobFilters() {
+  var region = document.getElementById('fJobRegion').value;
+  var category = document.getElementById('fJobCategory').value;
+  var wage = parseInt(document.getElementById('fJobWage').value || '0', 10);
+  document.querySelectorAll('#tab-jobs .portal-card').forEach(function(card) {
+    var cardRegion = card.dataset.region || '';
+    var cardCat = (card.dataset.category || '').toLowerCase();
+    var cardWage = parseInt(card.dataset.wage || '0', 10);
+    var match = (!region || cardRegion.includes(region))
+      && (!category || cardCat.includes(category.toLowerCase()))
+      && (!wage || cardWage >= wage);
+    card.style.display = match ? '' : 'none';
+  });
+}
+
+function applyResumeFilters() {
+  var region = document.getElementById('fResumeRegion').value;
+  var career = document.getElementById('fResumeCareer').value;
+  var wage = parseInt(document.getElementById('fResumeWage').value || '0', 10);
+  document.querySelectorAll('#tab-resumes .portal-card').forEach(function(card) {
+    var cardArea = card.dataset.area || '';
+    var cardCareer = card.dataset.career || '';
+    var cardWage = parseInt(card.dataset.wage || '0', 10);
+    var match = (!region || cardArea.includes(region))
+      && (!career || cardCareer === career)
+      && (!wage || cardWage >= wage);
+    card.style.display = match ? '' : 'none';
+  });
+}
+</script>
+
+<p class="terms-copy">이용약관 &nbsp;|&nbsp; 개인정보처리방침 &nbsp;|&nbsp; 고객센터 &nbsp;|&nbsp; © 2026 바로알바</p>
+
 <div th:replace="~{fragments/layout :: scripts}"></div>
 </body>
 </html>

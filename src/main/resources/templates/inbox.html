@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('받은 제안함')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-detail">
+  <div class="inbox-head">
+    <h1><i class="fa-regular fa-paper-plane"></i> 매칭 제안함</h1>
+    <span class="section-sub" th:text="${viewerIsOwner} ? '사장님 모드' : '구직자 모드'">모드</span>
+  </div>
+
+  <!-- 받은 요청 -->
+  <div class="section-header">
+    <span class="section-title" th:text="${viewerIsOwner} ? '받은 지원' : '받은 제안'">받은 요청</span>
+    <span class="section-more" th:text="${#lists.size(receivedRequests)} + '건'">0건</span>
+  </div>
+  <div class="empty-state" th:if="${#lists.isEmpty(receivedRequests)}">아직 받은 요청이 없습니다.</div>
+  <div class="inbox-card-list">
+    <article class="inbox-card" th:each="r : ${receivedRequests}">
+      <div class="inbox-card-main">
+        <div class="inbox-card-top">
+          <strong class="inbox-name" th:text="${r.counterpartName}">상대방</strong>
+          <span class="inbox-status"
+                th:classappend="' inbox-status--' + ${r.statusCode.toLowerCase()}"
+                th:text="${r.status}">상태</span>
+        </div>
+        <p class="inbox-context" th:if="${r.context != null and !r.context.isEmpty()}" th:text="'· ' + ${r.context}">공고</p>
+        <p class="inbox-message" th:text="${r.message}">메시지</p>
+      </div>
+      <div class="inbox-card-actions" th:if="${r.actionable}">
+        <!-- 사장님: 구직자 지원 수락/거절 -->
+        <form th:if="${viewerIsOwner}" th:action="@{/boss/requests/{id}/accept(id=${r.id})}" method="post">
+          <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-check"></i> 수락</button>
+        </form>
+        <form th:if="${viewerIsOwner}" th:action="@{/boss/requests/{id}/decline(id=${r.id})}" method="post">
+          <button class="btn btn-secondary btn-sm" type="submit">거절</button>
+        </form>
+        <!-- 구직자: 사장님 제안 수락/거절 -->
+        <form th:unless="${viewerIsOwner}" th:action="@{/worker/requests/{id}/accept(id=${r.id})}" method="post">
+          <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-check"></i> 수락</button>
+        </form>
+        <form th:unless="${viewerIsOwner}" th:action="@{/worker/requests/{id}/decline(id=${r.id})}" method="post">
+          <button class="btn btn-secondary btn-sm" type="submit">거절</button>
+        </form>
+      </div>
+      <div class="inbox-card-actions" th:if="${r.statusCode == 'ACCEPTED'}">
+        <a class="btn btn-primary btn-sm" th:href="@{/chat/{id}(id=${r.id})}"><i class="fa-regular fa-comment"></i> 대화</a>
+      </div>
+    </article>
+  </div>
+
+  <!-- 보낸 요청 -->
+  <div class="section-header" style="margin-top:28px">
+    <span class="section-title" th:text="${viewerIsOwner} ? '보낸 제안' : '보낸 지원'">보낸 요청</span>
+    <span class="section-more" th:text="${#lists.size(sentRequests)} + '건'">0건</span>
+  </div>
+  <div class="empty-state" th:if="${#lists.isEmpty(sentRequests)}">아직 보낸 요청이 없습니다.</div>
+  <div class="inbox-card-list">
+    <article class="inbox-card" th:each="r : ${sentRequests}">
+      <div class="inbox-card-main">
+        <div class="inbox-card-top">
+          <strong class="inbox-name" th:text="${r.counterpartName}">상대방</strong>
+          <span class="inbox-status"
+                th:classappend="' inbox-status--' + ${r.statusCode.toLowerCase()}"
+                th:text="${r.status}">상태</span>
+        </div>
+        <p class="inbox-context" th:if="${r.context != null and !r.context.isEmpty()}" th:text="'· ' + ${r.context}">공고</p>
+        <p class="inbox-message" th:text="${r.message}">메시지</p>
+      </div>
+      <div class="inbox-card-actions" th:if="${r.cancelable and !viewerIsOwner}">
+        <form th:action="@{/worker/requests/{id}/cancel(id=${r.id})}" method="post">
+          <button class="btn btn-secondary btn-sm" type="submit">취소</button>
+        </form>
+      </div>
+      <div class="inbox-card-actions" th:if="${r.statusCode == 'ACCEPTED'}">
+        <a class="btn btn-primary btn-sm" th:href="@{/chat/{id}(id=${r.id})}"><i class="fa-regular fa-comment"></i> 대화</a>
+      </div>
+    </article>
+  </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

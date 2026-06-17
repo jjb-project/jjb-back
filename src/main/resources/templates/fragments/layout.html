@@ -35,45 +35,64 @@
   </a>
 </nav>
 
+<div th:fragment="toast">
+  <div th:if="${successMessage}" class="toast-notification toast-success" id="toastSuccess">
+    <i class="fa-solid fa-circle-check"></i>
+    <span th:text="${successMessage}">완료되었습니다.</span>
+  </div>
+  <div th:if="${errorMessage}" class="toast-notification toast-error" id="toastError">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span th:text="${errorMessage}">오류가 발생했습니다.</span>
+  </div>
+</div>
+
 <header th:fragment="siteHeader" class="site-header">
+<div th:replace="~{fragments/layout :: toast}"></div>
   <div class="site-header-top">
     <a class="logo-mark" th:href="@{/}">
       <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
       <span class="logo-text">바로<span>알바</span></span>
     </a>
-    <form class="site-search" th:action="@{/worker/home}" method="get">
-      <label class="search-field">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input name="keyword" placeholder="알바, 지역, 업종을 검색하세요">
-      </label>
-      <input class="filter-input" name="region" placeholder="지역">
-      <input class="filter-input" name="category" placeholder="업종">
-      <button class="btn btn-primary btn-sm" type="submit">검색</button>
+    <form class="site-search" th:action="@{/jobs}" method="get">
+      <div class="search-field">
+        <input name="keyword" placeholder="검색으로 딱! 알바 찾기" autocomplete="off">
+        <button class="search-btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
     </form>
     <div class="site-header-actions">
+      <a th:if="${member == null}" th:href="@{/login}">로그인</a>
       <a th:if="${member == null}" th:href="@{/signup}">회원가입</a>
-      <a th:if="${member == null}" th:href="@{/}">로그인</a>
-      <a th:if="${member != null}" class="mode-switch-link" th:href="@{/role}">
-        <i class="fa-solid fa-repeat"></i>
-        모드 전환
-      </a>
-      <a th:if="${member != null}" class="avatar avatar-48 avatar-worker" th:href="@{/mypage}" aria-label="마이페이지">
-        <i class="fa-regular fa-user"></i>
-      </a>
+      <th:block th:if="${member != null}">
+        <a class="mode-badge"
+           th:classappend="${activeRole != null and activeRole.name() == 'OWNER'} ? ' mode-badge--boss'"
+           th:href="@{/role}">
+          <i class="fa-solid fa-circle-half-stroke"></i>
+          <span th:text="${activeRole != null and activeRole.name() == 'OWNER'} ? '사장님 모드' : '구직자 모드'">구직자 모드</span>
+          <i class="fa-solid fa-chevron-down" style="font-size:10px;opacity:.7"></i>
+        </a>
+        <a class="notif-bell" th:href="@{/notifications}" aria-label="알림">
+          <i class="fa-regular fa-bell"></i>
+          <span class="notif-bell-dot" th:if="${unreadNotifications != null and unreadNotifications > 0}"
+                th:text="${unreadNotifications > 9} ? '9+' : ${unreadNotifications}">1</span>
+        </a>
+        <a class="avatar avatar-48" th:href="@{/mypage}" aria-label="마이페이지">
+          <i class="fa-regular fa-user"></i>
+        </a>
+      </th:block>
     </div>
   </div>
   <nav class="site-gnb" aria-label="주요 메뉴">
-    <div class="site-gnb-menu">
-      <a th:href="@{/worker/home}">채용정보</a>
-      <a th:href="@{/boss/home}">인재정보</a>
-      <a th:href="@{/worker/home(region='서울특별시')}">지역별</a>
-      <a th:href="@{/worker/home(category='외식·음료')}">업종별</a>
-      <a th:href="@{/eval}">평가관리</a>
-      <a th:href="@{/role}">양방향 매칭</a>
-    </div>
-    <div class="site-gnb-actions">
-      <a class="gnb-btn gnb-btn-worker" th:href="@{/worker/profile/edit}">구직 프로필 등록</a>
-      <a class="gnb-btn gnb-btn-boss" th:href="@{/boss/recruitments/new}">공고 등록</a>
+    <div class="site-gnb-inner">
+      <div class="site-gnb-menu">
+        <a class="gnb-allmenu" th:href="@{/}"><i class="fa-solid fa-bars"></i> 전체메뉴</a>
+        <a th:href="@{/jobs}">채용정보</a>
+        <a th:href="@{/(tab='resumes')}">인재정보</a>
+        <a th:href="@{/jobs(keyword='역세권')}">테마별알바</a>
+        <a th:href="@{/jobs(region='서울특별시')}">지역별알바</a>
+        <a th:href="@{/substitutes}">대타마켓</a>
+        <a th:href="@{/inbox}">매칭제안함</a>
+        <a th:href="@{/eval}">평가관리</a>
+      </div>
     </div>
   </nav>
 </header>

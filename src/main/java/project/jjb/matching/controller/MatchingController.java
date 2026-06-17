@@ -58,7 +58,10 @@ public class MatchingController {
 				request.startTime(),
 				request.endTime(),
 				request.workplaceAddress(),
-				request.hourlyWage()
+				request.hourlyWage(),
+				java.util.List.of(),
+				"",
+				false
 			);
 		}
 		else {
