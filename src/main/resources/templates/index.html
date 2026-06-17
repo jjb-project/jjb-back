@@ -142,16 +142,14 @@
       </div>
     </section>
     <section class="category-box">
-      <h3>테마별 알바</h3>
+      <h3>시급별 알바</h3>
       <div class="category-box-grid two-col">
-        <a href="#portal-section" onclick="quickFilter('tag','역세권');return false;"><i class="fa-solid fa-train-subway"></i> 역세권알바</a>
-        <a href="#portal-section" onclick="quickFilter('tag','단시간');return false;"><i class="fa-regular fa-clock"></i> 단시간 알바</a>
-        <a href="#portal-section" onclick="quickFilter('tag','급구');return false;"><i class="fa-solid fa-bolt"></i> 급구알바</a>
-        <a href="#portal-section" onclick="quickFilter('tag','풀타임');return false;"><i class="fa-solid fa-sun"></i> 풀알바</a>
-        <a href="#portal-section" onclick="quickFilter('tag','대학가');return false;"><i class="fa-solid fa-graduation-cap"></i> 대학가</a>
-        <a href="#portal-section" onclick="quickFilter('tag','브랜드');return false;"><i class="fa-solid fa-tag"></i> 브랜드알바</a>
-        <a href="#portal-section" onclick="quickFilter('tag','야간');return false;"><i class="fa-regular fa-moon"></i> 야간알바</a>
-        <a href="#portal-section" onclick="quickFilter('tag','주말');return false;"><i class="fa-regular fa-calendar"></i> 주말알바</a>
+        <a href="#portal-section" onclick="quickFilter('wage','10000');return false;"><i class="fa-solid fa-won-sign"></i> 1만원 이상</a>
+        <a href="#portal-section" onclick="quickFilter('wage','11000');return false;"><i class="fa-solid fa-won-sign"></i> 1.1만원 이상</a>
+        <a href="#portal-section" onclick="quickFilter('wage','12000');return false;"><i class="fa-solid fa-coins"></i> 1.2만원 이상</a>
+        <a href="#portal-section" onclick="quickFilter('wage','13000');return false;"><i class="fa-solid fa-coins"></i> 1.3만원 이상</a>
+        <a href="#portal-section" onclick="quickFilter('wage','15000');return false;"><i class="fa-solid fa-money-bill-wave"></i> 1.5만원 이상</a>
+        <a href="#portal-section" onclick="quickFilter('wage','20000');return false;"><i class="fa-solid fa-sack-dollar"></i> 2만원 이상</a>
       </div>
     </section>
     <section class="category-box">
@@ -217,6 +215,7 @@
       <option value="12000">1.2만원 이상</option>
       <option value="13000">1.3만원 이상</option>
       <option value="15000">1.5만원 이상</option>
+      <option value="20000">2만원 이상</option>
     </select>
   </div>
 
@@ -249,6 +248,7 @@
       <option value="12000">1.2만원 이상</option>
       <option value="13000">1.3만원 이상</option>
       <option value="15000">1.5만원 이상</option>
+      <option value="20000">2만원 이상</option>
     </select>
   </div>
 
@@ -368,6 +368,7 @@ function quickFilter(type, value) {
   jobTagFilter = '';
   if (type === 'region') document.getElementById('fJobRegion').value = value;
   else if (type === 'category') document.getElementById('fJobCategory').value = value;
+  else if (type === 'wage') document.getElementById('fJobWage').value = value;
   else if (type === 'tag') jobTagFilter = value;
   applyJobFilters();
   var sec = document.getElementById('portal-section');
