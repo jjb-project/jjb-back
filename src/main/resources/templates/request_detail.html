@@ -30,7 +30,7 @@
     </dl>
 
     <div class="action-row">
-      <a class="btn btn-secondary" th:href="@{/worker/home}">나중에 보기</a>
+      <a class="btn btn-secondary" th:href="@{/inbox}">나중에 보기</a>
       <form th:action="@{/worker/requests/{id}/decline(id=${request.id})}" method="post">
         <button class="btn btn-outline" type="submit">거절하기</button>
       </form>

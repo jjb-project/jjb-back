@@ -37,9 +37,8 @@
       <p class="eyebrow">구인구직 포털 + 양방향 매칭</p>
       <h1>급할 때 바로 매칭,<br>믿을 수 있는 단기 알바</h1>
       <p>구직자는 가게에 지원하고,<br>사장님은 좋은 구직자에게 직접 제안합니다.</p>
-      <a class="btn" th:href="${member == null} ? @{/login} : '#portal-section'"
-         th:onclick="${member != null} ? 'event.preventDefault();document.getElementById(\'portal-section\').scrollIntoView({behavior:\'smooth\'})' : ''">
-        <span th:text="${member == null} ? '지금 시작하기' : '양방향 매칭 시작하기'">지금 시작하기</span>
+      <a class="btn" th:href="${member == null} ? @{/login} : @{/substitutes}">
+        <span th:text="${member == null} ? '지금 시작하기' : '대타 마켓 바로가기'">지금 시작하기</span>
       </a>
     </div>
     <div class="hero-banner-mascot"><img src="/img/mascot.svg" alt="바로알바 마스코트"></div>
@@ -128,42 +127,42 @@
     <section class="category-box">
       <h3>지역·동네 알바</h3>
       <div class="category-box-grid">
-        <a th:href="@{/jobs(region='서울특별시')}"><i class="fa-solid fa-location-dot"></i> 서울</a>
-        <a th:href="@{/jobs(region='경기도')}"><i class="fa-solid fa-location-dot"></i> 경기</a>
-        <a th:href="@{/jobs(region='인천광역시')}"><i class="fa-solid fa-location-dot"></i> 인천</a>
-        <a th:href="@{/jobs(region='부산광역시')}"><i class="fa-solid fa-location-dot"></i> 부산</a>
-        <a th:href="@{/jobs(region='대구광역시')}"><i class="fa-solid fa-location-dot"></i> 대구</a>
-        <a th:href="@{/jobs(region='대전광역시')}"><i class="fa-solid fa-location-dot"></i> 대전</a>
-        <a th:href="@{/jobs(region='경상남도')}"><i class="fa-solid fa-location-dot"></i> 경남</a>
-        <a th:href="@{/jobs(region='전라남도')}"><i class="fa-solid fa-location-dot"></i> 전남</a>
-        <a th:href="@{/jobs(region='충청북도')}"><i class="fa-solid fa-location-dot"></i> 충북</a>
-        <a th:href="@{/jobs(region='강원도')}"><i class="fa-solid fa-location-dot"></i> 강원</a>
-        <a th:href="@{/jobs(region='제주특별자치도')}"><i class="fa-solid fa-location-dot"></i> 제주</a>
-        <a th:href="@{/jobs}"><i class="fa-solid fa-location-dot"></i> 전국</a>
+        <a href="#portal-section" onclick="quickFilter('region','서울');return false;"><i class="fa-solid fa-location-dot"></i> 서울</a>
+        <a href="#portal-section" onclick="quickFilter('region','경기');return false;"><i class="fa-solid fa-location-dot"></i> 경기</a>
+        <a href="#portal-section" onclick="quickFilter('region','인천');return false;"><i class="fa-solid fa-location-dot"></i> 인천</a>
+        <a href="#portal-section" onclick="quickFilter('region','부산');return false;"><i class="fa-solid fa-location-dot"></i> 부산</a>
+        <a href="#portal-section" onclick="quickFilter('region','대구');return false;"><i class="fa-solid fa-location-dot"></i> 대구</a>
+        <a href="#portal-section" onclick="quickFilter('region','대전');return false;"><i class="fa-solid fa-location-dot"></i> 대전</a>
+        <a href="#portal-section" onclick="quickFilter('region','경상남');return false;"><i class="fa-solid fa-location-dot"></i> 경남</a>
+        <a href="#portal-section" onclick="quickFilter('region','전라남');return false;"><i class="fa-solid fa-location-dot"></i> 전남</a>
+        <a href="#portal-section" onclick="quickFilter('region','충청북');return false;"><i class="fa-solid fa-location-dot"></i> 충북</a>
+        <a href="#portal-section" onclick="quickFilter('region','강원');return false;"><i class="fa-solid fa-location-dot"></i> 강원</a>
+        <a href="#portal-section" onclick="quickFilter('region','제주');return false;"><i class="fa-solid fa-location-dot"></i> 제주</a>
+        <a href="#portal-section" onclick="quickFilter('region','');return false;"><i class="fa-solid fa-location-dot"></i> 전국</a>
       </div>
     </section>
     <section class="category-box">
       <h3>테마별 알바</h3>
       <div class="category-box-grid two-col">
-        <a th:href="@{/jobs(keyword='역세권')}"><i class="fa-solid fa-train-subway"></i> 역세권알바</a>
-        <a th:href="@{/jobs(keyword='단시간')}"><i class="fa-regular fa-clock"></i> 단시간 알바</a>
-        <a th:href="@{/jobs(keyword='급구')}"><i class="fa-solid fa-bolt"></i> 급구알바</a>
-        <a th:href="@{/jobs(keyword='풀타임')}"><i class="fa-solid fa-sun"></i> 풀알바</a>
-        <a th:href="@{/jobs(category='카페')}"><i class="fa-solid fa-mug-hot"></i> 카페·음료</a>
-        <a th:href="@{/jobs(keyword='대학가')}"><i class="fa-solid fa-graduation-cap"></i> 대학가</a>
-        <a th:href="@{/jobs(keyword='브랜드')}"><i class="fa-solid fa-tag"></i> 브랜드알바</a>
-        <a th:href="@{/jobs(keyword='콜센터')}"><i class="fa-solid fa-headset"></i> 콜센터</a>
+        <a href="#portal-section" onclick="quickFilter('tag','역세권');return false;"><i class="fa-solid fa-train-subway"></i> 역세권알바</a>
+        <a href="#portal-section" onclick="quickFilter('tag','단시간');return false;"><i class="fa-regular fa-clock"></i> 단시간 알바</a>
+        <a href="#portal-section" onclick="quickFilter('tag','급구');return false;"><i class="fa-solid fa-bolt"></i> 급구알바</a>
+        <a href="#portal-section" onclick="quickFilter('tag','풀타임');return false;"><i class="fa-solid fa-sun"></i> 풀알바</a>
+        <a href="#portal-section" onclick="quickFilter('tag','대학가');return false;"><i class="fa-solid fa-graduation-cap"></i> 대학가</a>
+        <a href="#portal-section" onclick="quickFilter('tag','브랜드');return false;"><i class="fa-solid fa-tag"></i> 브랜드알바</a>
+        <a href="#portal-section" onclick="quickFilter('tag','야간');return false;"><i class="fa-regular fa-moon"></i> 야간알바</a>
+        <a href="#portal-section" onclick="quickFilter('tag','주말');return false;"><i class="fa-regular fa-calendar"></i> 주말알바</a>
       </div>
     </section>
     <section class="category-box">
       <h3>직종별 알바</h3>
       <div class="category-box-grid two-col">
-        <a th:href="@{/jobs(category='카페')}"><i class="fa-solid fa-mug-hot"></i> 카페·음료</a>
-        <a th:href="@{/jobs(category='편의점')}"><i class="fa-solid fa-store"></i> 편의점</a>
-        <a th:href="@{/jobs(category='식당')}"><i class="fa-solid fa-utensils"></i> 식당·주방</a>
-        <a th:href="@{/jobs(category='배달')}"><i class="fa-solid fa-motorcycle"></i> 배달·물류</a>
-        <a th:href="@{/jobs(category='사무')}"><i class="fa-solid fa-laptop"></i> 사무보조</a>
-        <a th:href="@{/jobs(category='매장')}"><i class="fa-solid fa-bag-shopping"></i> 매장관리</a>
+        <a href="#portal-section" onclick="quickFilter('category','카페');return false;"><i class="fa-solid fa-mug-hot"></i> 카페·음료</a>
+        <a href="#portal-section" onclick="quickFilter('category','편의점');return false;"><i class="fa-solid fa-store"></i> 편의점</a>
+        <a href="#portal-section" onclick="quickFilter('category','식당');return false;"><i class="fa-solid fa-utensils"></i> 식당·주방</a>
+        <a href="#portal-section" onclick="quickFilter('category','배달');return false;"><i class="fa-solid fa-motorcycle"></i> 배달·물류</a>
+        <a href="#portal-section" onclick="quickFilter('category','사무');return false;"><i class="fa-solid fa-laptop"></i> 사무보조</a>
+        <a href="#portal-section" onclick="quickFilter('category','매장');return false;"><i class="fa-solid fa-bag-shopping"></i> 매장관리</a>
       </div>
     </section>
   </div>
@@ -275,7 +274,7 @@
     <div class="home-portal-grid" th:unless="${#lists.isEmpty(allJobs)}">
       <a class="portal-card portal-card--job" th:each="job : ${allJobs}"
          th:href="@{/jobs/{id}(id=${job.id})}"
-         th:attr="data-category=${job.businessCategory},data-region=${job.workplaceAddress},data-wage=${job.hourlyWage}">
+         th:attr="data-category=${job.businessCategory},data-region=${job.workplaceAddress},data-wage=${job.hourlyWage},data-tags=${#strings.listJoin(job.tags, ',')}">
         <div class="portal-card-logo portal-card-logo--job"
              th:classappend="${job.storeImageUrl != null and !job.storeImageUrl.isEmpty()} ? ' has-img'"
              th:style="${job.storeImageUrl != null and !job.storeImageUrl.isEmpty()} ? 'background-image:url(' + ${job.storeImageUrl} + ')' : ''">
@@ -331,6 +330,8 @@
 </section>
 
 <script>
+var jobTagFilter = '';
+
 function switchPortalTab(name) {
   document.querySelectorAll('.portal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.getElementById('tab-jobs').style.display = name === 'jobs' ? '' : 'none';
@@ -349,11 +350,28 @@ function applyJobFilters() {
     var cardRegion = card.dataset.region || '';
     var cardCat = (card.dataset.category || '').toLowerCase();
     var cardWage = parseInt(card.dataset.wage || '0', 10);
+    var cardTags = card.dataset.tags || '';
     var match = (!region || cardRegion.includes(region))
       && (!category || cardCat.includes(category.toLowerCase()))
-      && (!wage || cardWage >= wage);
+      && (!wage || cardWage >= wage)
+      && (!jobTagFilter || cardTags.includes(jobTagFilter));
     card.style.display = match ? '' : 'none';
   });
+}
+
+// 카테고리 박스 클릭 → 공고 탭으로 전환 + 필터 적용 + 공고 영역으로 스크롤
+function quickFilter(type, value) {
+  switchPortalTab('jobs');
+  document.getElementById('fJobRegion').value = '';
+  document.getElementById('fJobCategory').value = '';
+  document.getElementById('fJobWage').value = '';
+  jobTagFilter = '';
+  if (type === 'region') document.getElementById('fJobRegion').value = value;
+  else if (type === 'category') document.getElementById('fJobCategory').value = value;
+  else if (type === 'tag') jobTagFilter = value;
+  applyJobFilters();
+  var sec = document.getElementById('portal-section');
+  if (sec) sec.scrollIntoView({ behavior: 'smooth' });
 }
 
 function applyResumeFilters() {
@@ -370,6 +388,16 @@ function applyResumeFilters() {
     card.style.display = match ? '' : 'none';
   });
 }
+
+// GNB 채용정보/인재정보 → 해당 탭으로 전환 + 스크롤
+document.addEventListener('DOMContentLoaded', function() {
+  var view = new URLSearchParams(window.location.search).get('view');
+  if (view === 'jobs' || view === 'resumes') {
+    switchPortalTab(view);
+    var sec = document.getElementById('portal-section');
+    if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+  }
+});
 </script>
 
 <p class="terms-copy">이용약관 &nbsp;|&nbsp; 개인정보처리방침 &nbsp;|&nbsp; 고객센터 &nbsp;|&nbsp; © 2026 바로알바</p>

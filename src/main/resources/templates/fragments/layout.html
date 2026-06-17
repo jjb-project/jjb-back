@@ -20,7 +20,7 @@
 </header>
 
 <nav th:fragment="bottomNav(active)" class="bottom-nav">
-  <a class="nav-item" th:classappend="${active == 'home'} ? 'active'" th:href="@{/worker/home}">
+  <a class="nav-item" th:classappend="${active == 'home'} ? 'active'" th:href="@{/}">
     <i class="fa-solid fa-house"></i>
     홈
   </a>
@@ -85,10 +85,8 @@
     <div class="site-gnb-inner">
       <div class="site-gnb-menu">
         <a class="gnb-allmenu" th:href="@{/}"><i class="fa-solid fa-bars"></i> 전체메뉴</a>
-        <a th:href="@{/jobs}">채용정보</a>
-        <a th:href="@{/(tab='resumes')}">인재정보</a>
-        <a th:href="@{/jobs(keyword='역세권')}">테마별알바</a>
-        <a th:href="@{/jobs(region='서울특별시')}">지역별알바</a>
+        <a th:href="@{/(view='jobs')}">채용정보</a>
+        <a th:href="@{/(view='resumes')}">인재정보</a>
         <a th:href="@{/substitutes}">대타마켓</a>
         <a th:href="@{/inbox}">매칭제안함</a>
         <a th:href="@{/eval}">평가관리</a>
