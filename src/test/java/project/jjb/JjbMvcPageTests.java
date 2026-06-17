@@ -60,23 +60,32 @@ class JjbMvcPageTests {
 
 	@Test
 	void mainMvcPagesRender() throws Exception {
+		// 소셜 로그인 직접 링크는 홈에서 노출하지 않고 /login 페이지로 통합되었다.
 		mockMvc.perform(get("/"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("급할 때 바로 매칭")))
 			.andExpect(content().string(org.hamcrest.Matchers.not(
 				org.hamcrest.Matchers.containsString("/oauth2/authorization/google"))))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("/login/local")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/login\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/signup")))
 			.andExpect(content().string(org.hamcrest.Matchers.not(
 				org.hamcrest.Matchers.containsString("id=\"signupEmail\""))))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/kakao")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/naver")))
+			.andExpect(content().string(org.hamcrest.Matchers.not(
+				org.hamcrest.Matchers.containsString("/oauth2/authorization/kakao"))))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/css/style.css")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/js/app.js")));
 
+		// 통합된 /login 페이지에서 로컬·소셜 로그인 진입점을 모두 제공한다.
+		mockMvc.perform(get("/login"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/login/local")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/kakao")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/oauth2/authorization/naver")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("/signup")));
+
 		mockMvc.perform(get("/signup"))
 			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("아이디 회원가입")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("아이디로 계정을 만들어요")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/signup/local")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"username\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("type=\"email\""))))
@@ -136,12 +145,12 @@ class JjbMvcPageTests {
 			.andExpect(status().isOk())
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("잡스카페")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("오픈 타임 홀 서빙")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("11,000원/시간")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("시급 11,000원")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("/css/style.css")));
 
 		mockMvc.perform(get("/"))
 			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("실시간 등록 공고")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("오늘의 업데이트")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("잡스카페")));
 	}
 
@@ -190,12 +199,12 @@ class JjbMvcPageTests {
 				.param("username", username)
 				.param("password", "wrong-password"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/"))
+			.andExpect(redirectedUrl("/login"))
 			.andExpect(flash().attribute("errorMessage", "아이디 또는 비밀번호가 올바르지 않습니다."));
 
 		mockMvc.perform(get("/login/local"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/"));
+			.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
@@ -204,7 +213,7 @@ class JjbMvcPageTests {
 				.param("error", "access_denied")
 				.param("state", "test-state"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/"));
+			.andExpect(redirectedUrl("/login?error"));
 	}
 
 	@Test
@@ -223,7 +232,7 @@ class JjbMvcPageTests {
 				.session(session)
 				.param("role", "JOB_SEEKER"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/worker/home"));
+			.andExpect(redirectedUrl("/"));
 
 		mockMvc.perform(get("/worker/profile/new").session(session))
 			.andExpect(status().isOk())
@@ -234,11 +243,11 @@ class JjbMvcPageTests {
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"23:00\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"10320\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("min=\"10320\"")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("2026년 최저시급 10,320원이 기본값으로 입력돼 있어요.")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("최저시급 10,320원 이상으로 입력해주세요.")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"preferredProvince\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"preferredDistrict\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-region-districts")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"experiencedIndustrySelect\"")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-multi-toggle=\"experiencedIndustries\"")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("외식·음료")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("checked=\"checked\"")));
 
@@ -251,30 +260,16 @@ class JjbMvcPageTests {
 				.param("urgentSubstituteAvailable", "true")
 				.param("introduction", "MVC form profile"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/worker/home"));
+			.andExpect(redirectedUrl("/"));
 
 		mockMvc.perform(get("/worker/profile/edit").session(session))
 			.andExpect(status().isOk())
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("MVC form profile")));
 
+		// 구직자 홈은 통합 홈(/)으로 리다이렉트된다.
 		mockMvc.perform(get("/worker/home").session(session))
-			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-live-refresh")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("AI 추천")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-recommendation-url=\"/api/members/")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("모드 전환")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/role\"")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("fa-regular fa-square-plus")))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("fa-regular fa-address-card"))))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("등록 내역")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("오늘 17:00-22:00")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("서울 강남구")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("13,000원 이상")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("고객응대, 정리")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("MVC form profile")))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("김하나"))))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("김알바"))))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("카페 모모"))));
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/"));
 
 		MockHttpSession ownerSession = new MockHttpSession();
 		mockMvc.perform(post("/start")
@@ -287,20 +282,10 @@ class JjbMvcPageTests {
 				.param("role", "OWNER"))
 			.andExpect(status().is3xxRedirection());
 
+		// 사장님 홈도 통합 홈(/)으로 리다이렉트된다.
 		mockMvc.perform(get("/boss/home").session(ownerSession))
-			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("MVC Tester")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("data-live-refresh")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("사장님 맞춤 인재 찾기")))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("모집 등록"))))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("진행 중 모집"))))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("모드 전환")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/role\"")))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("fa-regular fa-square-plus"))))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("fa-regular fa-address-card"))))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("김하나"))))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("김알바"))))
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("카페 모모"))));
+			.andExpect(status().is3xxRedirection())
+			.andExpect(redirectedUrl("/"));
 
 		mockMvc.perform(get("/boss/recruitments/new").session(ownerSession))
 			.andExpect(status().is3xxRedirection())
@@ -339,39 +324,20 @@ class JjbMvcPageTests {
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/boss/home"));
 
-		mockMvc.perform(get("/worker/home").session(session))
-			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("지원 가능한 가게")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("가게명, 업무, 소개 검색")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("찜한 가게")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("카페 양방향")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("AI 추천")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("초보도 환영하는 따뜻한 매장입니다.")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("후기 0개")));
-
 		UUID ownerId = (UUID) ownerSession.getAttribute(WebSessionKeys.CURRENT_MEMBER_ID);
-		mockMvc.perform(get("/worker/home")
-				.session(session)
-				.param("keyword", "없는매장"))
+
+		// 구직자는 가게 상세에서 사장님 매장 정보를 확인하고 찜·지원할 수 있다.
+		mockMvc.perform(get("/worker/stores/{id}", ownerId).session(session))
 			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("카페 양방향"))));
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("카페 양방향")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("초보도 환영하는 따뜻한 매장입니다.")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("후기 0개")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("가게 평가")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("지원하기")));
 
 		mockMvc.perform(post("/worker/stores/{id}/favorite", ownerId).session(session))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/worker/home"));
-
-		mockMvc.perform(get("/worker/home")
-				.session(session)
-				.param("favoritesOnly", "true"))
-			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("카페 양방향")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("찜한 가게")));
-
-		mockMvc.perform(get("/worker/stores/{id}", ownerId).session(session))
-			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("카페 양방향")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("가게 평가")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("지원하기")));
 
 		mockMvc.perform(post("/worker/match-requests")
 				.session(session)
@@ -388,20 +354,22 @@ class JjbMvcPageTests {
 			  and requested_by = 'JOB_SEEKER'
 			""", UUID.class, workerId, ownerSession.getAttribute(WebSessionKeys.CURRENT_MEMBER_ID));
 
-		mockMvc.perform(get("/boss/home").session(ownerSession))
+		// 받은 지원은 사장님의 매칭 제안함(/inbox)에서 확인한다.
+		mockMvc.perform(get("/inbox").session(ownerSession))
 			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("받은 지원 요청")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("받은 지원")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("MVC Tester")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("근무 지원합니다.")));
 
-		mockMvc.perform(get("/worker/home").session(session))
+		// 보낸 지원은 구직자의 매칭 제안함(/inbox)에서 확인하고 취소할 수 있다.
+		mockMvc.perform(get("/inbox").session(session))
 			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("보낸 지원 요청")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("보낸 지원")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("취소")));
 
 		mockMvc.perform(post("/worker/requests/{id}/cancel", workerRequestId).session(session))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/worker/home"));
+			.andExpect(redirectedUrl("/inbox"));
 
 		Integer canceledCount = jdbcTemplate.queryForObject("""
 			select count(*)
@@ -462,13 +430,6 @@ class JjbMvcPageTests {
 		mockMvc.perform(post("/boss/candidates/{id}/favorite", workerId).session(ownerSession))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(redirectedUrl("/boss/home"));
-
-		mockMvc.perform(get("/boss/home")
-				.session(ownerSession)
-				.param("favoritesOnly", "true"))
-			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("MVC Tester")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("찜한 인재")));
 	}
 
 	private UUID createWorkerRequest(MockHttpSession workerSession, MockHttpSession ownerSession) throws Exception {
