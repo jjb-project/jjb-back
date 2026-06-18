@@ -55,7 +55,6 @@ public class JjbPageController {
 	private final MatchingRecommendationService matchingRecommendationService;
 	private final LiveUpdateService liveUpdateService;
 	private final NotificationService notificationService;
-	private final project.jjb.common.FileStorageService fileStorageService;
 	private final int minimumHourlyWage;
 
 	public JjbPageController(
@@ -64,7 +63,6 @@ public class JjbPageController {
 		MatchingRecommendationService matchingRecommendationService,
 		LiveUpdateService liveUpdateService,
 		NotificationService notificationService,
-		project.jjb.common.FileStorageService fileStorageService,
 		@Value("${jjb.minimum-hourly-wage:10320}") int minimumHourlyWage
 	) {
 		this.memberService = memberService;
@@ -72,7 +70,6 @@ public class JjbPageController {
 		this.matchingRecommendationService = matchingRecommendationService;
 		this.liveUpdateService = liveUpdateService;
 		this.notificationService = notificationService;
-		this.fileStorageService = fileStorageService;
 		this.minimumHourlyWage = minimumHourlyWage;
 	}
 
@@ -279,14 +276,10 @@ public class JjbPageController {
 		@RequestParam(defaultValue = "") String education,
 		@RequestParam(defaultValue = "") String careerLevel,
 		@RequestParam(defaultValue = "") String preferredDays,
-		@RequestParam(required = false) org.springframework.web.multipart.MultipartFile photo,
 		HttpSession session,
 		RedirectAttributes redirectAttributes
 	) {
 		MemberSnapshot member = ensureRole(session, MemberRole.JOB_SEEKER);
-		String uploadedUrl = fileStorageService.store(photo);
-		String imageUrl = uploadedUrl != null ? uploadedUrl
-			: (member.jobSeekerProfile() == null ? null : member.jobSeekerProfile().imageUrl());
 		MemberSnapshot updated = memberService.updateJobSeekerProfile(
 			member.id(),
 			availableTime,
@@ -300,7 +293,7 @@ public class JjbPageController {
 			education,
 			careerLevel,
 			splitList(preferredDays),
-			imageUrl
+			null
 		);
 		setSessionMember(session, updated);
 		liveUpdateService.publish("profiles");
@@ -512,14 +505,10 @@ public class JjbPageController {
 		@RequestParam String storeAddress,
 		@RequestParam String businessCategory,
 		@RequestParam(defaultValue = "") String storeIntroduction,
-		@RequestParam(required = false) org.springframework.web.multipart.MultipartFile storePhoto,
 		HttpSession session
 	) {
 		MemberSnapshot owner = ensureRole(session, MemberRole.OWNER);
-		String uploadedUrl = fileStorageService.store(storePhoto);
-		String imageUrl = uploadedUrl != null ? uploadedUrl
-			: (owner.ownerProfile() == null ? null : owner.ownerProfile().imageUrl());
-		memberService.updateOwnerProfile(owner.id(), storeName, storeAddress, businessCategory, storeIntroduction, imageUrl);
+		memberService.updateOwnerProfile(owner.id(), storeName, storeAddress, businessCategory, storeIntroduction, null);
 		MemberSnapshot verified = memberService.verifyBusiness(
 			owner.id(),
 			businessRegistrationNumber,

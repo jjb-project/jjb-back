@@ -5,25 +5,11 @@
 <div th:replace="~{fragments/layout :: siteHeader}"></div>
 
 <div class="web-narrow">
-  <form class="form-screen compact" th:action="@{/worker/profile}" method="post" enctype="multipart/form-data">
+  <form class="form-screen compact" th:action="@{/worker/profile}" method="post">
 
     <div class="page-intro">
       <h1>나의 이력서를<br>등록해요</h1>
       <p>작성한 정보는 사장님의 매칭 제안에 활용됩니다.</p>
-    </div>
-
-    <!-- ── 프로필 사진 ── -->
-    <div class="photo-upload">
-      <div class="photo-preview" id="photoPreview"
-           th:classappend="${profile != null and profile.imageUrl() != null and !profile.imageUrl().isEmpty()} ? ' has-img'"
-           th:style="${profile != null and profile.imageUrl() != null and !profile.imageUrl().isEmpty()} ? 'background-image:url(' + ${profile.imageUrl()} + ')' : ''">
-        <i class="fa-regular fa-user" th:if="${profile == null or profile.imageUrl() == null or profile.imageUrl().isEmpty()}"></i>
-      </div>
-      <label class="photo-upload-btn">
-        <i class="fa-solid fa-camera"></i> 프로필 사진
-        <input type="file" name="photo" accept="image/*" hidden
-               onchange="previewPhoto(this,'photoPreview')">
-      </label>
     </div>
 
     <!-- ── 기본 정보 ── -->
