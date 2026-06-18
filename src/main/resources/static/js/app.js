@@ -287,3 +287,18 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// 하단 탭바: 현재 경로에 맞는 탭 활성화
+(function highlightAppTab() {
+  var path = window.location.pathname;
+  var active = 'home';
+  if (path === '/' || path === '') active = 'home';
+  else if (path.startsWith('/jobs')) active = 'jobs';
+  else if (path.startsWith('/substitutes')) active = 'subs';
+  else if (path.startsWith('/inbox')) active = 'inbox';
+  else if (path.startsWith('/mypage') || path.startsWith('/worker/profile')
+    || path.startsWith('/eval') || path.startsWith('/role')) active = 'my';
+  document.querySelectorAll('.app-tab').forEach(function (tab) {
+    tab.classList.toggle('active', tab.dataset.tab === active);
+  });
+})();

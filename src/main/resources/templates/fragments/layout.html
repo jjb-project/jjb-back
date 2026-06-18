@@ -95,8 +95,25 @@
   </nav>
 </header>
 
-<div th:fragment="scripts">
+<th:block th:fragment="scripts">
+  <nav class="app-tabbar" aria-label="하단 메뉴">
+    <a class="app-tab" data-tab="home" th:href="@{/}">
+      <i class="fa-solid fa-house"></i><span>홈</span>
+    </a>
+    <a class="app-tab" data-tab="jobs" th:href="@{/jobs}">
+      <i class="fa-solid fa-magnifying-glass"></i><span>알바찾기</span>
+    </a>
+    <a class="app-tab" data-tab="subs" th:href="@{/substitutes}">
+      <i class="fa-solid fa-arrows-rotate"></i><span>대타</span>
+    </a>
+    <a class="app-tab" data-tab="inbox" th:href="@{/inbox}">
+      <i class="fa-regular fa-paper-plane"></i><span>제안함</span>
+    </a>
+    <a class="app-tab" data-tab="my" th:href="@{/mypage}">
+      <i class="fa-regular fa-user"></i><span>MY</span>
+    </a>
+  </nav>
   <script th:src="@{/js/app.js}"></script>
-</div>
+</th:block>
 </body>
 </html>
