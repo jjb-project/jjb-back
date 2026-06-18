@@ -249,6 +249,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+function previewPhoto(input, targetId) {
+  if (!input.files || !input.files[0]) return;
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    target.style.backgroundImage = 'url(' + e.target.result + ')';
+    target.classList.add('has-img');
+    target.innerHTML = '';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
 function aiFill(button, url, payload, targetId) {
   const target = document.getElementById(targetId);
   if (!target) return;

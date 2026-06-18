@@ -5,7 +5,7 @@
 <div th:replace="~{fragments/layout :: siteHeader}"></div>
 
 <div class="web-narrow">
-  <form class="form-screen" th:action="@{/boss/verify}" method="post">
+  <form class="form-screen" th:action="@{/boss/verify}" method="post" enctype="multipart/form-data">
     <div class="page-intro">
       <h1>첫 매칭 요청 전<br>사업자 인증이 필요해요</h1>
       <p>사장님 모드 탐색과 후보 조회는 가능하지만 매칭 요청은 인증 후 진행됩니다.</p>
@@ -33,6 +33,17 @@
     </div>
 
     <div class="form-section-title">매장 정보</div>
+    <div class="photo-upload">
+      <div class="photo-preview photo-preview--store" id="storePreview"
+           th:classappend="${member != null and member.ownerProfile() != null and member.ownerProfile().imageUrl() != null and !member.ownerProfile().imageUrl().isEmpty()} ? ' has-img'"
+           th:style="${member != null and member.ownerProfile() != null and member.ownerProfile().imageUrl() != null and !member.ownerProfile().imageUrl().isEmpty()} ? 'background-image:url(' + ${member.ownerProfile().imageUrl()} + ')' : ''">
+        <i class="fa-solid fa-store" th:if="${member == null or member.ownerProfile() == null or member.ownerProfile().imageUrl() == null or member.ownerProfile().imageUrl().isEmpty()}"></i>
+      </div>
+      <label class="photo-upload-btn">
+        <i class="fa-solid fa-camera"></i> 매장 사진
+        <input type="file" name="storePhoto" accept="image/*" hidden onchange="previewPhoto(this,'storePreview')">
+      </label>
+    </div>
     <div class="form-group">
       <label class="form-label" for="storeName">매장명</label>
       <input class="form-input" id="storeName" name="storeName" placeholder="매장명" required>
