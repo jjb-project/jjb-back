@@ -260,7 +260,7 @@ class JjbMvcPageTests {
 				.param("urgentSubstituteAvailable", "true")
 				.param("introduction", "MVC form profile"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("/"));
+			.andExpect(redirectedUrl("/?view=resumes"));
 
 		mockMvc.perform(get("/worker/profile/edit").session(session))
 			.andExpect(status().isOk())

@@ -305,7 +305,7 @@ public class JjbPageController {
 		setSessionMember(session, updated);
 		liveUpdateService.publish("profiles");
 		redirectAttributes.addFlashAttribute("successMessage", "이력서가 등록되었습니다!");
-		return "redirect:/";
+		return "redirect:/?view=resumes";
 	}
 
 	@GetMapping("/worker/requests/{id}")
