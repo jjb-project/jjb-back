@@ -145,7 +145,7 @@
     <section class="category-box">
       <h3>시급별 알바</h3>
       <div class="category-box-grid two-col">
-        <a href="#portal-section" th:onclick="'quickFilter(\'wage\',\'' + ${minimumHourlyWage} + '\');return false;'"><i class="fa-solid fa-won-sign"></i> 최저시급 이상</a>
+        <a href="#portal-section" th:onclick="'quickFilter(\'wage\',\'' + ${minimumHourlyWage} + '\');return false;'"><i class="fa-solid fa-won-sign"></i> <span th:text="'최저시급(' + ${#numbers.formatInteger(minimumHourlyWage, 0, 'COMMA')} + '원) 이상'">최저시급 이상</span></a>
         <a href="#portal-section" onclick="quickFilter('wage','11000');return false;"><i class="fa-solid fa-won-sign"></i> 1.1만원 이상</a>
         <a href="#portal-section" onclick="quickFilter('wage','12000');return false;"><i class="fa-solid fa-coins"></i> 1.2만원 이상</a>
         <a href="#portal-section" onclick="quickFilter('wage','13000');return false;"><i class="fa-solid fa-coins"></i> 1.3만원 이상</a>
@@ -211,7 +211,7 @@
     </select>
     <select class="portal-filter-select" id="fJobWage" onchange="applyJobFilters()">
       <option value="">시급 전체</option>
-      <option th:value="${minimumHourlyWage}">최저시급 이상</option>
+      <option th:value="${minimumHourlyWage}" th:text="'최저시급(' + ${#numbers.formatInteger(minimumHourlyWage, 0, 'COMMA')} + '원) 이상'">최저시급 이상</option>
       <option value="11000">1.1만원 이상</option>
       <option value="12000">1.2만원 이상</option>
       <option value="13000">1.3만원 이상</option>
@@ -244,7 +244,7 @@
     </select>
     <select class="portal-filter-select" id="fResumeWage" onchange="applyResumeFilters()">
       <option value="">시급 전체</option>
-      <option th:value="${minimumHourlyWage}">최저시급 이상</option>
+      <option th:value="${minimumHourlyWage}" th:text="'최저시급(' + ${#numbers.formatInteger(minimumHourlyWage, 0, 'COMMA')} + '원) 이상'">최저시급 이상</option>
       <option value="11000">1.1만원 이상</option>
       <option value="12000">1.2만원 이상</option>
       <option value="13000">1.3만원 이상</option>
