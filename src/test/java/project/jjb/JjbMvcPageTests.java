@@ -150,7 +150,7 @@ class JjbMvcPageTests {
 
 		mockMvc.perform(get("/"))
 			.andExpect(status().isOk())
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("오늘의 업데이트")))
+			.andExpect(content().string(org.hamcrest.Matchers.containsString("최신 글")))
 			.andExpect(content().string(org.hamcrest.Matchers.containsString("잡스카페")));
 	}
 

@@ -81,8 +81,7 @@ public class JjbPageController {
 		MemberSnapshot member = addSessionMember(model, session);
 		List<Recruitment> open = openRecruitments();
 		List<ProfileCard> allProfiles = profileCards();
-		model.addAttribute("recentJobs", jobListingCards(open.stream().limit(3).toList()));
-		model.addAttribute("recentProfiles", allProfiles.stream().limit(2).toList());
+		model.addAttribute("recentUpdates", recentUpdateFeed(open, allProfiles).stream().limit(3).toList());
 		model.addAttribute("allJobs", jobListingCards(open));
 		model.addAttribute("allProfiles", allProfiles);
 		model.addAttribute("urgentJobs", nearbyUrgentJobs(open, member));
@@ -170,6 +169,13 @@ public class JjbPageController {
 		model.addAttribute("region", region);
 		model.addAttribute("category", category);
 		return "jobs";
+	}
+
+	@GetMapping("/updates")
+	String updates(Model model, HttpSession session) {
+		addSessionMember(model, session);
+		model.addAttribute("updates", recentUpdateFeed(openRecruitments(), profileCards()));
+		return "updates";
 	}
 
 	@PostMapping("/start")
@@ -1115,6 +1121,28 @@ public class JjbPageController {
 			.toList();
 	}
 
+	/**
+	 * 최신 공고와 최신 이력서를 한 줄씩 번갈아 끼워 넣은 "최신 글" 피드를 만든다.
+	 * 공고는 등록 시각(createdAt) 기준 최신순으로 정렬한다.
+	 */
+	private List<UpdateCard> recentUpdateFeed(List<Recruitment> open, List<ProfileCard> profiles) {
+		List<JobListingCard> jobs = jobListingCards(open.stream()
+			.sorted(java.util.Comparator.comparing(Recruitment::createdAt).reversed())
+			.toList());
+		List<UpdateCard> feed = new java.util.ArrayList<>();
+		int i = 0;
+		int j = 0;
+		while (i < jobs.size() || j < profiles.size()) {
+			if (i < jobs.size()) {
+				feed.add(UpdateCard.ofJob(jobs.get(i++)));
+			}
+			if (j < profiles.size()) {
+				feed.add(UpdateCard.ofProfile(profiles.get(j++)));
+			}
+		}
+		return feed;
+	}
+
 	private List<ProfileCard> profileCards() {
 		return memberService.listJobSeekersWithProfiles().stream()
 			.map(this::profileCard)
@@ -1409,6 +1437,17 @@ public class JjbPageController {
 	}
 
 	record SubstituteCard(UUID id, String requesterName, String storeName, String shiftInfo, String reason, String status, String statusCode, boolean canTake, boolean mine) {
+	}
+
+	/** "최신 글" 피드 한 줄. kind 가 "job" 이면 job 만, "profile" 이면 profile 만 채워진다. */
+	record UpdateCard(String kind, JobListingCard job, ProfileCard profile) {
+		static UpdateCard ofJob(JobListingCard job) {
+			return new UpdateCard("job", job, null);
+		}
+
+		static UpdateCard ofProfile(ProfileCard profile) {
+			return new UpdateCard("profile", null, profile);
+		}
 	}
 
 	record ShiftOption(UUID ownerId, UUID recruitmentId, String storeName, String shiftInfo) {

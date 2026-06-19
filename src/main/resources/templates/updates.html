@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('최신 글')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="jobs-page-head">
+  <div>
+    <h1>최신 글</h1>
+    <span class="section-sub" th:text="${#lists.size(updates)} + '개의 글'">0개의 글</span>
+  </div>
+</div>
+
+<div class="empty-state" th:if="${#lists.isEmpty(updates)}">
+  아직 등록된 내용이 없습니다.
+</div>
+
+<div class="jobs-grid" th:unless="${#lists.isEmpty(updates)}">
+  <th:block th:each="u : ${updates}">
+    <a class="job-grid-card" th:if="${u.kind == 'job'}" th:href="@{/jobs/{id}(id=${u.job.id})}">
+      <div class="job-grid-logo"><i class="fa-solid fa-store"></i></div>
+      <div class="job-grid-body">
+        <span class="hero-type-badge hero-type-badge--job">공고</span>
+        <span class="job-grid-store" th:text="${u.job.storeName}">매장명</span>
+        <p class="job-grid-title" th:text="${u.job.title}">공고 제목</p>
+        <span class="job-grid-meta" th:text="${u.job.workTime}">근무시간</span>
+        <span class="job-grid-meta" th:text="${u.job.workplaceAddress}">주소</span>
+        <span class="job-grid-wage" th:text="'시급 ' + ${#numbers.formatInteger(u.job.hourlyWage, 0, 'COMMA')} + '원'">시급</span>
+        <span class="job-grid-link">공고 보기 <i class="fa-solid fa-chevron-right"></i></span>
+      </div>
+    </a>
+    <a class="job-grid-card" th:if="${u.kind == 'profile'}"
+       th:href="${member != null and activeRole != null and activeRole.name() == 'OWNER'} ? @{/boss/candidates/{id}(id=${u.profile.id})} : @{/worker/profile/edit}">
+      <div class="job-grid-logo"><i class="fa-solid fa-user"></i></div>
+      <div class="job-grid-body">
+        <span class="hero-type-badge hero-type-badge--resume">이력서</span>
+        <span class="job-grid-store" th:text="${u.profile.name}">이름</span>
+        <p class="job-grid-title" th:text="${u.profile.industries}">업종</p>
+        <span class="job-grid-meta" th:text="${u.profile.area}">지역</span>
+        <span class="job-grid-meta" th:text="${u.profile.availableTime}">근무 가능 시간</span>
+        <span class="job-grid-wage" th:text="'희망 시급 ' + ${#numbers.formatInteger(u.profile.desiredHourlyWage, 0, 'COMMA')} + '원'">희망 시급</span>
+        <span class="job-grid-link">이력서 보기 <i class="fa-solid fa-chevron-right"></i></span>
+      </div>
+    </a>
+  </th:block>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

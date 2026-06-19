@@ -9,27 +9,29 @@
 
   <!-- 좌: 오늘의 공고 + 이력서 혼합 -->
   <article class="hero-jobs-card">
-    <h2>오늘의 업데이트 <a th:href="@{/jobs}">더보기</a></h2>
-    <div class="empty-state" th:if="${#lists.isEmpty(recentJobs) and #lists.isEmpty(recentProfiles)}">아직 등록된 내용이 없습니다.</div>
-    <a class="hero-job-item" th:each="job : ${recentJobs}" th:href="@{/jobs/{id}(id=${job.id})}">
-      <div style="display:flex;align-items:center;gap:6px">
-        <span class="hero-type-badge hero-type-badge--job">공고</span>
-        <strong th:text="${job.storeName}">매장명</strong>
-      </div>
-      <span th:text="${job.title}">공고 제목</span>
-      <span th:text="${job.workTime} + ' · ' + ${job.workplaceAddress}">근무시간 · 주소</span>
-      <span class="hero-job-wage" th:text="${#numbers.formatInteger(job.hourlyWage, 0, 'COMMA')} + '원/시간'">시급</span>
-    </a>
-    <a class="hero-job-item" th:each="p : ${recentProfiles}"
-       th:href="${member != null and activeRole != null and activeRole.name() == 'OWNER'} ? @{/boss/candidates/{id}(id=${p.id})} : @{/worker/profile/edit}">
-      <div style="display:flex;align-items:center;gap:6px">
-        <span class="hero-type-badge hero-type-badge--resume">이력서</span>
-        <strong th:text="${p.name}">이름</strong>
-      </div>
-      <span th:text="${p.industries}">업종</span>
-      <span th:text="${p.area}">지역</span>
-      <span class="hero-job-wage" th:text="'희망 시급 ' + ${#numbers.formatInteger(p.desiredHourlyWage, 0, 'COMMA')} + '원'">희망 시급</span>
-    </a>
+    <h2>최신 글 <a th:href="@{/updates}">더보기</a></h2>
+    <div class="empty-state" th:if="${#lists.isEmpty(recentUpdates)}">아직 등록된 내용이 없습니다.</div>
+    <th:block th:each="u : ${recentUpdates}">
+      <a class="hero-job-item" th:if="${u.kind == 'job'}" th:href="@{/jobs/{id}(id=${u.job.id})}">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="hero-type-badge hero-type-badge--job">공고</span>
+          <strong th:text="${u.job.storeName}">매장명</strong>
+        </div>
+        <span th:text="${u.job.title}">공고 제목</span>
+        <span th:text="${u.job.workTime} + ' · ' + ${u.job.workplaceAddress}">근무시간 · 주소</span>
+        <span class="hero-job-wage" th:text="${#numbers.formatInteger(u.job.hourlyWage, 0, 'COMMA')} + '원/시간'">시급</span>
+      </a>
+      <a class="hero-job-item" th:if="${u.kind == 'profile'}"
+         th:href="${member != null and activeRole != null and activeRole.name() == 'OWNER'} ? @{/boss/candidates/{id}(id=${u.profile.id})} : @{/worker/profile/edit}">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="hero-type-badge hero-type-badge--resume">이력서</span>
+          <strong th:text="${u.profile.name}">이름</strong>
+        </div>
+        <span th:text="${u.profile.industries}">업종</span>
+        <span th:text="${u.profile.area}">지역</span>
+        <span class="hero-job-wage" th:text="'희망 시급 ' + ${#numbers.formatInteger(u.profile.desiredHourlyWage, 0, 'COMMA')} + '원'">희망 시급</span>
+      </a>
+    </th:block>
   </article>
 
   <!-- 중: 서비스 배너 -->
