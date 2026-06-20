@@ -1135,8 +1135,14 @@ public class JjbPageController {
 		for (MatchRequestSnapshot request : matchingService.listAcceptedMatchRequestsForParticipant(me)) {
 			boolean iAmOwner = request.ownerId().equals(me);
 			UUID counterpartId = iAmOwner ? request.jobSeekerId() : request.ownerId();
-			MemberSnapshot counterpart = memberService.getMember(counterpartId);
-			String name = iAmOwner ? counterpart.displayName() : storeName(counterpart);
+			MemberSnapshot counterpart = null;
+			try {
+				counterpart = memberService.getMember(counterpartId);
+			}
+			catch (Exception ignored) {
+				// 상대 회원 조회 실패 시 기본값으로 대체한다.
+			}
+			String name = counterpart == null ? "상대방" : (iAmOwner ? counterpart.displayName() : storeName(counterpart));
 			String context = "";
 			if (request.recruitmentId() != null) {
 				try {
@@ -1157,9 +1163,15 @@ public class JjbPageController {
 
 		// 대타 — 내가 맡음
 		for (SubstituteRequest substitute : matchingService.listSubstituteRequestsByFiller(me)) {
-			String name = substitute.storeName() == null || substitute.storeName().isBlank()
-				? memberService.getMember(substitute.ownerId()).displayName()
-				: substitute.storeName();
+			String name = substitute.storeName();
+			if (name == null || name.isBlank()) {
+				try {
+					name = memberService.getMember(substitute.ownerId()).displayName();
+				}
+				catch (Exception ignored) {
+					name = "매장";
+				}
+			}
 			rows.add(new Row(substitute.createdAt(), new MatchHistoryCard(
 				"대타 · 내가 맡음", "SUBSTITUTE", name, substitute.shiftInfo(), substitute.reason(),
 				"매칭 완료", shortTime(substitute.createdAt()), null)));
@@ -1170,13 +1182,27 @@ public class JjbPageController {
 			if (substitute.status() != SubstituteStatus.FILLED) {
 				continue;
 			}
-			String takerName = substitute.filledById() == null
-				? "대타자"
-				: memberService.getMember(substitute.filledById()).displayName();
+			String takerName = "대타자";
+			if (substitute.filledById() != null) {
+				try {
+					takerName = memberService.getMember(substitute.filledById()).displayName();
+				}
+				catch (Exception ignored) {
+					takerName = "대타자";
+				}
+			}
 			String store = substitute.storeName() == null ? "" : substitute.storeName();
-			String context = store.isBlank()
-				? substitute.shiftInfo()
-				: store + " · " + substitute.shiftInfo();
+			String shiftInfo = substitute.shiftInfo() == null ? "" : substitute.shiftInfo();
+			String context;
+			if (store.isBlank()) {
+				context = shiftInfo;
+			}
+			else if (shiftInfo.isBlank()) {
+				context = store;
+			}
+			else {
+				context = store + " · " + shiftInfo;
+			}
 			rows.add(new Row(substitute.createdAt(), new MatchHistoryCard(
 				"대타 · 구함 완료", "SUBSTITUTE", takerName + " 님", context, substitute.reason(),
 				"매칭 완료", shortTime(substitute.createdAt()), null)));

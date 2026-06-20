@@ -108,13 +108,13 @@ class MatchHistoryPageTests {
 			.andExpect(status().isOk())
 			.andExpect(content().string(Matchers.containsString("매칭 히스토리")))
 			.andExpect(content().string(Matchers.containsString("카페 히스토리")))
-			.andExpect(content().string(Matchers.containsString("대타")));
+			.andExpect(content().string(Matchers.containsString("대타 · 내가 맡음")));
 
 		// 대타를 구한(요청한) 사람의 히스토리에도 뜬다.
 		mockMvc.perform(get("/mypage/matches").session(requesterSession))
 			.andExpect(status().isOk())
 			.andExpect(content().string(Matchers.containsString("MH Taker")))
-			.andExpect(content().string(Matchers.containsString("대타")));
+			.andExpect(content().string(Matchers.containsString("대타 · 구함 완료")));
 	}
 
 	@Test
