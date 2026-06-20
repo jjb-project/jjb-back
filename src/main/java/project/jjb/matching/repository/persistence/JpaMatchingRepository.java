@@ -177,6 +177,13 @@ public class JpaMatchingRepository implements MatchingRepository {
 	}
 
 	@Override
+	public List<SubstituteRequest> findSubstituteRequestsByFilledById(UUID filledById) {
+		return substituteRequestJpaDataRepository.findByFilledByIdOrderByCreatedAtDesc(filledById).stream()
+			.map(SubstituteRequestJpaEntity::toDomain)
+			.toList();
+	}
+
+	@Override
 	public ChatMessage saveChatMessage(ChatMessage message) {
 		return chatMessageJpaDataRepository.save(ChatMessageJpaEntity.fromDomain(message)).toDomain();
 	}

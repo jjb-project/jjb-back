@@ -32,6 +32,7 @@ import project.jjb.matching.domain.MatchingRecommendation;
 import project.jjb.matching.domain.Recruitment;
 import project.jjb.matching.domain.Review;
 import project.jjb.matching.domain.SubstituteRequest;
+import project.jjb.matching.domain.SubstituteStatus;
 import project.jjb.matching.service.MatchingRecommendationService;
 import project.jjb.matching.service.MatchingService;
 import project.jjb.member.domain.JobSeekerProfile;
@@ -721,6 +722,15 @@ public class JjbPageController {
 		return "mypage";
 	}
 
+	@GetMapping("/mypage/matches")
+	String matchHistory(Model model, HttpSession session) {
+		MemberSnapshot member = requireMember(session);
+		model.addAttribute("member", member);
+		model.addAttribute("activeRole", member.activeRole());
+		model.addAttribute("historyCards", matchHistoryCards(member));
+		return "match_history";
+	}
+
 	@GetMapping("/eval")
 	String eval(Model model, HttpSession session) {
 		MemberSnapshot member = requireMember(session);
@@ -1115,6 +1125,95 @@ public class JjbPageController {
 		);
 	}
 
+	private List<MatchHistoryCard> matchHistoryCards(MemberSnapshot member) {
+		UUID me = member.id();
+		record Row(java.time.Instant sortKey, MatchHistoryCard card) {
+		}
+		List<Row> rows = new java.util.ArrayList<>();
+
+		// 정식 매칭 (ACCEPTED)
+		for (MatchRequestSnapshot request : matchingService.listAcceptedMatchRequestsForParticipant(me)) {
+			boolean iAmOwner = request.ownerId().equals(me);
+			UUID counterpartId = iAmOwner ? request.jobSeekerId() : request.ownerId();
+			MemberSnapshot counterpart = null;
+			try {
+				counterpart = memberService.getMember(counterpartId);
+			}
+			catch (Exception ignored) {
+				// 상대 회원 조회 실패 시 기본값으로 대체한다.
+			}
+			String name = counterpart == null ? "상대방" : (iAmOwner ? counterpart.displayName() : storeName(counterpart));
+			String context = "";
+			if (request.recruitmentId() != null) {
+				try {
+					context = matchingService.getRecruitment(request.recruitmentId()).title();
+				}
+				catch (Exception ignored) {
+					context = "";
+				}
+			}
+			if (context == null || context.isBlank()) {
+				context = request.message();
+			}
+			java.time.Instant when = request.respondedAt() != null ? request.respondedAt() : request.createdAt();
+			rows.add(new Row(when, new MatchHistoryCard(
+				"정식 매칭", "MATCH", name, context, "",
+				statusLabel(request.status().name()), shortTime(when), request.id())));
+		}
+
+		// 대타 — 내가 맡음
+		for (SubstituteRequest substitute : matchingService.listSubstituteRequestsByFiller(me)) {
+			String name = substitute.storeName();
+			if (name == null || name.isBlank()) {
+				try {
+					name = memberService.getMember(substitute.ownerId()).displayName();
+				}
+				catch (Exception ignored) {
+					name = "매장";
+				}
+			}
+			rows.add(new Row(substitute.createdAt(), new MatchHistoryCard(
+				"대타 · 내가 맡음", "SUBSTITUTE", name, substitute.shiftInfo(), substitute.reason(),
+				"매칭 완료", shortTime(substitute.createdAt()), null)));
+		}
+
+		// 대타 — 내가 구함 (FILLED)
+		for (SubstituteRequest substitute : matchingService.listSubstituteRequestsByRequester(me)) {
+			if (substitute.status() != SubstituteStatus.FILLED) {
+				continue;
+			}
+			String takerName = "대타자";
+			if (substitute.filledById() != null) {
+				try {
+					takerName = memberService.getMember(substitute.filledById()).displayName();
+				}
+				catch (Exception ignored) {
+					takerName = "대타자";
+				}
+			}
+			String store = substitute.storeName() == null ? "" : substitute.storeName();
+			String shiftInfo = substitute.shiftInfo() == null ? "" : substitute.shiftInfo();
+			String context;
+			if (store.isBlank()) {
+				context = shiftInfo;
+			}
+			else if (shiftInfo.isBlank()) {
+				context = store;
+			}
+			else {
+				context = store + " · " + shiftInfo;
+			}
+			rows.add(new Row(substitute.createdAt(), new MatchHistoryCard(
+				"대타 · 구함 완료", "SUBSTITUTE", takerName + " 님", context, substitute.reason(),
+				"매칭 완료", shortTime(substitute.createdAt()), null)));
+		}
+
+		return rows.stream()
+			.sorted(java.util.Comparator.comparing(Row::sortKey).reversed())
+			.map(Row::card)
+			.toList();
+	}
+
 	private List<Recruitment> openRecruitments() {
 		return matchingService.listRecruitments().stream()
 			.filter(Recruitment::isOpen)
@@ -1434,6 +1533,9 @@ public class JjbPageController {
 	}
 
 	record InboxCard(UUID id, String counterpartName, String message, String context, String status, String statusCode, boolean actionable, boolean cancelable) {
+	}
+
+	record MatchHistoryCard(String kindLabel, String kindCode, String counterpartName, String context, String detail, String statusLabel, String dateLabel, UUID chatMatchRequestId) {
 	}
 
 	record SubstituteCard(UUID id, String requesterName, String storeName, String shiftInfo, String reason, String status, String statusCode, boolean canTake, boolean mine) {

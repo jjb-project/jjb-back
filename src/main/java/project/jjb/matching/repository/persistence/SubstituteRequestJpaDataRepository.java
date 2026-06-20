@@ -11,4 +11,6 @@ interface SubstituteRequestJpaDataRepository extends JpaRepository<SubstituteReq
 	List<SubstituteRequestJpaEntity> findByStatusOrderByCreatedAtDesc(SubstituteStatus status);
 
 	List<SubstituteRequestJpaEntity> findByRequesterIdOrderByCreatedAtDesc(UUID requesterId);
+
+	List<SubstituteRequestJpaEntity> findByFilledByIdOrderByCreatedAtDesc(UUID filledById);
 }

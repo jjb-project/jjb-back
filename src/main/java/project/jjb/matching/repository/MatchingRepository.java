@@ -58,6 +58,8 @@ public interface MatchingRepository {
 
 	List<SubstituteRequest> findSubstituteRequestsByRequesterId(UUID requesterId);
 
+	List<SubstituteRequest> findSubstituteRequestsByFilledById(UUID filledById);
+
 	ChatMessage saveChatMessage(ChatMessage message);
 
 	List<ChatMessage> findChatMessages(UUID matchRequestId);

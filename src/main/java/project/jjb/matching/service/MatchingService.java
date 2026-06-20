@@ -22,6 +22,7 @@ import project.jjb.matching.domain.Review;
 import project.jjb.matching.domain.Recruitment;
 import project.jjb.matching.domain.RecruitmentStatus;
 import project.jjb.matching.domain.SubstituteRequest;
+import project.jjb.matching.domain.SubstituteStatus;
 import project.jjb.matching.repository.MatchingRepository;
 import project.jjb.member.service.MemberService;
 
@@ -377,6 +378,13 @@ public class MatchingService {
 	@Transactional(readOnly = true)
 	public List<SubstituteRequest> listSubstituteRequestsByRequester(UUID requesterId) {
 		return matchingRepository.findSubstituteRequestsByRequesterId(requesterId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<SubstituteRequest> listSubstituteRequestsByFiller(UUID memberId) {
+		return matchingRepository.findSubstituteRequestsByFilledById(memberId).stream()
+			.filter(request -> request.status() == SubstituteStatus.FILLED)
+			.toList();
 	}
 
 	@Transactional(readOnly = true)

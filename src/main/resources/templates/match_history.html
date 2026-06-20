@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('매칭 히스토리')}"></head>
+<body class="web-page">
+<div th:replace="~{fragments/layout :: siteHeader}"></div>
+
+<div class="web-detail">
+  <div class="inbox-head">
+    <h1><i class="fa-solid fa-handshake"></i> 매칭 히스토리</h1>
+    <span class="section-sub">성사된 매칭 모아보기</span>
+  </div>
+
+  <div class="section-header">
+    <span class="section-title">성공한 매칭</span>
+    <span class="section-more" th:text="${#lists.size(historyCards)} + '건'">0건</span>
+  </div>
+  <div class="empty-state" th:if="${#lists.isEmpty(historyCards)}">아직 성공한 매칭이 없습니다.</div>
+  <div class="inbox-card-list">
+    <article class="inbox-card" th:each="c : ${historyCards}">
+      <div class="inbox-card-main">
+        <div class="inbox-card-top">
+          <strong class="inbox-name" th:text="${c.counterpartName}">상대방</strong>
+          <span class="inbox-status"
+                th:classappend="${c.kindCode == 'SUBSTITUTE'} ? ' inbox-status--substitute' : ' inbox-status--accepted'"
+                th:text="${c.kindLabel}">종류</span>
+        </div>
+        <p class="inbox-context" th:if="${c.context != null and !c.context.isEmpty()}" th:text="'· ' + ${c.context}">공고</p>
+        <p class="inbox-message" th:if="${c.detail != null and !c.detail.isEmpty()}" th:text="${c.detail}">상세</p>
+        <p class="inbox-context" th:text="${c.statusLabel} + ' · ' + ${c.dateLabel}">상태 · 날짜</p>
+      </div>
+      <div class="inbox-card-actions" th:if="${c.chatMatchRequestId != null}">
+        <a class="btn btn-primary btn-sm" th:href="@{/chat/{id}(id=${c.chatMatchRequestId})}"><i class="fa-regular fa-comment"></i> 대화</a>
+      </div>
+    </article>
+  </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
