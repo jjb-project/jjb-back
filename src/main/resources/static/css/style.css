@@ -798,6 +798,7 @@ select.form-input{appearance:none}
 .inbox-status--accepted{background:var(--green-light);color:var(--green)}
 .inbox-status--declined{background:var(--red-light);color:var(--red)}
 .inbox-status--canceled{background:var(--bg-2);color:var(--text-3)}
+.inbox-status--substitute{background:var(--blue-light);color:var(--blue)}
 .inbox-card-actions,.manage-card-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .inbox-card-actions form,.manage-card-actions form{margin:0}
 @media (max-width:560px){
