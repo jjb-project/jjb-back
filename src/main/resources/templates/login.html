@@ -27,12 +27,20 @@
     <div class="login-divider"><span>소셜 로그인</span></div>
     <div class="login-social-btns">
       <a class="social-btn social-btn-kakao" th:href="@{/oauth2/authorization/kakao}">
-        <span class="social-btn-icon">K</span>
-        <span class="social-btn-label">카카오로 시작하기</span>
+        <span class="social-btn-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#000000">
+            <path d="M12 3C6.48 3 2 6.52 2 10.86c0 2.77 1.85 5.2 4.63 6.57-.15.53-.83 2.86-.86 3.05 0 0-.02.14.08.2.09.06.2.01.2.01.27-.04 3.13-2.05 3.63-2.4.76.11 1.54.17 2.32.17 5.52 0 10-3.52 10-7.86S17.52 3 12 3z"/>
+          </svg>
+        </span>
+        <span class="social-btn-label">카카오 로그인</span>
       </a>
       <a class="social-btn social-btn-naver" th:href="@{/oauth2/authorization/naver}">
-        <span class="social-btn-icon">N</span>
-        <span class="social-btn-label">네이버로 시작하기</span>
+        <span class="social-btn-icon" aria-hidden="true">
+          <svg viewBox="0 0 20 20" width="17" height="17" fill="#ffffff">
+            <path d="M13.5613 10.6919L6.18007 0H0V20H6.43867V9.30811L13.8199 20H20V0H13.5613V10.6919Z"/>
+          </svg>
+        </span>
+        <span class="social-btn-label">네이버 로그인</span>
       </a>
     </div>
 

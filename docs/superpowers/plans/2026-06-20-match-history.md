@@ -176,9 +176,7 @@ Expected: PASS.
 
 ```bash
 git add src/main/java/project/jjb/matching src/test/java/project/jjb/MatchHistoryServiceTests.java
-git commit -m "feat: 내가 맡은 대타 조회(listSubstituteRequestsByFiller) 추가
-
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+git commit -m "feat: 내가 맡은 대타 조회(listSubstituteRequestsByFiller) 추가"
 ```
 
 ---
@@ -556,9 +554,7 @@ git add src/main/java/project/jjb/web/controller/JjbPageController.java \
         src/main/resources/templates/mypage.html \
         src/main/resources/static/css/style.css \
         src/test/java/project/jjb/MatchHistoryPageTests.java
-git commit -m "feat: 마이페이지 매칭 히스토리 페이지 추가 (정식+대타 매칭)
-
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+git commit -m "feat: 마이페이지 매칭 히스토리 페이지 추가 (정식+대타 매칭)"
 ```
 
 ---
